@@ -1,0 +1,15 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.CustomModelContextComponent
+
+<section class="custom-model-context-component">
+    <p id="singleProp">@Model.CustomContext?.SingleProperty</p>
+    <p id="class1string">@Model.CustomContext?.TestClass1?.TestString</p>
+    <p id="class1int">@Model.CustomContext?.TestClass1?.TestInt</p>
+    <p id="class1date">@Model.CustomContext?.TestClass1?.TestTime</p>
+    <p id="class2string">@Model.CustomContext?.TestClass2?.TestString</p>
+    <p id="class2int">@Model.CustomContext?.TestClass2?.TestInt</p>
+    <p id="class1Indint">@Model.TestClass1?.TestInt</p>
+    <p id="class1Indstr">@Model.TestClass1?.TestString</p>
+    <p id="customCtxIndInt">@Model.CustomContextIndividual?.TestClass1?.TestInt</p>
+    <p id="customCtxIndStr">@Model.CustomContextIndividual?.TestClass1?.TestString</p>
+    <p id="individualProperty">@Model.SingleProperty</p>
+</section>

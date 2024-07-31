@@ -1,0 +1,16 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComplexComponent
+
+<section class="complex-component">
+    <h1 id="fieldHeader" asp-for="Header"></h1>
+    <h2 id="routeField" asp-for="PageTitle"></h2>
+    <h3 id="componentProperty" asp-for="ComponentName"></h3>
+    <p id="routeProperty" asp-for="RouteName"></p>
+    <p id="routeNestedField" asp-for="RouteFields!.SearchKeywords"></p>
+    <div id="fieldContent" asp-for="Content"></div>
+    <textarea id="contextProperty" asp-for="IsEditing"></textarea>
+    <textarea id="nestedComponentHeaderField" asp-for="NestedComponent!.Header"></textarea>
+    <textarea id="nestedComponentHeader2Field" asp-for="NestedComponent!.Header2!.Value"></textarea>
+    <textarea id="customField" asp-for="CustomField!.Value"></textarea>
+    <textarea id="searchKeywords" asp-for="RouteFields!.SearchKeywords!.Value"></textarea>
+    <p id="paramContent">@Model.ParamName</p>
+</section>

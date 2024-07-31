@@ -1,0 +1,13 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithAllFieldTypes
+
+  <section class="component-allfields">
+    <h1 asp-for="TextField"></h1>
+    <div id="div1" asp-for="MultiLineField"></div>
+    <div id="div2" asp-for="RichTextField1"></div>
+    <div id="div3"><sc-text asp-for="RichTextField2"></sc-text></div>
+    <div id="div4"><sc-link asp-for="LinkField"></sc-link></div>
+    <div id="div5"><img asp-for="ImageField" /></div>
+    <div id="div6"><sc-date asp-for="DateField" date-format="MM/dd/yyyy"></sc-date></div>
+    <div id="div7"><figure style='background-image: url(@Model.MediaLibraryItemImageField?.GetMediaLink(new { mw = 100, mh = 50 }))'>Text</figure></div>
+    <div id="div8"><sc-number asp-for="NumberField"></sc-number></div>
+  </section>

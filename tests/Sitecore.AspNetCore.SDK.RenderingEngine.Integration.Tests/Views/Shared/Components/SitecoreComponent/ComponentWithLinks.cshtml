@@ -1,0 +1,11 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithLinks
+
+<section class="component-with-links">
+    <sc-link asp-for="InternalLink">Sample internal link</sc-link>
+    <sc-link asp-for="InternalLink"><span asp-for="@Model.Text"></span></sc-link>
+    <sc-link asp-for="ParamsLink"></sc-link>
+    <sc-link asp-for="InternalLink" class="author-text-ee"></sc-link>
+    <sc-link asp-for="InternalLink" class="author-text-ee-editable-false" editable="false">custom text</sc-link>
+    <a asp-for="InternalLink" class="author-text"></a>
+    <a asp-for="ParamsLink" data-test="test"><span asp-for="@Model.Text"></span></a>
+</section>

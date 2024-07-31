@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
+    <ProjectReference Include="..\data\Sitecore.AspNetCore.SDK.TestData\Sitecore.AspNetCore.SDK.TestData.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\data\json\layoutResponse.json">
+      <Link>Json\layoutResponse.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\data\json\mixedComponentsEditChromes.json">
+      <Link>Json\mixedComponentsEditChromes.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\data\json\onlyComponents.json">
+      <Link>Json\onlyComponents.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\data\json\onlyEditChromes.json">
+      <Link>Json\onlyEditChromes.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

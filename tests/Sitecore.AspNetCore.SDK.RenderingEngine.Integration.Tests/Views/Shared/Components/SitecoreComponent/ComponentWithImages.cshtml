@@ -1,0 +1,7 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithImages
+
+<section class="component-with-images">
+    <sc-img asp-for="FirstImage" />
+    <div asp-for="Heading"></div>
+    <img asp-for="SecondImage" height="50" width="94" image-params="new { mw = 100, mh = 50 }" data-sample="other-attributes-pass-through" />
+</section>

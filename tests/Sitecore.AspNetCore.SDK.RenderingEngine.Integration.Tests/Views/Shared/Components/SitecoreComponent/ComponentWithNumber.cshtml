@@ -1,0 +1,11 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithNumber
+
+<section class="component-with-number">
+    <ul>
+        <li>Number Default Culture With Formatting: <sc-number asp-for="Number" number-format="C"></sc-number>
+        <li>Number Specific Culture With Formatting: <sc-number asp-for="Number" number-format="C" culture="ua-ua"></sc-number>
+        <li>Number Without Formatting: <sc-number asp-for="Number"></sc-number>
+        <li>Span: <span asp-for="Number" number-format="P"></span></li>
+    </ul>
+    <span asp-for="@Model.Text"></span>
+</section>

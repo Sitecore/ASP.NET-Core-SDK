@@ -1,0 +1,3 @@
+# Ignore assets generated at build time
+_site/
+api/

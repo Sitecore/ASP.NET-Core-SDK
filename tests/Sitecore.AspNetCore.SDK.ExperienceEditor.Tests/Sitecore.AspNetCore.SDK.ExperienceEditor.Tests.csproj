@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.ExperienceEditor\Sitecore.AspNetCore.SDK.ExperienceEditor.csproj" />
+    <ProjectReference Include="..\data\Sitecore.AspNetCore.SDK.TestData\Sitecore.AspNetCore.SDK.TestData.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
+  </ItemGroup>
+
+</Project>

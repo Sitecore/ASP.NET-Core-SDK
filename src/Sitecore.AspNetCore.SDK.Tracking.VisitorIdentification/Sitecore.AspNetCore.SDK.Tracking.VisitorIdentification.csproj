@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Product>Sitecore Rendering Host</Product>
+    <Description>.NET SDK for creating a Sitecore Headless Rendering Host with tracking capabilities</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ProxyKit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.RenderingEngine\Sitecore.AspNetCore.SDK.RenderingEngine.csproj" />
+  </ItemGroup>
+
+</Project>

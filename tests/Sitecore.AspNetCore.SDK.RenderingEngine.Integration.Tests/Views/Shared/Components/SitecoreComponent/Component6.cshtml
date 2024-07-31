@@ -1,0 +1,7 @@
+﻿@using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels
+@{
+    Component6? component = this.SitecoreComponent()?.ReadFields<Component6>();
+}
+<section class="component-6">
+    <textarea asp-for="@component!.TestField"></textarea>
+</section>
