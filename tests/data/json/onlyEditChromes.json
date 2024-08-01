@@ -1,0 +1,57 @@
+[
+  {
+    "name": "code",
+    "type": "text/sitecore",
+    "contents": "{\"commands\":[{\"click\":\"chrome:placeholder:addControl\",\"header\":\"Add to here\",\"icon\":\"/temp/iconcache/office/16x16/add.png\",\"disabledIcon\":\"/temp/add_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Add a new rendering to the '{0}' placeholder.\",\"type\":\"\"},{\"click\":\"chrome:placeholder:editSettings\",\"header\":\"\",\"icon\":\"/temp/iconcache/office/16x16/window_gear.png\",\"disabledIcon\":\"/temp/window_gear_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the placeholder settings.\",\"type\":\"\"}],\"contextItemUri\":\"sitecore://master/{616E2DAA-BB71-5117-82B1-B360EF600213}?lang=en&ver=1\",\"custom\":{\"allowedRenderings\":[\"1DE91AADC1465D8983FA31A8FD63EBB3\",\"4E3C94B3A9D25478B7548D87283D8AA6\",\"26D9B310A5365D6B975442DB6BE1D381\",\"27EA18D87B6456108919947077956819\"],\"editable\":\"true\"},\"displayName\":\"Main\",\"expandedDisplayName\":null}",
+    "attributes": {
+      "type": "text/sitecore",
+      "chrometype": "placeholder",
+      "kind": "open",
+      "id": "jss_main",
+      "key": "jss-main",
+      "class": "scpm",
+      "data-selectable": "true"
+    }
+  },
+  {
+    "name": "code",
+    "type": "text/sitecore",
+    "contents": "{\"commands\":[{\"click\":\"javascript:Sitecore.PageModes.PageEditor.postRequest('webedit:fieldeditor(command={2F7D34E2-EB93-47ED-8177-B1F429A9FCD7},fields=heading|content,id={585596CA-7903-500B-8DF2-0357DD6E3FAC})',null,false)\",\"header\":\"Edit Fields\",\"icon\":\"/temp/iconcache/office/16x16/pencil.png\",\"disabledIcon\":\"/temp/pencil_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"\",\"type\":null},{\"click\":\"chrome:dummy\",\"header\":\"Separator\",\"icon\":\"\",\"disabledIcon\":\"\",\"isDivider\":false,\"tooltip\":null,\"type\":\"separator\"},{\"click\":\"chrome:rendering:sort\",\"header\":\"Change position\",\"icon\":\"/temp/iconcache/office/16x16/document_size.png\",\"disabledIcon\":\"/temp/document_size_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Move component.\",\"type\":\"\"},{\"click\":\"javascript:Sitecore.PageModes.PageEditor.postRequest('webedit:componentoptions(referenceId={E02DDB9B-A062-5E50-924A-1940D7E053CE},renderingId={1DE91AAD-C146-5D89-83FA-31A8FD63EBB3},id={585596CA-7903-500B-8DF2-0357DD6E3FAC})',null,false)\",\"header\":\"Edit Experience Editor Options\",\"icon\":\"/temp/iconcache/office/16x16/clipboard_check_edit.png\",\"disabledIcon\":\"/temp/clipboard_check_edit_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the Experience Editor options for the component.\",\"type\":\"common\"},{\"click\":\"chrome:rendering:properties\",\"header\":\"Edit component properties\",\"icon\":\"/temp/iconcache/office/16x16/elements_branch.png\",\"disabledIcon\":\"/temp/elements_branch_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the properties for the component.\",\"type\":\"common\"},{\"click\":\"javascript:Sitecore.PageModes.PageEditor.postRequest('webedit:setdatasource(referenceId={E02DDB9B-A062-5E50-924A-1940D7E053CE},renderingId={1DE91AAD-C146-5D89-83FA-31A8FD63EBB3},id={585596CA-7903-500B-8DF2-0357DD6E3FAC})',null,false)\",\"header\":\"dsHeaderParameter\",\"icon\":\"/temp/iconcache/office/16x16/data.png\",\"disabledIcon\":\"/temp/data_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"dsTooltipParameter\",\"type\":\"datasourcesmenu\"},{\"click\":\"chrome:rendering:personalize({command:\\\"webedit:personalize\\\"})\",\"header\":\"Personalize\",\"icon\":\"/temp/iconcache/office/16x16/users_family.png\",\"disabledIcon\":\"/temp/users_family_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Create or edit personalization for this component.\",\"type\":\"sticky\"},{\"click\":\"chrome:common:edititem({command:\\\"webedit:open\\\"})\",\"header\":\"Edit the related item\",\"icon\":\"/temp/iconcache/office/16x16/cubes.png\",\"disabledIcon\":\"/temp/cubes_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the related item in the Content Editor.\",\"type\":\"datasourcesmenu\"},{\"click\":\"chrome:rendering:delete\",\"header\":\"Delete\",\"icon\":\"/temp/iconcache/office/16x16/delete.png\",\"disabledIcon\":\"/temp/delete_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Remove component.\",\"type\":\"sticky\"}],\"contextItemUri\":\"sitecore://master/{585596CA-7903-500B-8DF2-0357DD6E3FAC}?lang=en&ver=1\",\"custom\":{\"renderingID\":\"1DE91AADC1465D8983FA31A8FD63EBB3\",\"editable\":\"true\"},\"displayName\":\"Content Block\",\"expandedDisplayName\":null}",
+    "attributes": {
+      "type": "text/sitecore",
+      "chrometype": "rendering",
+      "kind": "open",
+      "hintname": "Content Block",
+      "id": "r_E02DDB9BA0625E50924A1940D7E053CE",
+      "class": "scpm",
+      "data-selectable": "true"
+    }
+  },
+  {
+    "name": "code",
+    "type": "text/sitecore",
+    "contents": "",
+    "attributes": {
+      "type": "text/sitecore",
+      "id": "scEnclosingTag_r_",
+      "chrometype": "rendering",
+      "kind": "close",
+      "hintkey": "Content Block",
+      "class": "scpm"
+    }
+  },
+  {
+    "name": "code",
+    "type": "text/sitecore",
+    "contents": "{\"commands\":[{\"click\":\"chrome:rendering:sort\",\"header\":\"Change position\",\"icon\":\"/temp/iconcache/office/16x16/document_size.png\",\"disabledIcon\":\"/temp/document_size_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Move component.\",\"type\":\"\"},{\"click\":\"javascript:Sitecore.PageModes.PageEditor.postRequest('webedit:componentoptions(referenceId={34A6553C-81DE-5CD3-989E-853F6CB6DF8C},renderingId={4E3C94B3-A9D2-5478-B754-8D87283D8AA6},id={616E2DAA-BB71-5117-82B1-B360EF600213})',null,false)\",\"header\":\"Edit Experience Editor Options\",\"icon\":\"/temp/iconcache/office/16x16/clipboard_check_edit.png\",\"disabledIcon\":\"/temp/clipboard_check_edit_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the Experience Editor options for the component.\",\"type\":\"common\"},{\"click\":\"chrome:rendering:properties\",\"header\":\"Edit component properties\",\"icon\":\"/temp/iconcache/office/16x16/elements_branch.png\",\"disabledIcon\":\"/temp/elements_branch_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the properties for the component.\",\"type\":\"common\"},{\"click\":\"javascript:Sitecore.PageModes.PageEditor.postRequest('webedit:setdatasource(referenceId={34A6553C-81DE-5CD3-989E-853F6CB6DF8C},renderingId={4E3C94B3-A9D2-5478-B754-8D87283D8AA6},id={616E2DAA-BB71-5117-82B1-B360EF600213})',null,false)\",\"header\":\"dsHeaderParameter\",\"icon\":\"/temp/iconcache/office/16x16/data.png\",\"disabledIcon\":\"/temp/data_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"dsTooltipParameter\",\"type\":\"datasourcesmenu\"},{\"click\":\"chrome:rendering:personalize({command:\\\"webedit:personalize\\\"})\",\"header\":\"Personalize\",\"icon\":\"/temp/iconcache/office/16x16/users_family.png\",\"disabledIcon\":\"/temp/users_family_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Create or edit personalization for this component.\",\"type\":\"sticky\"},{\"click\":\"chrome:common:edititem({command:\\\"webedit:open\\\"})\",\"header\":\"Edit the related item\",\"icon\":\"/temp/iconcache/office/16x16/cubes.png\",\"disabledIcon\":\"/temp/cubes_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the related item in the Content Editor.\",\"type\":\"datasourcesmenu\"},{\"click\":\"chrome:rendering:delete\",\"header\":\"Delete\",\"icon\":\"/temp/iconcache/office/16x16/delete.png\",\"disabledIcon\":\"/temp/delete_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Remove component.\",\"type\":\"sticky\"}],\"contextItemUri\":\"sitecore://master/{616E2DAA-BB71-5117-82B1-B360EF600213}?lang=en&ver=1\",\"custom\":{\"renderingID\":\"4E3C94B3A9D25478B7548D87283D8AA6\",\"editable\":\"true\"},\"displayName\":\"Styleguide-Layout\",\"expandedDisplayName\":null}",
+    "attributes": {
+      "type": "text/sitecore",
+      "chrometype": "rendering",
+      "kind": "open",
+      "hintname": "Styleguide-Layout",
+      "id": "r_34A6553C81DE5CD3989E853F6CB6DF8C",
+      "class": "scpm",
+      "data-selectable": "true"
+    }
+  }
+]

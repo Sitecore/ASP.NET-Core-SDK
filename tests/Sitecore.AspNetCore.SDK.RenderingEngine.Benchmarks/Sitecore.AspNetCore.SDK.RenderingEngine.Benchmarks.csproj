@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.ExperienceEditor\Sitecore.AspNetCore.SDK.ExperienceEditor.csproj" />
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification.csproj" />
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Tracking\Sitecore.AspNetCore.SDK.Tracking.csproj" />
+    <ProjectReference Include="..\data\Sitecore.AspNetCore.SDK.TestData\Sitecore.AspNetCore.SDK.TestData.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests\Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

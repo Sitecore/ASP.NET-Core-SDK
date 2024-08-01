@@ -1,0 +1,9 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.Component3
+
+<section class="component-3">
+    <h1 asp-for="@Model.TestField"></h1>
+    <div asp-for="@Model.EmptyField" editable="false"></div>
+    <p asp-for="@Model.NullValueField"></p>
+    <span asp-for="@Model.MultiLineField"></span>
+    <textarea asp-for="@Model.EncodedField"></textarea>
+</section>

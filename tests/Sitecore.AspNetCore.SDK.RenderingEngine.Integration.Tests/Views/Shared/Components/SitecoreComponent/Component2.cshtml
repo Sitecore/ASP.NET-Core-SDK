@@ -1,0 +1,8 @@
+﻿@using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels
+@{
+    Component2? component = this.SitecoreComponent()?.ReadFields<Component2>();
+}
+<section class="component-2">
+    <sc-text asp-for="@component!.TestField" />
+    <sc-img asp-for="@component!.ImageField" class="image1" height="50" width="94" alt="customAlt" image-params="new { mw = 100, mh = 50 }" />
+</section>

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+    "layoutId": "14030e9f-ce92-49c6-ad87-7d49b50e42ea",
+    "placeholders": [],
+    "renderings": [
+      {
+        "id": "885b8314-7d8c-4cbb-8000-01421ea8f406",
+        "instanceId": "43222d12-08c9-453b-ae96-d406ebb95126",
+        "placeholderKey": "main",
+        "parameters": {},
+        "caching": {},
+        "analytics": {}
+      },
+      {
+        "id": "ce4adcfb-7990-4980-83fb-a00c1e3673db",
+        "instanceId": "cf044ad9-0332-407a-abde-587214a2c808",
+        "placeholderKey": "/main/centercolumn",
+        "parameters": {},
+        "caching": {},
+        "analytics": {}
+      },
+      {
+        "id": "493b3a83-0fa7-4484-8fc9-4680991cf743",
+        "instanceId": "b343725a-3a93-446e-a9c8-3a2cbd3db489",
+        "placeholderKey": "/main/centercolumn/content",
+        "parameters": {},
+        "caching": {},
+        "analytics": {}
+      }
+    ]
+  },
+  {
+    "id": "46d2f427-4ce5-4e1f-ba10-ef3636f43534",
+    "layoutId": "14030e9f-ce92-49c6-ad87-7d49b50e42ea",
+    "placeholders": [],
+    "renderings": [
+      {
+        "id": "493b3a83-0fa7-4484-8fc9-4680991cf743",
+        "instanceId": "a08c9132-dbd1-474f-a2ca-6ca26a4aa650",
+        "placeholderKey": "content",
+        "parameters": {},
+        "caching": {},
+        "analytics": {}
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.Component4
+
+<section class="component-4" data-language="en">
+    <textarea asp-for="@Model.Date!.Value"></textarea>
+    <span><sc-text asp-for="@Model.Date"></sc-text></span>
+    <div id="div1"><sc-text asp-for="@Model.RichTextField1"></sc-text></div>
+    <div id="div2" asp-for="@Model.RichTextField2" editable="false"></div>
+    <div id="div3"><sc-text asp-for="@Model.EmptyField"></sc-text></div>
+    <div id="div4"><sc-text asp-for="@Model.NullValueField"></sc-text></div>
+    <div id="div5"><sc-text asp-for="@Model.TestField"></sc-text></div>
+</section>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\data\json\edit.json">
+      <Link>Json\edit.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\data\json\edit-in-horizon-mode.json">
+      <Link>Json\edit-in-horizon-mode.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

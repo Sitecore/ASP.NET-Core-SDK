@@ -1,0 +1,10 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithMissingData
+
+<section class="component-with-missing-data">
+    <p asp-for="@Model.InexistentComponentTextField" id="textField" />
+    <p asp-for="@Model.InexistentRouteProperty" id="routeProperty" />
+    <p asp-for="@Model.InexistentRouteField" id="routeField" />
+    <p asp-for="@Model.InexistentContextProperty" id="contextProperty" />
+
+    <sc-placeholder name="placeholder-2"></sc-placeholder>
+</section>

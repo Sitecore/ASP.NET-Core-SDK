@@ -1,0 +1,9 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithDates
+
+<section class="component-with-dates">
+    <p asp-for="Date" date-format="MM/dd/yyyy"></p>
+    <p><sc-date asp-for="Date" date-format="MM/dd/yyyy HH:mm:ss"></sc-date></p>
+    <span asp-for="Date"></span>
+    <span asp-for="@Model.Text"></span>
+    <p><sc-date asp-for="Date" culture="uk-ua"></sc-date></p>
+</section>

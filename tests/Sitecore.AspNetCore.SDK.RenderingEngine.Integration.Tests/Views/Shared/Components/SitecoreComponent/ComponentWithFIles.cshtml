@@ -1,0 +1,23 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithFiles
+
+<section class="component-with-files">
+    <a asp-for="@Model.FileLink"></a>
+    <sc-file asp-for="@Model.FileLink" />
+    <a asp-file="@Model.FileLink"></a>
+    <sc-file asp-file="@Model.FileLink"></sc-file>
+
+    <a asp-for="@Model.FileLink" target="_blank" custom-attribute="test-custom-attribute" class="test-class"></a>
+    <sc-file asp-for="@Model.FileLink" target="_blank" custom-attribute="test-custom-attribute" class="test-class" />
+    <a asp-file="@Model.FileLink" target="_blank" custom-attribute="test-custom-attribute" class="test-class"></a>
+    <sc-file asp-file="@Model.FileLink" target="_blank" custom-attribute="test-custom-attribute" class="test-class"></sc-file>
+
+    <sc-file asp-for="@Model.FileLink" type="application/custom" href="/customLink" title="custom-title">Custom Download Link</sc-file>
+    <a asp-for="@Model.FileLink" type="application/custom" href="/customLink" title="custom-title">Custom Download Link</a>
+    <sc-file asp-file="@Model.FileLink" type="application/custom" href="/customLink" title="custom-title">Custom Download Link</sc-file>
+    <a asp-file="@Model.FileLink" type="application/custom" href="/customLink" title="custom-title">Custom Download Link></a>
+
+    <a asp-for="@Model.FileLink"><h1>Inner html</h1></a>
+    <sc-file asp-for="@Model.FileLink"><h1>Inner html</h1></sc-file>
+    <a asp-file="@Model.FileLink"><h1>Inner html</h1></a>
+    <sc-file asp-file="@Model.FileLink"><h1>Inner html</h1></sc-file>
+</section>

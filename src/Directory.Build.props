@@ -1,0 +1,31 @@
+<Project>
+
+  <!--<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />-->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn.Replace(';CS1591',''));CS7035</NoWarn>
+
+    <Authors>sc-ivanlieckens</Authors>
+    <Company>Sitecore</Company>
+    <RepositoryUrl>https://github.com/Sitecore/ASP.NET-Core-Rendering-SDK</RepositoryUrl>
+    <PackageTags>sitecore</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup Label="Shared Assets">
+    <Compile Include="$(MSBuildThisFileDirectory)GlobalSuppressions.cs">
+      <Link>GlobalSuppressions.cs</Link>
+    </Compile>
+    <None Include="..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

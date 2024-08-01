@@ -1,0 +1,6 @@
+﻿@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.ComponentWithoutId
+<section class="component-without-id">
+    <div asp-for="@Model.InexistentComponentRichTextField" id="nestedRichTextField"></div>
+    <p asp-for="@Model.InexistentComponentTextField" id="nestedTextField" />
+    <p asp-for="@Model.InexistentComponentId" id="nestedComponentId" />
+</section>

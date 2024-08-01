@@ -1,0 +1,49 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "**/*.csproj"
+          ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern",
+      "template"
+    ],
+    "globalMetadata": {
+      "_appName": "ASP.NET Core SDK",
+      "_appTitle": "ASP.NET Core SDK",
+      "_appLogoPath": "images/Sitecore-Icon.png",
+      "_appFaviconPath": "images/Sitecore-Icon.png",
+      "_enableSearch": true,
+      "_disableBreadcrumb": true,
+      "pdf": false
+    }
+  }
+}

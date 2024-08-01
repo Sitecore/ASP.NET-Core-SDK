@@ -1,0 +1,85 @@
+name: CICD
+
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: "cicd"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      buildConfiguration: Release
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create-release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newVersion = '${{ needs.build.outputs.newVersion }}';
+            const response = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: newVersion,
+              target_commitish: context.sha,
+              name: newVersion,
+              generate_release_notes: true
+            });
+            core.setOutput('upload_url', response.data.upload_url);
+
+      - name: Download Artifact Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: ./artifacts
+
+      - name: Attach Release Assets
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const uploadUrl = '${{ steps.create-release.outputs.upload_url }}';
+            const fs = require('fs');
+            const path = require('path');
+            const packages = fs.readdirSync('./artifacts').filter(file => file.endsWith('.nupkg'));
+            for (const file of packages) {
+              const filePath = path.join('./artifacts', file);
+              const name = path.basename(filePath);
+              const response = await github.rest.repos.uploadReleaseAsset({
+                url: uploadUrl,
+                headers: {
+                  'content-type': 'application/zip',
+                  'content-length': fs.statSync(filePath).size
+                },
+                name: name,
+                data: fs.readFileSync(filePath)
+              });
+              core.info('Uploaded ' + name);
+            }
+  publish-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Dotnet Setup
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.x
+    - run: dotnet tool update -g docfx
+    - run: docfx ./docfx/docfx.json
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        # Upload entire repository
+        path: './docfx/_site'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification.csproj" />
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Tracking\Sitecore.AspNetCore.SDK.Tracking.csproj" />
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
+  </ItemGroup>
+
+</Project>
