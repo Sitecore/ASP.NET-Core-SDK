@@ -64,6 +64,7 @@ jobs:
   publish-docs:
     permissions:
       id-token: write
+      pages: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
