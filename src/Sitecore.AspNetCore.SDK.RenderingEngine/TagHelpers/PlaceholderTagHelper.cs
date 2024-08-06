@@ -100,7 +100,7 @@ public class PlaceholderTagHelper(
 
         if (!foundPlaceholderFeatures)
         {
-            output.Content.SetHtmlContent($"<!-- {string.Format(Resources.Warning_PlaceholderWasEmpty, placeholderName)} -->");
+            output.Content.SetHtmlContent($"<div className=\"sc-jss-empty-placeholder\"></div>");
         }
     }
 
@@ -109,14 +109,12 @@ public class PlaceholderTagHelper(
         Placeholder? placeholderFeatures = null;
 
         // try to get the placeholder from the "context" component
-        renderingContext.Component?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures);
-
-        // top level placeholders do not have a "context" component set, so their component list can be retrieved directly from the Sitecore Route object
-        if (placeholderFeatures?.Count > 0)
+        if (renderingContext.Component?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures) ?? false)
         {
             return placeholderFeatures;
         }
 
+        // top level placeholders do not have a "context" component set, so their component list can be retrieved directly from the Sitecore Route object
         Route? route = renderingContext.Response?.Content?.Sitecore?.Route;
         route?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures);
 
