@@ -3,8 +3,8 @@
 <section class="complex-component">
     <h1 id="fieldHeader" asp-for="Header"></h1>
     <h2 id="routeField" asp-for="PageTitle"></h2>
-    <h3 id="componentProperty" asp-for="ComponentName"></h3>
-    <p id="routeProperty" asp-for="RouteName"></p>
+    <h3 id="componentProperty">@Model.ComponentName</h3>
+    <p id="routeProperty">@Model.RouteName</p>
     <p id="routeNestedField" asp-for="RouteFields!.SearchKeywords"></p>
     <div id="fieldContent" asp-for="Content"></div>
     <textarea id="contextProperty" asp-for="IsEditing"></textarea>

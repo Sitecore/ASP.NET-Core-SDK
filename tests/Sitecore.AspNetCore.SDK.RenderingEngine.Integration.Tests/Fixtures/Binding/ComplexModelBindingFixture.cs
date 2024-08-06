@@ -76,10 +76,10 @@ public class ComplexModelBindingFixture : IDisposable
             .Should().Be(TestConstants.SearchKeywords);
 
         sectionNode.ChildNodes.First(n => n.Id.Equals("componentProperty", StringComparison.OrdinalIgnoreCase)).InnerText
-            .Should().BeEmpty("Complex-Component");
+            .Should().Be("Complex-Component");
 
         sectionNode.ChildNodes.First(n => n.Id.Equals("routeProperty", StringComparison.OrdinalIgnoreCase)).InnerText.
-            Should().BeEmpty("styleguide");
+            Should().Be("styleguide");
 
         sectionNode.ChildNodes.First(n => n.Id.Equals("fieldContent", StringComparison.OrdinalIgnoreCase)).InnerHtml.
             Should().Be(TestConstants.RichTextFieldValue1);
