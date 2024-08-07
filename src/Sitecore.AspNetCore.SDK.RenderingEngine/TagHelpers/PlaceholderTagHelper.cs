@@ -128,12 +128,14 @@ public class PlaceholderTagHelper(
         Placeholder? placeholderFeatures = null;
 
         // try to get the placeholder from the "context" component
-        if (renderingContext.Component?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures) ?? false)
+        renderingContext.Component?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures);
+
+        // top level placeholders do not have a "context" component set, so their component list can be retrieved directly from the Sitecore Route object
+        if (placeholderFeatures?.Count > 0)
         {
             return placeholderFeatures;
         }
 
-        // top level placeholders do not have a "context" component set, so their component list can be retrieved directly from the Sitecore Route object
         Route? route = renderingContext.Response?.Content?.Sitecore?.Route;
         route?.Placeholders.TryGetValue(placeholderName, out placeholderFeatures);
 
