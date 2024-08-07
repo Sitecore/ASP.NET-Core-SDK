@@ -236,7 +236,7 @@ public class PlaceholderTagHelperFixture
         await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Content.GetContent().Should().Be($"<div className=\"sc-jss-empty-placeholder\"></div>");
+        tagHelperOutput.Content.GetContent().Should().Be($"<!-- Placeholder '{PlaceHolderWithNoComponentsName}' was empty. -->");
     }
 
     [Theory]

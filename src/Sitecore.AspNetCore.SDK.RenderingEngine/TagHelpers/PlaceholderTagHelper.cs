@@ -109,7 +109,7 @@ public class PlaceholderTagHelper(
 
         if (!foundPlaceholderFeatures)
         {
-            output.Content.SetHtmlContent($"<div className=\"sc-jss-empty-placeholder\"></div>");
+            output.Content.SetHtmlContent($"<!-- {string.Format(Resources.Warning_PlaceholderWasEmpty, placeholderName)} -->");
         }
     }
 
