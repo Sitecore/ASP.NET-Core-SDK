@@ -478,6 +478,53 @@ public class PlaceholderTagHelperFixture
 
     [Theory]
     [AutoNSubstituteData]
+    public async Task ProcessAsync_PlaceholderContainsUnknownPlaceholderFeature_IsInEditingMode_OutputIsEditingWrapperTag(
+        PlaceholderTagHelper sut,
+        ViewContext viewContext,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        SitecoreRenderingContext context = new()
+        {
+            Response = new SitecoreLayoutResponse([])
+            {
+                Content = new SitecoreLayoutResponseContent
+                {
+                    Sitecore = new SitecoreData
+                    {
+                        Context = new Context { IsEditing = true },
+                        Route = new Route
+                        {
+                            Placeholders =
+                            {
+                                [PlaceHolderWithComponentsName] =
+                                [
+                                    new TestPlaceholderFeature
+                                    {
+                                        Content = TestComponentRenderer.HtmlContent
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        viewContext.HttpContext.SetSitecoreRenderingContext(context);
+        sut.Name = PlaceHolderWithComponentsName;
+        sut.ViewContext = viewContext;
+
+        // Act
+        await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Content.GetContent().Should().Be("<div class=\"sc-empty-placeholder\"></div>");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
     public async Task ProcessAsync_PlaceholderNameInLayoutServiceResponseAndPlaceholderIsNotEmpty_ContextComponentDoNotChange(
         PlaceholderTagHelper sut,
         ViewContext viewContext,
