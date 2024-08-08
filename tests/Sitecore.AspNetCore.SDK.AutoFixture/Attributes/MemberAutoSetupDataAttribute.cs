@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 
+[ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class MemberAutoSetupDataAttribute : MemberDataAttributeBase
 {

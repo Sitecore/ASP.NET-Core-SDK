@@ -69,18 +69,21 @@ function Set-Version
 	if (![string]::IsNullOrEmpty($Suffix)) {
 		$suffixElement = $xml.CreateElement("VersionSuffix")
 		$suffixElement.InnerText = $Suffix
-		$properties.AppendChild($suffixElement)
+		[void]$properties.AppendChild($suffixElement)
 	}
 
-	$properties.AppendChild($assemblyVersionElement)
-	$properties.AppendChild($versionElement)
-	$properties.AppendChild($fileVersionElement)
+	[void]$properties.AppendChild($assemblyVersionElement)
+	[void]$properties.AppendChild($versionElement)
+	[void]$properties.AppendChild($fileVersionElement)
 
-	$xml.Save($Path)
+	[void]$xml.Save($Path)
 }
 
 $newVersion = Get-Version $PreviousVersion $Message
 $suffix = Get-VersionSuffix
-Set-Version $Path $newVersion $suffix | Out-Null
+Set-Version $Path $newVersion $suffix
+
+"# :arrow_up_small: Version" >> $Env:GITHUB_STEP_SUMMARY
+$newVersion >> $Env:GITHUB_STEP_SUMMARY
 
 return "newVersion=$newVersion"

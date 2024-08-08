@@ -1,7 +1,9 @@
-﻿using AutoFixture;
+﻿using System.Diagnostics.CodeAnalysis;
+using AutoFixture;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.ActionProviders;
 
+[ExcludeFromCodeCoverage]
 public abstract class SetupActionsProvider : ISetupActionsProvider
 {
     public virtual IEnumerable<Action<IFixture>> GetSetupActions(Type? type, string fixtureAction)

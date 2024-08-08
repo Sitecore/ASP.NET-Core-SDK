@@ -3,6 +3,7 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 
 namespace Sitecore.AspNetCore.SDK.TestData.Models;
 
+[ExcludeFromCodeCoverage]
 public class CustomFieldType : Field<string>
 {
     [SetsRequiredMembers]

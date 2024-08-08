@@ -97,6 +97,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\build.yml = .github\workflows\build.yml
 		.github\workflows\main.yml = .github\workflows\main.yml
 		.github\workflows\pullrequest.yml = .github\workflows\pullrequest.yml
+		.github\workflows\TestSummary.ps1 = .github\workflows\TestSummary.ps1
 		.github\workflows\Version.ps1 = .github\workflows\Version.ps1
 	EndProjectSection
 EndProject

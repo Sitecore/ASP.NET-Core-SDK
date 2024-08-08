@@ -1,8 +1,10 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using AutoFixture.Idioms;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class GuardClauseAssertionExtensions
 {
     public static void Verify<T>(this GuardClauseAssertion assertion)

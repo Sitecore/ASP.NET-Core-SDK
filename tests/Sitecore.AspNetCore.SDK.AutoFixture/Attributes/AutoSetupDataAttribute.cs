@@ -1,10 +1,12 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using AutoFixture;
 using AutoFixture.Xunit2;
 using Sitecore.AspNetCore.SDK.AutoFixture.ActionProviders;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 
+[ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
 public class AutoSetupDataAttribute : AutoDataAttribute
 {
@@ -58,7 +60,7 @@ public class AutoSetupDataAttribute : AutoDataAttribute
 
         if (!fixtureSetups.Contains(DefaultFixtureSetupName))
         {
-            fixtureSetups = new[] { DefaultFixtureSetupName }.Concat(fixtureSetups).ToArray();
+            fixtureSetups = [DefaultFixtureSetupName, .. fixtureSetups];
         }
 
         _fixtureSetups = fixtureSetups;
