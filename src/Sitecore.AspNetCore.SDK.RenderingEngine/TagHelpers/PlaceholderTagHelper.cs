@@ -70,8 +70,13 @@ public class PlaceholderTagHelper(
             return;
         }
 
-        bool foundPlaceholderFeatures = false;
+        bool emptyEdit = IsInEditingMode(renderingContext) && IsPlaceHolderEmpty(placeholderFeatures);
+        if (emptyEdit)
+        {
+            output.Content.AppendHtml("<div class=\"sc-empty-placeholder\">");
+        }
 
+        bool foundPlaceholderFeatures = false;
         foreach (IPlaceholderFeature placeholderFeature in placeholderFeatures.OfType<IPlaceholderFeature>())
         {
             foundPlaceholderFeatures = true;
@@ -98,10 +103,25 @@ public class PlaceholderTagHelper(
             output.Content.AppendHtml(html);
         }
 
+        if (emptyEdit)
+        {
+            output.Content.AppendHtml("</div>");
+        }
+
         if (!foundPlaceholderFeatures)
         {
             output.Content.SetHtmlContent($"<!-- {string.Format(Resources.Warning_PlaceholderWasEmpty, placeholderName)} -->");
         }
+    }
+
+    private static bool IsInEditingMode(ISitecoreRenderingContext renderingContext)
+    {
+        return renderingContext.Response?.Content?.Sitecore?.Context?.IsEditing ?? false;
+    }
+
+    private static bool IsPlaceHolderEmpty(Placeholder placeholderFeatures)
+    {
+        return !placeholderFeatures.Exists(x => x is Component);
     }
 
     private static Placeholder? GetPlaceholderFeatures(string placeholderName, ISitecoreRenderingContext renderingContext)
