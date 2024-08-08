@@ -70,7 +70,8 @@ public class PlaceholderTagHelper(
             return;
         }
 
-        if (IsInEditingMode(renderingContext) && IsPlaceHolderEmpty(placeholderFeatures))
+        bool emptyEdit = IsInEditingMode(renderingContext) && IsPlaceHolderEmpty(placeholderFeatures);
+        if (emptyEdit)
         {
             output.Content.AppendHtml("<div class=\"sc-empty-placeholder\">");
         }
@@ -102,7 +103,7 @@ public class PlaceholderTagHelper(
             output.Content.AppendHtml(html);
         }
 
-        if (IsInEditingMode(renderingContext) && IsPlaceHolderEmpty(placeholderFeatures))
+        if (emptyEdit)
         {
             output.Content.AppendHtml("</div>");
         }
@@ -115,7 +116,7 @@ public class PlaceholderTagHelper(
 
     private static bool IsInEditingMode(ISitecoreRenderingContext renderingContext)
     {
-        return renderingContext?.Response?.Content?.Sitecore?.Context?.IsEditing ?? false;
+        return renderingContext.Response?.Content?.Sitecore?.Context?.IsEditing ?? false;
     }
 
     private static bool IsPlaceHolderEmpty(Placeholder placeholderFeatures)
