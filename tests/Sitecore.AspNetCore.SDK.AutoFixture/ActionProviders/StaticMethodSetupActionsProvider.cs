@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.ActionProviders;
 
+[ExcludeFromCodeCoverage]
 public class StaticMethodSetupActionsProvider : SetupActionsProvider
 {
     protected override object? ResolveFromType(Type? type, string fixtureAction)

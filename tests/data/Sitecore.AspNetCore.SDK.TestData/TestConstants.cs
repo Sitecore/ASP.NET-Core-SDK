@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace Sitecore.AspNetCore.SDK.TestData;
 
+[ExcludeFromCodeCoverage]
 public static class TestConstants
 {
     public const string TestFieldValue = "This is a test";

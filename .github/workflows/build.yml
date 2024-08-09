@@ -85,7 +85,17 @@ jobs:
       run: dotnet build -c ${{ inputs.buildConfiguration }} --no-restore
 
     - name: Test
-      run: dotnet test -c ${{ inputs.buildConfiguration }} --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage" --results-directory TestResults
+      run: dotnet test -c ${{ inputs.buildConfiguration }} --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage" --results-directory TestResults -p:Exclude=\"[Sitecore.AspNetCore.SDK.AutoFixture]*,[Sitecore.AspNetCore.SDK.TestData]*\"
+
+    - name: Code Coverage Report
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator -reports:"TestResults/**/*.xml" -targetdir:"TestResults/Report" -reporttypes:Html -assemblyfilters:"-Sitecore.AspNetCore.SDK.AutoFixture;-Sitecore.AspNetCore.SDK.TestData"
+        reportgenerator -reports:"TestResults/**/*.xml" -targetdir:"TestResults/Summary" -reporttypes:XmlSummary -assemblyfilters:"-Sitecore.AspNetCore.SDK.AutoFixture;-Sitecore.AspNetCore.SDK.TestData"
+
+    - name: Test Summary
+      shell: pwsh  
+      run: ./.github/workflows/TestSummary.ps1 -CoverageReportPath "./TestResults/Summary/Summary.xml" -ResultFolderPath "./TestResults/*" >> $Env:GITHUB_STEP_SUMMARY 
 
     - name: Upload dotnet test results
       uses: actions/upload-artifact@v4
@@ -97,6 +107,13 @@ jobs:
     - name: Run Benchmarks
       working-directory: ./tests/Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks
       run: dotnet run -c Release
+
+    - name: Benchmark Summary
+      working-directory: ./tests/Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks/BenchmarkDotNet.Artifacts/results
+      shell: pwsh
+      run: |
+        "# :rocket: Benchmarks" >> $Env:GITHUB_STEP_SUMMARY
+        Get-Content -Path .\* -Filter *.md >> $Env:GITHUB_STEP_SUMMARY
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4

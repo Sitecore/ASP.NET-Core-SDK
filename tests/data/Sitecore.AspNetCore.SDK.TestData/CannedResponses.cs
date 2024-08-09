@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
@@ -10,6 +11,7 @@ using File = Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Propert
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.TestData;
 
+[ExcludeFromCodeCoverage]
 public static class CannedResponses
 {
     public static SitecoreLayoutResponseContent Simple => new()
@@ -3913,6 +3915,7 @@ public static class CannedResponses
     };
 
     // ReSharper disable once MemberCanBePrivate.Global - Must be available
+    [ExcludeFromCodeCoverage]
     public static class SitecoreLayoutIds
     {
         public const string Styleguide1LayoutId = "{E02DDB9B-A062-5E50-924A-1940D7E053C1}";

@@ -1,5 +1,8 @@
-﻿namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
+
+[ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class InlineAutoNSubstituteDataAttribute : InlineAutoSetupDataAttribute
 {

@@ -1,8 +1,10 @@
-﻿using AutoFixture;
+﻿using System.Diagnostics.CodeAnalysis;
+using AutoFixture;
 using AutoFixture.AutoNSubstitute;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 
+[ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Method)]
 public class AutoNSubstituteDataAttribute : AutoSetupDataAttribute
 {

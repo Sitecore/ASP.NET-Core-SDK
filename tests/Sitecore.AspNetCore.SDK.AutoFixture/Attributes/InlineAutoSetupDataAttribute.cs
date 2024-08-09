@@ -1,7 +1,9 @@
-﻿using AutoFixture.Xunit2;
+﻿using System.Diagnostics.CodeAnalysis;
+using AutoFixture.Xunit2;
 
 namespace Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 
+[ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class InlineAutoSetupDataAttribute(AutoDataAttribute baseAttribute, params object[] values)
     : InlineAutoDataAttribute(baseAttribute, values)
