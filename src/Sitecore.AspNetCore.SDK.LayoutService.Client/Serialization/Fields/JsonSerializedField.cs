@@ -19,6 +19,12 @@ public class JsonSerializedField(JsonDocument doc)
     private readonly string _json = doc != null ? doc.RootElement.GetRawText() : throw new ArgumentNullException(nameof(doc));
 
     /// <inheritdoc/>
+    public override string ToString()
+    {
+        return _json;
+    }
+
+    /// <inheritdoc/>
     protected override object? HandleRead(Type type)
     {
         // NOTE The JsonSerializerOptions used to be delivered through the deserialization but are now locked here inside the class because
