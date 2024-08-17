@@ -18,8 +18,11 @@ public class JsonSerializedField(JsonDocument doc)
 
     private readonly string _json = doc != null ? doc.RootElement.GetRawText() : throw new ArgumentNullException(nameof(doc));
 
-    /// <inheritdoc/>
-    public override string ToString()
+    /// <summary>
+    /// Gets the raw JSON string representation of the field.
+    /// </summary>
+    /// <returns>A string containing the raw JSON data.</returns>
+    public string GetRawValue()
     {
         return _json;
     }
