@@ -22,7 +22,7 @@ public class FieldConverter : JsonConverter<IFieldReader>
         JsonDocument doc = JsonDocument.ParseValue(ref reader);
         return doc.RootElement.ValueKind switch
         {
-            JsonValueKind.Object or JsonValueKind.Array => new JsonSerializedField(doc),
+            JsonValueKind.Object or JsonValueKind.Array or JsonValueKind.String => new JsonSerializedField(doc),
             _ => throw new JsonException($"Expected an array or object when deserializing a {typeof(IFieldReader)}. Found {reader.TokenType}"),
         };
     }
