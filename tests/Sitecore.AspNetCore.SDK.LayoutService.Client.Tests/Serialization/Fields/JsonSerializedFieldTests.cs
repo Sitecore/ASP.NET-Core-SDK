@@ -119,6 +119,21 @@ public class JsonSerializedFieldTests
         field.Should().BeNull();
     }
 
+    [Fact]
+    public void GetRawValue_ReturnsExpectedJson()
+    {
+        // Arrange
+        const string json = "{\"value\": 100}";
+        JsonDocument token = JsonDocument.Parse(json);
+        JsonSerializedField sut = new(token);
+
+        // Act
+        string result = sut.GetRawValue();
+
+        // Assert
+        result.Should().Be(json);
+    }
+
     private class ValueField<T> : IField
     {
         public required T Value { get; set; }
