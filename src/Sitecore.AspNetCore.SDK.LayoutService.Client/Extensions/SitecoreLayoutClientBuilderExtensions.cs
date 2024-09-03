@@ -152,23 +152,6 @@ public static class SitecoreLayoutClientBuilderExtensions
     }
 
     /// <summary>
-    /// Configures System.Text.Json specific features such as input and output formatters.
-    /// </summary>
-    /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> being configured.</param>
-    /// <returns>The <see cref="ILayoutRequestHandlerBuilder{THandler}"/> so that additional calls can be chained.</returns>
-    public static ISitecoreLayoutClientBuilder AddSystemTextJson(this ISitecoreLayoutClientBuilder builder)
-    {
-        ServiceDescriptor descriptor = new(typeof(ISitecoreLayoutSerializer), typeof(JsonLayoutServiceSerializer), ServiceLifetime.Singleton);
-        builder.Services.Replace(descriptor);
-
-        builder.Services.AddSingleton<IFieldParser, FieldParser>();
-        builder.Services.AddSingleton<JsonConverter, FieldConverter>();
-        builder.Services.AddSingleton<JsonConverter, PlaceholderFeatureConverter>();
-
-        return builder;
-    }
-
-    /// <summary>
     /// Registers a HTTP request handler for the Sitecore layout service client.
     /// </summary>
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> to configure.</param>
