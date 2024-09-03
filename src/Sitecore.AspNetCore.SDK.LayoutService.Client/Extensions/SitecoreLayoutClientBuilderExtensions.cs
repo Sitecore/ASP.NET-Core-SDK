@@ -99,7 +99,7 @@ public static class SitecoreLayoutClientBuilderExtensions
                 request.Language(defaultLanguage);
             }
         });
-        return builder.AddHandler(name, (sp)
+        return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
                 sp, client, sp.GetRequiredService<ISitecoreLayoutSerializer>(), sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }

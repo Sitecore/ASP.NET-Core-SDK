@@ -1,0 +1,24 @@
+﻿@using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels
+@model Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.ComponentModels.CustomResolver
+
+<section class="custom-resolver">
+    <ul>
+        @foreach (CustomResolverModel item in Model.CustomContent ?? [])
+        {
+            <li>
+                <span class="top">@item.NavigationTitle?.Value</span>
+                @if (item.Children?.Count > 0)
+                {
+                    <ul>
+                        @foreach (CustomResolverModel subItem in item.Children)
+                        {
+                            <li>
+                                <span class="sub">@subItem.NavigationTitle?.Value</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
+</section>

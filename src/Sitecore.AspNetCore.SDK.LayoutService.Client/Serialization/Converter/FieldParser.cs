@@ -7,15 +7,32 @@ namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Converter;
 /// <inheritdoc cref="IFieldParser"/>
 public class FieldParser : IFieldParser
 {
+    /// <summary>
+    /// Field key for custom content created by Custom Content Resolvers.
+    /// </summary>
+    // ReSharper disable once MemberCanBePrivate.Global - Must be accessible for people using the SDK.
+    public const string CustomContentFieldKey = "CustomContent";
+
     /// <inheritdoc cref="IFieldParser.ParseFields"/>
     public Dictionary<string, IFieldReader> ParseFields(ref Utf8JsonReader reader)
     {
-        if (reader.TokenType != JsonTokenType.StartObject)
+        Dictionary<string, IFieldReader> result = [];
+        switch (reader.TokenType)
         {
-            throw new JsonException();
+            case JsonTokenType.StartObject:
+                result = ParseStandardFields(ref reader);
+                break;
+            default:
+                result.Add(CustomContentFieldKey, new JsonSerializedField(ParseField(ref reader)));
+                break;
         }
 
-        Dictionary<string, IFieldReader> fields = [];
+        return result;
+    }
+
+    private static Dictionary<string, IFieldReader> ParseStandardFields(ref Utf8JsonReader reader)
+    {
+        Dictionary<string, IFieldReader> result = [];
         while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
         {
             string? key = reader.GetString();
@@ -23,11 +40,11 @@ public class FieldParser : IFieldParser
             JsonDocument value = ParseField(ref reader);
             if (key != null)
             {
-                fields.Add(key, new JsonSerializedField(value));
+                result.Add(key, new JsonSerializedField(value));
             }
         }
 
-        return fields;
+        return result;
     }
 
     private static JsonDocument ParseField(ref Utf8JsonReader reader)

@@ -18,4 +18,11 @@
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.AutoFixture\Sitecore.AspNetCore.SDK.AutoFixture.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\data\json\headlessSxa.json">
+      <Link>Json\headlessSxa.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
