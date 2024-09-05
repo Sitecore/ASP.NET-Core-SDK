@@ -14,7 +14,8 @@ public class HomeController : Controller
         {
             TestConstants.NestedPlaceholderPageLayoutId => "NestedPlaceholderPageLayout",
             TestConstants.VisitorIdentificationPageLayoutId => "VisitorIdentificationLayout",
-            _ => nameof(Index),
+            TestConstants.HeadlessSxaLayoutId => "HeadlessSxaLayout",
+            _ => nameof(Index)
         };
 
         return View(view);

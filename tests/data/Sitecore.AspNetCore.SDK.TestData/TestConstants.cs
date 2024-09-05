@@ -75,6 +75,8 @@ public static class TestConstants
 
     public const string TestParamNameValue = "ParamName-Value";
 
+    public const string HeadlessSxaLayoutId = "96e5f4ba-a2cf-4a4c-a4e7-64da88226362";
+
 #pragma warning disable SA1401
 #pragma warning disable CA2211
     public static readonly string TestMultilineFieldValue = $"This is {Environment.NewLine} multiline text";

@@ -493,4 +493,30 @@ public class FieldsFixture
         resultField!.Value.Should().Be(expectedField.value.Value);
         resultField.EditableMarkup.Should().Be(expectedField.editable.Value);
     }
+
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public void HeadlessSxa_CanBeRead(ISitecoreLayoutSerializer serializer)
+    {
+        // Arrange
+        string json = File.ReadAllText("./Json/headlessSxa.json");
+        dynamic jsonModel = JObject.Parse(json);
+
+        // Act
+        SitecoreLayoutResponseContent? result = serializer.Deserialize(json);
+
+        // Assert
+        TextField? resultField = result?.Sitecore?.Route?
+            .Placeholders["headless-header"].ComponentAt(0)?
+            .Placeholders["sxa-header"].ComponentAt(0)?
+            .Fields["Text"]
+            .Read<TextField>();
+
+        dynamic? expectedField = jsonModel.sitecore.route
+            .placeholders["headless-header"][0]
+            .placeholders["sxa-header"][0]
+            .fields.Text;
+
+        resultField!.Value.Should().Be(expectedField.value.Value);
+    }
 }
