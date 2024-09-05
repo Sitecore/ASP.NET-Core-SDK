@@ -1,0 +1,334 @@
+{
+	"sitecore": {
+		"context": {
+			"pageEditing": false,
+			"site": {
+				"name": "iva-test"
+			},
+			"pageState": "normal",
+			"editMode": "chromes",
+			"language": "en",
+			"itemPath": "/"
+		},
+		"route": {
+			"name": "Home",
+			"displayName": "Home",
+			"fields": {
+				"Title": {
+					"value": "Home"
+				},
+				"Content": {
+					"value": ""
+				},
+				"NavigationClass": null,
+				"NavigationTitle": {
+					"value": "Home"
+				},
+				"NavigationFilter": [],
+				"SxaTags": [],
+				"Page Design": null
+			},
+			"databaseName": "master",
+			"deviceId": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+			"itemId": "eb77f03b-ff99-441f-a54d-e0705a42110c",
+			"itemLanguage": "en",
+			"itemVersion": 1,
+			"layoutId": "96e5f4ba-a2cf-4a4c-a4e7-64da88226362",
+			"templateId": "e9601da9-d186-4ced-83f3-d72c05ec21b4",
+			"templateName": "Page",
+			"placeholders": {
+				"headless-header": [
+					{
+						"uid": "201e78eb-f292-4914-a19f-c11d54ddb727",
+						"componentName": "PartialDesignDynamicPlaceholder",
+						"dataSource": "",
+						"params": {
+							"sid": "{201E78EB-F292-4914-A19F-C11D54DDB727}",
+							"ph": "headless-header",
+							"sig": "sxa-header"
+						},
+						"placeholders": {
+							"sxa-header": [
+								{
+									"uid": "f6789ac1-de59-44bb-bc4a-7165304b4a83",
+									"componentName": "RichText",
+									"dataSource": "/sitecore/content/Test Collection/iva-test/Presentation/Partial Designs/Header/Data/Title",
+									"params": {
+										"Styles": "bs-title",
+										"FieldNames": "Default",
+										"GridParameters": "col-12 col-lg-6"
+									},
+									"fields": {
+										"Text": {
+											"value": "<h1>Skate Park</h1>"
+										}
+									}
+								},
+								{
+									"uid": "bc41022c-5bab-4296-96f5-8b6fd37e9532",
+									"componentName": "Navigation",
+									"dataSource": "",
+									"params": {
+										"LevelFrom": "{1BB88840-5FB3-4353-AD8D-81136F6FF75A}",
+										"LevelTo": "{1BB88840-5FB3-4353-AD8D-81136F6FF75A}",
+										"FieldNames": "Default",
+										"AddRoot": "1",
+										"Styles": "position-right navigation-horizontal",
+										"GridParameters": "col-12",
+										"NavigationRoot": "{EB77F03B-FF99-441F-A54D-E0705A42110C}"
+									},
+									"fields": [
+										{
+											"Id": "eb77f03b-ff99-441f-a54d-e0705a42110c",
+											"Styles": [
+												"level0",
+												"submenu",
+												"item0",
+												"odd",
+												"first",
+												"last",
+												"active"
+											],
+											"Href": "/",
+											"Querystring": "",
+											"NavigationTitle": {
+												"value": "Home",
+												"editable": "Home"
+											},
+											"Children": [
+												{
+													"Id": "02120306-a97a-43d7-827f-ea853484fa0a",
+													"Styles": [
+														"level1",
+														"item0",
+														"odd",
+														"first",
+														"last"
+													],
+													"Href": "/About",
+													"Querystring": "",
+													"NavigationTitle": {
+														"value": "About",
+														"editable": "About"
+													}
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"headless-main": [
+					{
+						"uid": "86d9c1c9-1c1a-4886-af9f-526d8033df00",
+						"componentName": "RichText",
+						"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/Text 1",
+						"params": {
+							"Styles": "main-header",
+							"FieldNames": "Default",
+							"GridParameters": "col-12 col-sm-12 col-md-12 col-lg-7 col-xl-7 col-xxl-7 offset-0 offset-sm-0 offset-md-0 offset-lg-1 offset-xl-1 offset-xxl-1"
+						},
+						"fields": {
+							"Text": {
+								"value": "<h4>Providing wholesale product basics to the best skate brands</h4>"
+							}
+						}
+					},
+					{
+						"uid": "db9b7091-ef01-4ae8-a6ea-a901276dbd36",
+						"componentName": "Image",
+						"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/Image 1",
+						"params": {
+							"DynamicPlaceholderId": "2",
+							"FieldNames": "Banner",
+							"GridParameters": "col-12"
+						},
+						"fields": {
+							"ImageCaption": {
+								"value": ""
+							},
+							"Image": {
+								"value": {
+									"src": "https://xmcloudcm.localhost/-/media/Feature/JSS-Experience-Accelerator/Basic-Site/banner-image.jpg?h=2001&iar=0&w=3000&hash=4909101A3D2487395593CC6E7996A8E2",
+									"alt": "",
+									"width": "3000",
+									"height": "2001"
+								}
+							},
+							"TargetUrl": {
+								"value": {
+									"href": ""
+								}
+							}
+						}
+					},
+					{
+						"uid": "7b0847fa-3794-4cd2-af82-b22335c5b337",
+						"componentName": "Container",
+						"dataSource": "",
+						"params": {
+							"Styles": "container",
+							"GridParameters": "col-12",
+							"DynamicPlaceholderId": "1"
+						},
+						"placeholders": {
+							"container-{*}": [
+								{
+									"uid": "55535631-18c1-49c8-8b3d-6345cd2a233b",
+									"componentName": "RichText",
+									"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/Text 2",
+									"params": {
+										"Styles": "main-news-header",
+										"FieldNames": "Default",
+										"GridParameters": "col-12 col-lg-7 col-xl-7 col-xxl-7"
+									},
+									"fields": {
+										"Text": {
+											"value": "<h2>In the news</h2>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus. Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus.&nbsp;</p>"
+										}
+									}
+								},
+								{
+									"uid": "968c056d-12ea-4fec-b6bb-e8591db8da53",
+									"componentName": "Promo",
+									"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/PromoLeft",
+									"params": {
+										"Styles": "main-promo-no-border",
+										"FieldNames": "Default",
+										"GridParameters": "col-12 col-lg-6 col-xl-6 col-xxl-6"
+									},
+									"fields": {
+										"PromoIcon2": {
+											"value": {}
+										},
+										"PromoText3": {
+											"value": ""
+										},
+										"PromoText": {
+											"value": "<h3>Latest Streetwear</h3>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus.</p>"
+										},
+										"PromoLink": {
+											"value": {
+												"href": ""
+											}
+										},
+										"PromoIcon": {
+											"value": {
+												"src": "https://xmcloudcm.localhost/-/media/Feature/JSS-Experience-Accelerator/Basic-Site/bottom-left.jpg?h=386&iar=0&w=580&hash=1A24C76ABC73C2CA57E40DEFC159F4D3",
+												"alt": "",
+												"width": "580",
+												"height": "386"
+											}
+										},
+										"PromoText2": {
+											"value": ""
+										}
+									}
+								},
+								{
+									"uid": "e0f25e4a-e00b-45c9-b863-1c6f063de842",
+									"componentName": "Promo",
+									"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/PromoRight",
+									"params": {
+										"Styles": "main-promo-no-border",
+										"FieldNames": "Default",
+										"GridParameters": "col-12 col-lg-6 col-xl-6 col-xxl-6"
+									},
+									"fields": {
+										"PromoIcon2": {
+											"value": {}
+										},
+										"PromoText3": {
+											"value": ""
+										},
+										"PromoText": {
+											"value": "<h3>Latest Products</h3>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a, mattis tellus.</p>"
+										},
+										"PromoLink": {
+											"value": {
+												"href": ""
+											}
+										},
+										"PromoIcon": {
+											"value": {
+												"src": "https://xmcloudcm.localhost/-/media/Feature/JSS-Experience-Accelerator/Basic-Site/bottom-right.jpg?h=386&iar=0&w=580&hash=ABE451D7AA461213471A67A9E4FA441B",
+												"alt": "",
+												"width": "580",
+												"height": "386"
+											}
+										},
+										"PromoText2": {
+											"value": ""
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"headless-footer": [
+					{
+						"uid": "99a031b4-b77c-4773-bc6e-e60df29abe3a",
+						"componentName": "PartialDesignDynamicPlaceholder",
+						"dataSource": "",
+						"params": {
+							"sid": "{99A031B4-B77C-4773-BC6E-E60DF29ABE3A}",
+							"ph": "headless-footer",
+							"sig": "sxa-footer"
+						},
+						"placeholders": {
+							"sxa-footer": [
+								{
+									"uid": "08405428-e9fd-42c6-bd69-5cc4e4b682da",
+									"componentName": "Container",
+									"dataSource": "",
+									"params": {
+										"Styles": "indent-inner container-dark-background             ",
+										"GridParameters": "col-12",
+										"DynamicPlaceholderId": "1"
+									},
+									"placeholders": {
+										"container-{*}": [
+											{
+												"uid": "9f05a6cb-a72f-465e-8d85-30f083133eee",
+												"componentName": "RichText",
+												"dataSource": "/sitecore/content/Test Collection/iva-test/Presentation/Partial Designs/Footer/Data/Address",
+												"params": {
+													"Styles": "contacts",
+													"FieldNames": "Default",
+													"GridParameters": "col-12 col-lg-2"
+												},
+												"fields": {
+													"Text": {
+														"value": "<span id=\"docs-internal-guid-17237c97-7fff-f61d-384b-b66bc74de880\"></span>\r\n<p><span>Skate Park</span></p>\r\n<p><span>12 Forever Street</span></p>\r\n<p><span>A99 B44</span></p>\r\n<p><span>The Nation of Skate</span></p>\r\n<p><span>Made by <a href=\"https://www.sitecore.com/\">Sitecore</a></span></p>\r\n<div><span><br /></span></div>"
+													}
+												}
+											},
+											{
+												"uid": "19ee64e8-099b-4fee-b48f-315d1fac0a40",
+												"componentName": "RichText",
+												"dataSource": "/sitecore/content/Test Collection/iva-test/Presentation/Partial Designs/Footer/Data/Contact info",
+												"params": {
+													"Styles": "contacts",
+													"FieldNames": "Default",
+													"GridParameters": "col-12 col-lg-2"
+												},
+												"fields": {
+													"Text": {
+														"value": "<span id=\"docs-internal-guid-7ad7f9d6-7fff-281f-d1e1-3575add84e48\"></span>\r\n<p><span>info@Skatepark.com</span></p>\r\n<p><span>234-234-234-234</span></p>\r\n<div><span><br />\r\n</span></div>"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				]
+			}
+		}
+	}
+}

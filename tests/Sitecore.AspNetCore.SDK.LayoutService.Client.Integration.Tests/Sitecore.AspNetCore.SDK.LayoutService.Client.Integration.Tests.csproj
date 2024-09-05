@@ -17,6 +17,10 @@
       <Link>Json\edit-in-horizon-mode.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\data\json\headlessSxa.json">
+      <Link>Json\headlessSxa.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

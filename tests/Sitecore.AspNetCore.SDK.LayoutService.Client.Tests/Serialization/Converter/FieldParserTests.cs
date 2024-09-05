@@ -27,23 +27,22 @@ public class FieldParserTests
     };
 
     [Fact]
-    public void ParseFields_IncorrectJsonNotObject_ShouldThrowJsonException()
+    public void ParseFields_JsonNotObject_ShouldWrapAsCustomContent()
     {
         // Arrange
-        void Read()
-        {
-            const string json = "[]";
-            byte[] bytes = [.. Encoding.UTF8.GetBytes(json)];
-            Utf8JsonReader reader = new(bytes);
-            reader.Read();
-            _sut.ParseFields(ref reader);
-        }
+        const string json = "[]";
+        byte[] bytes = [.. Encoding.UTF8.GetBytes(json)];
+        Utf8JsonReader reader = new(bytes);
+        reader.Read();
 
         // Act
-        Action result = Read;
+        Dictionary<string, IFieldReader> result = _sut.ParseFields(ref reader);
 
         // Assert
-        result.Should().Throw<JsonException>();
+        result.Should().ContainSingle();
+        (string key, IFieldReader value) = result.First();
+        key.Should().Be(FieldParser.CustomContentFieldKey);
+        value.Should().BeOfType<JsonSerializedField>();
     }
 
     [Fact]
