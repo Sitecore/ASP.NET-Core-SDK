@@ -1,5 +1,5 @@
 <!-- Provide a general summary of your changes in the Title above -->
-<!-- Apply the label "bug" or "enhacement" as applicable. -->
+<!-- Apply the label "bug" or "enhancement" as applicable. -->
 
 ## Description / Motivation
 <!-- Describe your changes in detail -->
