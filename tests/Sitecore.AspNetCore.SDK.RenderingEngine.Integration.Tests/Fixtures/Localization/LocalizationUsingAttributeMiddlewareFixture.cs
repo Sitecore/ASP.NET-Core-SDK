@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.TestData;
@@ -14,13 +15,13 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Loc
 public class LocalizationUsingAttributeMiddlewareFixture : IDisposable
 {
     private readonly TestServer _server;
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler;
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
     public LocalizationUsingAttributeMiddlewareFixture()
     {
         TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new HttpLayoutClientMessageHandler();
+        _mockClientHandler = new MockHttpMessageHandler();
         testHostBuilder
             .ConfigureServices(builder =>
             {

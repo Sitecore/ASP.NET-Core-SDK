@@ -8,6 +8,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Configuration;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Exceptions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -49,7 +50,7 @@ public class HttpLayoutRequestHandlerFixture
 
     public static Action<IFixture> HttpClientWithMockedHttpMessageHandler => f =>
     {
-        HttpMessageHandlerWrapper mockHttpHandler = new();
+        MockHttpMessageHandler mockHttpHandler = new();
 
         HttpClient client = new(mockHttpHandler)
         {

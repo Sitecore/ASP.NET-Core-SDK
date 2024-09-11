@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
@@ -12,13 +13,13 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 
 public class RequestDefaultsConfigurationFixture : IDisposable
 {
-    private readonly HttpLayoutClientMessageHandler _clientHandler;
+    private readonly MockHttpMessageHandler _clientHandler;
     private readonly TestServer _server;
 
     public RequestDefaultsConfigurationFixture()
     {
         TestServerBuilder testHostBuilder = new();
-        _clientHandler = new HttpLayoutClientMessageHandler();
+        _clientHandler = new MockHttpMessageHandler();
 
         testHostBuilder
             .ConfigureServices(builder =>

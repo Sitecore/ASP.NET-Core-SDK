@@ -2,6 +2,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.TestData;
@@ -14,13 +15,13 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 {
     private const string TestHeaderRhResponse = "testHeaderResponseFromRenderingHost";
     private readonly TestServer _server;
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler;
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
     public ForwardHeadersToLayoutServiceFixture()
     {
         TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new HttpLayoutClientMessageHandler();
+        _mockClientHandler = new MockHttpMessageHandler();
 
         _ = testHostBuilder
             .ConfigureServices(builder =>

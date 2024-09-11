@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
@@ -20,14 +21,14 @@ public class TrackingBenchmarks : IDisposable
 {
     private TestServer? _server;
     private HttpClient? _client;
-    private HttpLayoutClientMessageHandler? _mockClientHandler;
+    private MockHttpMessageHandler? _mockClientHandler;
     private RenderingEngineBenchmarks? _baseLineTestInstance;
 
     [GlobalSetup(Target = nameof(RegularHomePageRequestWithTracking))]
     public void TrackingBenchmarksSetup()
     {
         TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new HttpLayoutClientMessageHandler();
+        _mockClientHandler = new MockHttpMessageHandler();
         testHostBuilder
             .ConfigureServices(builder =>
             {

@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
@@ -11,7 +12,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 
 public class RequestHeadersValidationFixture : IDisposable
 {
-    private HttpLayoutClientMessageHandler _clientHandler = new();
+    private MockHttpMessageHandler _clientHandler = new();
     private TestServer _server = null!;
 
     [Fact]
@@ -64,7 +65,7 @@ public class RequestHeadersValidationFixture : IDisposable
     private void ConfigureServices(string[] nonValidatedHeaders)
     {
         TestServerBuilder testHostBuilder = new();
-        _clientHandler = new HttpLayoutClientMessageHandler();
+        _clientHandler = new MockHttpMessageHandler();
         Dictionary<string, string[]> headers = new()
         {
             { "User-Agent", ["site;core"] }

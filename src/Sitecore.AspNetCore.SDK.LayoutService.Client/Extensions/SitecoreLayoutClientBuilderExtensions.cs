@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using GraphQL.Client.Abstractions;
+﻿using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,6 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
-using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Converter;
 
 namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 
@@ -101,7 +99,10 @@ public static class SitecoreLayoutClientBuilderExtensions
         });
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
-                sp, client, sp.GetRequiredService<ISitecoreLayoutSerializer>(), sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
+                sp,
+                client,
+                sp.GetRequiredService<ISitecoreLayoutSerializer>(),
+                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }
 
     /// <summary>
@@ -132,7 +133,10 @@ public static class SitecoreLayoutClientBuilderExtensions
         });
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
-                sp, sp.GetRequiredService<IGraphQLClient>(), sp.GetRequiredService<ISitecoreLayoutSerializer>(), sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
+                sp,
+                sp.GetRequiredService<IGraphQLClient>(),
+                sp.GetRequiredService<ISitecoreLayoutSerializer>(),
+                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }
 
     /// <summary>
@@ -152,7 +156,7 @@ public static class SitecoreLayoutClientBuilderExtensions
     }
 
     /// <summary>
-    /// Registers a HTTP request handler for the Sitecore layout service client.
+    /// Registers an HTTP request handler for the Sitecore layout service client.
     /// </summary>
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> to configure.</param>
     /// <param name="handlerName">The name of the request handler being registered.</param>
@@ -292,5 +296,51 @@ public static class SitecoreLayoutClientBuilderExtensions
         ArgumentNullException.ThrowIfNull(uri);
 
         return AddHttpHandler(builder, handlerName, new Uri(uri));
+    }
+
+    /// <summary>
+    /// Registers a graphQl handler to handle requests.
+    /// </summary>
+    /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> being configured.</param>
+    /// <param name="name">The name used to identify the handler.</param>
+    /// <param name="contextId">The context identifier to access graphQl endpoint.</param>
+    /// <param name="uri">GraphQl endpoint uri.</param>
+    /// <param name="siteName">The siteName used to identify the handler.</param>
+    /// <param name="defaultLanguage">Default language for GraphQl requests.</param>
+    /// <returns>The <see cref="ILayoutRequestHandlerBuilder{THandler}"/> so that additional calls can be chained.</returns>
+    public static ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> AddGraphQlWithContextHandler(
+        this ISitecoreLayoutClientBuilder builder,
+        string name,
+        string contextId,
+        Uri? uri = null,
+        string? siteName = null,
+        string defaultLanguage = "en")
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(contextId);
+        ArgumentNullException.ThrowIfNull(defaultLanguage);
+
+        uri ??= new Uri("https://edge-platform.sitecorecloud.io/v1/content/api/graphql/v1");
+        uri = uri.AddQueryString("sitecoreContextId", contextId)!;
+
+        GraphQLHttpClient client = new(uri, new SystemTextJsonSerializer());
+        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(uri.OriginalString, client);
+
+        builder.WithDefaultRequestOptions(request =>
+        {
+            request
+                .SiteName(siteName)
+                .ContextId(contextId);
+            if (!request.ContainsKey(RequestKeys.Language))
+            {
+                request.Language(defaultLanguage);
+            }
+        });
+        return builder.AddHandler(name, sp
+            => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
+                sp,
+                sp.GetRequiredKeyedService<IGraphQLClient>(uri.OriginalString),
+                sp.GetRequiredService<ISitecoreLayoutSerializer>(),
+                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }
 }

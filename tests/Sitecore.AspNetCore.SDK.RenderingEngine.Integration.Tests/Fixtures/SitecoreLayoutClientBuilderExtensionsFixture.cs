@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Options;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Configuration;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
@@ -11,13 +12,13 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 
 public class SitecoreLayoutClientBuilderExtensionsFixture : IDisposable
 {
-    private readonly HttpLayoutClientMessageHandler _messageHandler;
+    private readonly MockHttpMessageHandler _messageHandler;
     private readonly TestServer _server;
 
     public SitecoreLayoutClientBuilderExtensionsFixture()
     {
         TestServerBuilder testHostBuilder = new();
-        _messageHandler = new HttpLayoutClientMessageHandler();
+        _messageHandler = new MockHttpMessageHandler();
         testHostBuilder
             .ConfigureServices(builder =>
             {
