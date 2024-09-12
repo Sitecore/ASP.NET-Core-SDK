@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
+namespace Sitecore.AspNetCore.SDK.GraphQL.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="Uri"/>.

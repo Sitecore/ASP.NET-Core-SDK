@@ -3,6 +3,7 @@ using GraphQL.Client.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.GraphQL.Client.Models;
 using Sitecore.AspNetCore.SDK.GraphQL.Exceptions;
+using Sitecore.AspNetCore.SDK.GraphQL.Properties;
 
 namespace Sitecore.AspNetCore.SDK.GraphQL.Extensions;
 
@@ -24,13 +25,24 @@ public static class GraphQlConfigurationExtensions
 
         services.Configure(configuration);
 
-        SitecoreGraphQlClientOptions graphQlClientOptions = TryGetConfiguration(configuration);
+        SitecoreGraphQlClientOptions options = TryGetConfiguration(configuration);
 
         services.AddSingleton<IGraphQLClient, GraphQLHttpClient>(_ =>
         {
-            GraphQLHttpClient graphQlHttpClient = new(graphQlClientOptions.EndPoint!, graphQlClientOptions.GraphQlJsonSerializer);
+            if (!string.IsNullOrWhiteSpace(options.ContextId))
+            {
+                options.EndPoint = options.EndPoint.AddQueryString(
+                    SitecoreGraphQlClientOptions.ContextIdQueryStringKey,
+                    options.ContextId);
+            }
 
-            graphQlHttpClient.HttpClient.DefaultRequestHeaders.Add("sc_apikey", graphQlClientOptions.ApiKey);
+            GraphQLHttpClient graphQlHttpClient = new(options.EndPoint!, options.GraphQlJsonSerializer);
+
+            if (!string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                graphQlHttpClient.HttpClient.DefaultRequestHeaders.Add(SitecoreGraphQlClientOptions.ApiKeyHeaderName, options.ApiKey);
+            }
+
             return graphQlHttpClient;
         });
 
@@ -39,19 +51,23 @@ public static class GraphQlConfigurationExtensions
 
     private static SitecoreGraphQlClientOptions TryGetConfiguration(Action<SitecoreGraphQlClientOptions> configuration)
     {
-        SitecoreGraphQlClientOptions graphQlClientOptions = new();
-        configuration.Invoke(graphQlClientOptions);
+        SitecoreGraphQlClientOptions options = new();
+        configuration.Invoke(options);
 
-        if (string.IsNullOrWhiteSpace(graphQlClientOptions.ApiKey))
+        if (string.IsNullOrWhiteSpace(options.ApiKey) && string.IsNullOrWhiteSpace(options.ContextId))
         {
-            throw new InvalidGraphQlConfigurationException("Empty ApiKey, provided in GraphQLClientOptions.");
+            throw new InvalidGraphQlConfigurationException(Resources.Exception_MissingApiKeyAndContextId);
         }
 
-        if (graphQlClientOptions.EndPoint == null)
+        if (options.EndPoint == null && !string.IsNullOrWhiteSpace(options.ContextId))
         {
-            throw new InvalidGraphQlConfigurationException("Empty EndPoint, provided in GraphQLClientOptions.");
+            options.EndPoint = SitecoreGraphQlClientOptions.DefaultEdgeEndpoint;
+        }
+        else if (options.EndPoint == null)
+        {
+            throw new InvalidGraphQlConfigurationException(Resources.Exception_MissingEndpoint);
         }
 
-        return graphQlClientOptions;
+        return options;
     }
 }
