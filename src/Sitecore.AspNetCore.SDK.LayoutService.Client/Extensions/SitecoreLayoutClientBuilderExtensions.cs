@@ -87,6 +87,8 @@ public static class SitecoreLayoutClientBuilderExtensions
         GraphQLHttpClient client = new(uri, new SystemTextJsonSerializer());
         client.HttpClient.DefaultRequestHeaders.Add("sc_apikey", apiKey);
 
+        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(name, client);
+
         builder.WithDefaultRequestOptions(request =>
         {
             request
@@ -100,7 +102,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
                 sp,
-                client,
+                sp.GetRequiredKeyedService<IGraphQLClient>(name),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
                 sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }
@@ -134,7 +136,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
                 sp,
-                sp.GetRequiredService<IGraphQLClient>(),
+                sp.GetRequiredKeyedService<IGraphQLClient>(name),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
                 sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }
@@ -324,7 +326,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         uri = uri.AddQueryString("sitecoreContextId", contextId)!;
 
         GraphQLHttpClient client = new(uri, new SystemTextJsonSerializer());
-        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(uri.OriginalString, client);
+        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(name, client);
 
         builder.WithDefaultRequestOptions(request =>
         {
@@ -339,7 +341,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
                 sp,
-                sp.GetRequiredKeyedService<IGraphQLClient>(uri.OriginalString),
+                sp.GetRequiredKeyedService<IGraphQLClient>(name),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
                 sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }

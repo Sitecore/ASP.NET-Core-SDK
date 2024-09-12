@@ -28,7 +28,8 @@ public class RequestsFixture
 
         // Set up the client
         ISitecoreLayoutClientBuilder builder = services.AddSitecoreLayoutService();
-        builder.AddGraphQlWithContextHandler("contextHandler", contextId).AsDefaultHandler();
+        const string handlerName = "contextHandler";
+        builder.AddGraphQlWithContextHandler(handlerName, contextId).AsDefaultHandler();
 
         // Create an intercept for the actual HTTP call
         MockHttpMessageHandler result = new();
@@ -39,14 +40,12 @@ public class RequestsFixture
         };
         message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/graphql+json");
         result.Responses.Push(message);
-        string serviceKey = $"https://edge-platform.sitecorecloud.io/v1/content/api/graphql/v1?sitecoreContextId={contextId}";
-        services.RemoveAllKeyed<IGraphQLClient>(serviceKey);
-        services.AddKeyedSingleton<IGraphQLClient>(serviceKey, new GraphQLHttpClient(
-            o =>
-            {
-                o.EndPoint = new Uri(serviceKey);
-                o.HttpMessageHandler = result;
-            },
+        ServiceDescriptor gqlClient = services.Single(s => s.ServiceKey?.ToString() == handlerName);
+        GraphQLHttpClientOptions options = ((GraphQLHttpClient)gqlClient.KeyedImplementationInstance!).Options;
+        options.HttpMessageHandler = result;
+        services.RemoveAllKeyed<IGraphQLClient>(handlerName);
+        services.AddKeyedSingleton<IGraphQLClient>(handlerName, new GraphQLHttpClient(
+            options,
             new SystemTextJsonSerializer()));
 
         // Build and grab the sut
