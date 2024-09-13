@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Tests.Mocks;
 
+[ExcludeFromCodeCoverage]
 public class TestModelBinderProviderContext(ModelMetadata modelMetadata)
     : ModelBinderProviderContext
 {

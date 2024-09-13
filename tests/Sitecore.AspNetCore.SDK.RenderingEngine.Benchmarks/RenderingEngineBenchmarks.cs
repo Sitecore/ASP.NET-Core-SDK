@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
@@ -12,6 +13,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 
 [SimpleJob]
 [MemoryDiagnoser]
+[ExcludeFromCodeCoverage]
 public class RenderingEngineBenchmarks : IDisposable
 {
     private TestServer? _server;

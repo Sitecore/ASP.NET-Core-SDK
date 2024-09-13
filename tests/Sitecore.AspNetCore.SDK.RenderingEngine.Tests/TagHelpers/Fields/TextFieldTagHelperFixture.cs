@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using AutoFixture;
 using AutoFixture.Idioms;
@@ -25,6 +26,7 @@ public class TextFieldTagHelperFixture
     private static readonly string TestMultilineText = $"<p>This is the test text {Environment.NewLine} with line endings.</p>";
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         TagHelperContext tagHelperContext = new(

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -35,6 +36,7 @@ public class PlaceholderTagHelperFixture
     private static IComponentRendererFactory _componentRendererFactory = null!;
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         // prevent nested recursion issues

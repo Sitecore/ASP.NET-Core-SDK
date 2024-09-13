@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -25,6 +26,7 @@ public class NumberTagHelperFixture
     private const string Editable = "<input id='fld_30B7EF86921458E890726B0CEFE157CD_E495286A0C745FC3BC7D849BB5AA087B_en_1_a514562dbc4c4b5b91a88f1c8033a1b4_304' class='scFieldValue' name='fld_30B7EF86921458E890726B0CEFE157CD_E495286A0C745FC3BC7D849BB5AA087B_en_1_a514562dbc4c4b5b91a88f1c8033a1b4_304' type='hidden' value=\"9.99\" /><span class=\"scChromeData\">{\"commands\":[{\"click\":\"chrome:field:editcontrol({command:\\\"webedit: editnumber\\\"})\",\"header\":\"Edit number\",\"icon\":\"/temp/iconcache/wordprocessing/16x16/word_count.png\",\"disabledIcon\":\"/temp/word_count_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit number\",\"type\":\"\"},{\"click\":\"chrome:common:edititem({command:\\\"webedit: open\\\"})\",\"header\":\"Edit the related item\",\"icon\":\"/temp/iconcache/office/16x16/cubes.png\",\"disabledIcon\":\"/temp/cubes_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the related item in the Content Editor.\",\"type\":\"common\"},{\"click\":\"chrome:rendering:personalize({command:\\\"webedit: personalize\\\"})\",\"header\":\"Personalize\",\"icon\":\"/temp/iconcache/office/16x16/users_family.png\",\"disabledIcon\":\"/temp/users_family_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Create or edit personalization for this component.\",\"type\":\"sticky\"},{\"click\":\"chrome:rendering:editvariations({command:\\\"webedit: editvariations\\\"})\",\"header\":\"Edit variations\",\"icon\":\"/temp/iconcache/office/16x16/windows.png\",\"disabledIcon\":\"/temp/windows_disabled16x16.png\",\"isDivider\":false,\"tooltip\":\"Edit the variations.\",\"type\":\"sticky\"}],\"contextItemUri\":\"sitecore://master/{30B7EF86-9214-58E8-9072-6B0CEFE157CD}?lang=en&ver=1\",\"custom\":{},\"displayName\":\"sample\",\"expandedDisplayName\":null}</span><span scFieldType=\"number\" scDefaultText=\"[No text in field]\" contenteditable=\"true\" class=\"scWebEditInput\" id=\"fld_30B7EF86921458E890726B0CEFE157CD_E495286A0C745FC3BC7D849BB5AA087B_en_1_a514562dbc4c4b5b91a88f1c8033a1b4_304_edit\">9.99</span>";
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         TagHelperContext tagHelperContext = new([], new Dictionary<object, object>(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));

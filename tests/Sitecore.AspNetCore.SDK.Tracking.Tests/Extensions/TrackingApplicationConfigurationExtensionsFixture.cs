@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System.Diagnostics.CodeAnalysis;
+using AutoFixture;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -8,6 +9,7 @@ namespace Sitecore.AspNetCore.SDK.Tracking.Tests.Extensions;
 public class TrackingApplicationConfigurationExtensionsFixture
 {
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         IServiceProvider? services = Substitute.For<IServiceProvider>();

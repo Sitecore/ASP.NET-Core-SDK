@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Diagnostics.CodeAnalysis;
+using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 
 [SimpleJob]
 [MemoryDiagnoser]
+[ExcludeFromCodeCoverage]
 public class ExperienceEditorMiddlewareBenchmarks : IDisposable
 {
     private readonly TestServer _server;

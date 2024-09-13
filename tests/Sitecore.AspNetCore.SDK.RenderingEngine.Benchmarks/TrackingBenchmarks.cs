@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -17,6 +18,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 
 [SimpleJob]
 [MemoryDiagnoser]
+[ExcludeFromCodeCoverage]
 public class TrackingBenchmarks : IDisposable
 {
     private TestServer? _server;

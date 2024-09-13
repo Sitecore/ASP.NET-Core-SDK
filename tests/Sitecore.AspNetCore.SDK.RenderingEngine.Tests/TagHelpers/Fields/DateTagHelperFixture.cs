@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -23,6 +24,7 @@ public class DateTagHelperFixture
     private readonly DateTime _date = DateTime.Parse("2012-05-04T00:00:00Z", CultureInfo.InvariantCulture);
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         TagHelperContext tagHelperContext = new([], new Dictionary<object, object>(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));

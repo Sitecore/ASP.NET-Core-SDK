@@ -1,4 +1,5 @@
-﻿using AutoFixture;
+﻿using System.Diagnostics.CodeAnalysis;
+using AutoFixture;
 using FluentAssertions;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
@@ -10,6 +11,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Tests.Rendering;
 public class ComponentRendererDescriptorFixture
 {
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup()
     {
         return f =>

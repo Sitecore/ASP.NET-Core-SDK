@@ -1,8 +1,10 @@
-﻿using BenchmarkDotNet.Configs;
+﻿using System.Diagnostics.CodeAnalysis;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 
+[ExcludeFromCodeCoverage]
 internal class Program
 {
     private static void Main()
