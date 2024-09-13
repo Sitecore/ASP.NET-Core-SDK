@@ -1,5 +1,9 @@
-﻿namespace Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
+﻿using System.Diagnostics.CodeAnalysis;
+using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 
+namespace Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
+
+[ExcludeFromCodeCoverage]
 public class MockHttpMessageHandler : HttpMessageHandler
 {
     public Stack<HttpResponseMessage> Responses { get; } = new();
@@ -10,17 +14,19 @@ public class MockHttpMessageHandler : HttpMessageHandler
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        Requests.Add(request);
+        Task<HttpRequestMessage> clone = request.Clone();
+        clone.Wait(cancellationToken);
+        Requests.Add(clone.Result);
         WasInvoked = true;
         HttpResponseMessage response = Responses.Pop();
         return response;
     }
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        Requests.Add(request);
+        Requests.Add(await request.Clone().WaitAsync(cancellationToken));
         WasInvoked = true;
         HttpResponseMessage response = Responses.Pop();
-        return Task.FromResult(response);
+        return response;
     }
 }

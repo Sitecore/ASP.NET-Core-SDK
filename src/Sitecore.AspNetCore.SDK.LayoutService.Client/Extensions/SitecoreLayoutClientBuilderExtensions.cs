@@ -88,6 +88,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         client.HttpClient.DefaultRequestHeaders.Add("sc_apikey", apiKey);
 
         builder.Services.TryAddKeyedSingleton<IGraphQLClient>(name, client);
+        builder.Services.TryAddSingleton<IGraphQLClient>(client);
 
         builder.WithDefaultRequestOptions(request =>
         {
@@ -126,8 +127,11 @@ public static class SitecoreLayoutClientBuilderExtensions
 
         builder.WithDefaultRequestOptions(request =>
         {
-            request
-                .SiteName(siteName);
+            if (!request.ContainsKey(RequestKeys.SiteName))
+            {
+                request.SiteName(siteName);
+            }
+
             if (!request.ContainsKey(RequestKeys.Language))
             {
                 request.Language(defaultLanguage);
@@ -136,7 +140,7 @@ public static class SitecoreLayoutClientBuilderExtensions
         return builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
                 sp,
-                sp.GetRequiredKeyedService<IGraphQLClient>(name),
+                sp.GetRequiredService<IGraphQLClient>(),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
                 sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
     }

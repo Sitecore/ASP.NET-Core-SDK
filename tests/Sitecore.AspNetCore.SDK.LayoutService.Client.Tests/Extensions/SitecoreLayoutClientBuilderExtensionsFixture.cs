@@ -168,6 +168,21 @@ public class SitecoreLayoutClientBuilderExtensionsFixture
 
     [Theory]
     [AutoNSubstituteData]
+    public void AddGraphQlHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string name, string siteName, string apiKey, Uri uri)
+    {
+        // Act
+        ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> result = builder.AddGraphQlHandler(name, siteName, apiKey, uri);
+
+        // Assert
+        ServiceProvider provider = result.Services.BuildServiceProvider();
+        SitecoreLayoutRequestOptions options = provider.GetRequiredService<IOptions<SitecoreLayoutRequestOptions>>().Value;
+        options.RequestDefaults.ApiKey().Should().Be(apiKey);
+        options.RequestDefaults.SiteName().Should().Be(siteName);
+        options.RequestDefaults.Language().Should().Be("en");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
     public void AddGraphQlWithContextHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string contextId)
     {
         // Act
