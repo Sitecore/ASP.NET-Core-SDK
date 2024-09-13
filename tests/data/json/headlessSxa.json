@@ -122,6 +122,29 @@
 				],
 				"headless-main": [
 					{
+						"uid": "a1d00efc-5354-4a58-9404-8448c532ad1d",
+						"componentName": "HeadlineBarSection",
+						"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/HeadlineBar 1",
+						"params": {
+							"DynamicPlaceholderId": "2",
+							"FieldNames": "Banner",
+							"GridParameters": "col-12"
+						},
+						"fields": {
+							"title": "",
+							"leftLink": {
+								"key": "40dfd6adb1334ff48c3e4c68ab9b9b35",
+								"text": "The Energy Transition",
+								"href": "/connections/energy-transition-and-sustainability/what-is-the-energy-transition"
+							},
+							"rightLink": {
+								"key": "de61e12028784b4da96a9676b73fc764",
+								"text": "There are currently 54 known outages.",
+								"href": "/outages-and-maintenance"
+							}
+						}
+					},
+					{
 						"uid": "86d9c1c9-1c1a-4886-af9f-526d8033df00",
 						"componentName": "RichText",
 						"dataSource": "/sitecore/content/Test Collection/iva-test/Home/Data/Text 1",
