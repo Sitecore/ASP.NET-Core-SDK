@@ -10,7 +10,7 @@
 ## Testing
 
 - [ ] The Unit & Intergration tests are passing.
-- [ ] I have added the necesary tests to cover my changes.
+- [ ] I have added the necessary tests to cover my changes.
 
 ## Terms
 <!-- Place an X in the [] to check. -->
