@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
@@ -11,17 +13,18 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 
 [SimpleJob]
 [MemoryDiagnoser]
+[ExcludeFromCodeCoverage]
 public class RenderingEngineBenchmarks : IDisposable
 {
     private TestServer? _server;
     private HttpClient? _client;
-    private HttpLayoutClientMessageHandler? _mockClientHandler;
+    private MockHttpMessageHandler? _mockClientHandler;
 
     [GlobalSetup]
     public void Setup()
     {
         TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new HttpLayoutClientMessageHandler();
+        _mockClientHandler = new MockHttpMessageHandler();
         testHostBuilder
             .ConfigureServices(builder =>
             {

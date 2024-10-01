@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -26,6 +27,7 @@ public class ImageTagHelperFixture
     private readonly Image _image = new() { Src = "http://styleguide/-/media/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B", Alt = "Sitecore Logo", Width = 100, Height = 100, VSpace = 10, HSpace = 10, Border = 1, Class = "test", Title = "title" };
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         TagHelperContext tagHelperContext = new([], new Dictionary<object, object>(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));

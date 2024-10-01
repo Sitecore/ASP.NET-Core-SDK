@@ -49,4 +49,9 @@ public static class RequestKeys
     /// The key name for request preview date.
     /// </summary>
     public const string PreviewDate = "sc_date";
+
+    /// <summary>
+    /// The key name for request context identifier.
+    /// </summary>
+    public const string ContextId = "sitecoreContextId";
 }

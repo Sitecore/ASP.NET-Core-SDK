@@ -8,6 +8,7 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Tests.Extensions;
@@ -163,6 +164,36 @@ public class SitecoreLayoutClientBuilderExtensionsFixture
         options.RequestDefaults.Should().BeOfType<SitecoreLayoutRequest>();
         options.RequestDefaults.Should().ContainKey(RequestKeys.ApiKey);
         options.RequestDefaults.ApiKey().Should().Be("test_api_key");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void AddGraphQlHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string name, string siteName, string apiKey, Uri uri)
+    {
+        // Act
+        ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> result = builder.AddGraphQlHandler(name, siteName, apiKey, uri);
+
+        // Assert
+        ServiceProvider provider = result.Services.BuildServiceProvider();
+        SitecoreLayoutRequestOptions options = provider.GetRequiredService<IOptions<SitecoreLayoutRequestOptions>>().Value;
+        options.RequestDefaults.ApiKey().Should().Be(apiKey);
+        options.RequestDefaults.SiteName().Should().Be(siteName);
+        options.RequestDefaults.Language().Should().Be("en");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void AddGraphQlWithContextHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string contextId)
+    {
+        // Act
+        ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> result = builder.AddGraphQlWithContextHandler("Test", contextId);
+
+        // Assert
+        ServiceProvider provider = result.Services.BuildServiceProvider();
+        SitecoreLayoutRequestOptions options = provider.GetRequiredService<IOptions<SitecoreLayoutRequestOptions>>().Value;
+        options.RequestDefaults.ContextId().Should().Be(contextId);
+        options.RequestDefaults.SiteName().Should().BeNull();
+        options.RequestDefaults.Language().Should().Be("en");
     }
 
     private static IEnumerable<object[]> EmptyStrings()

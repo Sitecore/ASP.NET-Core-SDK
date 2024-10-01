@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Tests.Mocks;
 
+[ExcludeFromCodeCoverage]
 public class TestModelMetadata(ModelMetadataIdentity identity, Type type)
     : ModelMetadata(identity)
 {

@@ -29,6 +29,24 @@ public static class SitecoreLayoutRequestExtensions
         => WriteValue(request, RequestKeys.ApiKey, value);
 
     /// <summary>
+    /// Gets the context id key of the request.
+    /// </summary>
+    /// <param name="request">The <see cref="SitecoreLayoutRequest"/>.</param>
+    /// <returns>The API key string value, otherwise null.</returns>
+    public static string? ContextId(this SitecoreLayoutRequest request)
+        => ReadValue<string>(request, RequestKeys.ContextId);
+
+    /// <summary>
+    /// Sets the context id key of the request.
+    /// If a null value is provided, the API key is removed from the request.
+    /// </summary>
+    /// <param name="request">The <see cref="SitecoreLayoutRequest"/>.</param>
+    /// <param name="value">The value to set.</param>
+    /// <returns>The <paramref name="request"/>.</returns>
+    public static SitecoreLayoutRequest ContextId(this SitecoreLayoutRequest request, string? value)
+        => WriteValue(request, RequestKeys.ContextId, value);
+
+    /// <summary>
     /// Gets the site name of the request.
     /// </summary>
     /// <param name="request">The <see cref="SitecoreLayoutRequest"/>.</param>

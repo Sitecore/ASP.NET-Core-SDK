@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.Design;
+using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -20,6 +21,7 @@ public class ViewComponentComponentRendererFixture
     private const string Locator = "testLocator";
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         IHtmlHelper? htmlHelper = Substitute.For<IHtmlHelper>();

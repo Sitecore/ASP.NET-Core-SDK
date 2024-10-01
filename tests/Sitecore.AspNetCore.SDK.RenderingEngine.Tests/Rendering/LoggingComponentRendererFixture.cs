@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.Design;
+using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -16,6 +17,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Tests.Rendering;
 public class LoggingComponentRendererFixture
 {
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         ILogger<LoggingComponentRenderer>? logger = Substitute.For<ILogger<LoggingComponentRenderer>>();

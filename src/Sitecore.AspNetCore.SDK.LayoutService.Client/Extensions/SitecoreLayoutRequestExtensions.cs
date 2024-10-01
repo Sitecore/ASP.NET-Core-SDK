@@ -15,7 +15,8 @@ internal static class SitecoreLayoutRequestExtensions
         RequestKeys.Language,
         RequestKeys.ApiKey,
         RequestKeys.Mode,
-        RequestKeys.PreviewDate
+        RequestKeys.PreviewDate,
+        RequestKeys.ContextId
     ];
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Xunit;
 
@@ -14,14 +15,14 @@ public class ControllerMiddlewareFixture : IDisposable
 
     private readonly TestServer _server;
 
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler;
 
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
     public ControllerMiddlewareFixture()
     {
         TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new HttpLayoutClientMessageHandler();
+        _mockClientHandler = new MockHttpMessageHandler();
         testHostBuilder
             .ConfigureServices(builder =>
             {

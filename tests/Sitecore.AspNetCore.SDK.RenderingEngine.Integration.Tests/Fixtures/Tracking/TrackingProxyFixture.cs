@@ -2,6 +2,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
@@ -15,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Tra
 public class TrackingProxyFixture : IDisposable
 {
     private readonly TestServer _server;
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler = new();
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
     private readonly Uri _cmInstanceUri = new("http://layout.service");
 

@@ -4,6 +4,7 @@ using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.AspNetCore.TestHost;
 using NSubstitute;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
 using Sitecore.AspNetCore.SDK.SearchOptimization.Extensions;
 using Sitecore.AspNetCore.SDK.SearchOptimization.Models;
@@ -15,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Sea
 public class EdgeSitemapProxyFixture : IDisposable
 {
     private readonly TestServer _server;
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler = new();
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly ISitemapService _mockSitemapService = Substitute.For<ISitemapService>();
     private readonly Uri _edgeSitemapUrl = new("https://xmcloud-test.com/sitemap.xml");
 

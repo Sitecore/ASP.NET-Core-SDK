@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
 using Sitecore.AspNetCore.SDK.SearchOptimization.Extensions;
 using Xunit;
@@ -10,7 +11,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Sea
 public class SitemapProxyFixture : IDisposable
 {
     private readonly TestServer _server;
-    private readonly HttpLayoutClientMessageHandler _mockClientHandler = new();
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _cdInstanceUri = new("http://cd");
 
     public SitemapProxyFixture()

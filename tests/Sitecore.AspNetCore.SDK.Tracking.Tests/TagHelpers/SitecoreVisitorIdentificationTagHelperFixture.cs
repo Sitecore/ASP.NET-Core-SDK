@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -22,6 +23,7 @@ namespace Sitecore.AspNetCore.SDK.Tracking.Tests.TagHelpers;
 public class SitecoreVisitorIdentificationTagHelperFixture
 {
     // ReSharper disable once UnusedMember.Global - Used by testing framework
+    [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
         ViewContext viewContext = new()
@@ -266,6 +268,7 @@ public class SitecoreVisitorIdentificationTagHelperFixture
         tagHelperOutput.Content.GetContent().Should().NotBe($"<meta name=\"VIcurrentDateTime\" content=\"{fakeDateTimeNowUtc.Ticks}>\"/><meta name=\"VirtualFolder\" content=\"\\\"/><script type='text/javascript' src='/layouts/system/VisitorIdentification.js'></script>");
     }
 
+    [ExcludeFromCodeCoverage]
     private class RequestCookies(Dictionary<string, string> cookies)
         : Dictionary<string, string>(cookies), IRequestCookieCollection
     {
