@@ -159,6 +159,9 @@ public class PlaceholderFeatureConverter(IFieldParser fieldParser)
                 case EditableChromePropertiesNames.Type:
                     properties.TryAdd(propertyName, reader.GetString() ?? string.Empty);
                     break;
+                default:
+                    reader.Skip();
+                    break;
             }
         }
 
