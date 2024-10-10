@@ -12,7 +12,7 @@ namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Tests.Serialization.Conve
 
 public class PlaceholderFeatureConverterTests
 {
-    private readonly PlaceholderFeatureConverter _sut = new(new FieldParser());
+    private readonly PlaceholderFeatureConverter _sut = new(new PlaceholderParser(new FieldParser()));
 
     // ReSharper disable once UnusedMember.Global - Used by testing framework
     public static Action<IFixture> AutoSetup => f =>
@@ -23,7 +23,7 @@ public class PlaceholderFeatureConverterTests
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,
-            Converters = { new FieldConverter(), new PlaceholderFeatureConverter(new FieldParser()) }
+            Converters = { new FieldConverter(), new PlaceholderFeatureConverter(new PlaceholderParser(new FieldParser())) }
         };
         f.Inject(options);
     };

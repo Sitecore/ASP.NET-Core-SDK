@@ -34,4 +34,9 @@ public static class ComponentPropertiesNames
     /// The name of the ComponentName attribute.
     /// </summary>
     public const string ComponentName = "componentName";
+
+    /// <summary>
+    /// The name of the Experiences attribute.
+    /// </summary>
+    public const string Experiences = "experiences";
 }

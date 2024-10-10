@@ -25,6 +25,8 @@ public class Component : FieldsReader, IPlaceholderFeature
     /// <summary>
     /// Gets or sets the datasource of the component.
     /// </summary>
+    [DataMember(Name = "dataSource")]
+    [JsonPropertyName("dataSource")]
     public string DataSource { get; set; } = "available-in-connected-mode";
 
     /// <summary>
@@ -37,5 +39,14 @@ public class Component : FieldsReader, IPlaceholderFeature
     /// <summary>
     /// Gets the placeholders for the component.
     /// </summary>
+    [DataMember(Name = "placeholders")]
+    [JsonPropertyName("placeholders")]
     public Dictionary<string, Placeholder> Placeholders { get; init; } = [];
+
+    /// <summary>
+    /// Gets the experiences for the component.
+    /// </summary>
+    [DataMember(Name = "experiences")]
+    [JsonPropertyName("experiences")]
+    public Dictionary<string, Component> Experiences { get; init; } = [];
 }

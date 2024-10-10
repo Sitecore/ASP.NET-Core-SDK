@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
 
@@ -13,7 +14,7 @@ public class FieldParser : IFieldParser
     // ReSharper disable once MemberCanBePrivate.Global - Must be accessible for people using the SDK.
     public const string CustomContentFieldKey = "CustomContent";
 
-    /// <inheritdoc cref="IFieldParser.ParseFields"/>
+    /// <inheritdoc />
     public Dictionary<string, IFieldReader> ParseFields(ref Utf8JsonReader reader)
     {
         Dictionary<string, IFieldReader> result = [];
@@ -23,7 +24,7 @@ public class FieldParser : IFieldParser
                 result = ParseStandardFields(ref reader);
                 break;
             default:
-                result.Add(CustomContentFieldKey, new JsonSerializedField(ParseField(ref reader)));
+                result.Add(CustomContentFieldKey, ParseField(ref reader));
                 break;
         }
 
@@ -32,25 +33,24 @@ public class FieldParser : IFieldParser
 
     private static Dictionary<string, IFieldReader> ParseStandardFields(ref Utf8JsonReader reader)
     {
+        int startDepth = reader.CurrentDepth;
         Dictionary<string, IFieldReader> result = [];
-        while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+        while (reader.IsReadObjectAvailable(startDepth))
         {
             string? key = reader.GetString();
             reader.Read();
-            JsonDocument value = ParseField(ref reader);
             if (key != null)
             {
-                result.Add(key, new JsonSerializedField(value));
+                result.Add(key, ParseField(ref reader));
             }
         }
 
         return result;
     }
 
-    private static JsonDocument ParseField(ref Utf8JsonReader reader)
+    private static JsonSerializedField ParseField(ref Utf8JsonReader reader)
     {
         JsonDocument value = JsonDocument.ParseValue(ref reader);
-
-        return value;
+        return new JsonSerializedField(value);
     }
 }

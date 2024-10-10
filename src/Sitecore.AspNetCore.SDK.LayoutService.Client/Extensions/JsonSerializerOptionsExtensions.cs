@@ -22,7 +22,7 @@ public static class JsonSerializerOptionsExtensions
         options.PropertyNameCaseInsensitive = true;
         options.Converters.Add(new JsonStringEnumConverter());
         options.Converters.Add(new FieldConverter());
-        options.Converters.Add(new PlaceholderFeatureConverter(new FieldParser()));
+        options.Converters.Add(new PlaceholderFeatureConverter(new PlaceholderParser(new FieldParser())));
 
         return options;
     }

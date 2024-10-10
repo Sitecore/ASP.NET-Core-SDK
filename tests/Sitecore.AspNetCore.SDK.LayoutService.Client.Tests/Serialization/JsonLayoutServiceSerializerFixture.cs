@@ -45,4 +45,19 @@ public class JsonLayoutServiceSerializerFixture
         result!.Sitecore.Should().NotBeNull();
         result.ContextRawData.Should().NotBeNullOrWhiteSpace();
     }
+
+    [Fact]
+    public void Deserialize_Experiences_ReturnSitecoreLayoutResponseContent()
+    {
+        // Arrange
+        string json = File.ReadAllText("./Json/experiences.json");
+
+        // Act
+        SitecoreLayoutResponseContent? result = _sut.Deserialize(json);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Sitecore.Should().NotBeNull();
+        result.ContextRawData.Should().NotBeNullOrWhiteSpace();
+    }
 }

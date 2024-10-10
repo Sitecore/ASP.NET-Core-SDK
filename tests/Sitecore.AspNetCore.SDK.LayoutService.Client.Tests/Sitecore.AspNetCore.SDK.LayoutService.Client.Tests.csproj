@@ -26,6 +26,10 @@
       <Link>Json\onlyEditChromes.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\data\json\experiences.json">
+      <Link>Json\experiences.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

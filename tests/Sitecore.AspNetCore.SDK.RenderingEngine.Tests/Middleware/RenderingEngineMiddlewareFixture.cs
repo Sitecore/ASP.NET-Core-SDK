@@ -3,6 +3,7 @@ using AutoFixture.Idioms;
 using AutoFixture.Xunit2;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -76,7 +77,9 @@ public class RenderingEngineMiddlewareFixture
         IViewComponentHelper componentHelper,
         IHtmlHelper htmlHelper)
     {
+        bool contextWasSet = false;
         httpContext.Features.Get<ISitecoreRenderingContext>().Returns((ISitecoreRenderingContext)null!);
+        httpContext.Features.When(x => x.Set(Arg.Any<SitecoreRenderingContext>())).Do(_ => contextWasSet = true);
 
         // act
         await sut.Invoke(httpContext, componentHelper, htmlHelper);
@@ -84,7 +87,7 @@ public class RenderingEngineMiddlewareFixture
         // assert
         requestMapper.Received(1).Map(httpContext.Request);
         Received.InOrder(() => layoutClient.Request(Arg.Any<SitecoreLayoutRequest>()));
-        httpContext.Features.Get<SitecoreRenderingContext>().Should().NotBeNull();
+        contextWasSet.Should().BeTrue();
     }
 
     [Theory]

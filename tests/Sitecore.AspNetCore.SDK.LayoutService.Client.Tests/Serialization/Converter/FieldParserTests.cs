@@ -21,7 +21,7 @@ public class FieldParserTests
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,
-            Converters = { new FieldConverter(), new PlaceholderFeatureConverter(new FieldParser()) }
+            Converters = { new FieldConverter(), new PlaceholderFeatureConverter(new PlaceholderParser(new FieldParser())) }
         };
         f.Inject(options);
     };
