@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -47,7 +48,27 @@ public partial class PersonalizeMiddleware(RequestDelegate next, IOptions<Person
 
         if (personalizeInfo is { VariantIds.Length: > 0 })
         {
-            // TODO Execute personalization
+            PersonalizeExperienceParams experienceParams = GetExperienceParams(httpContext.Request, _options.ExperienceParamKeyOptions);
+            List<PersonalizeExecution> executions = GetPersonalizeExecutions(personalizeInfo, language, _options.Scope, _options.DefaultVariant);
+            ConcurrentBag<string> identifiedVariantIds = [];
+            await Parallel.ForEachAsync(executions, async (execution, token) =>
+            {
+                string? variantId = await Personalize(execution.FriendlyId, execution.VariantIds, experienceParams, language, 400);
+                if (!string.IsNullOrWhiteSpace(variantId) && execution.VariantIds.Contains(variantId))
+                {
+                    identifiedVariantIds.Add(variantId);
+                }
+                else if (!string.IsNullOrWhiteSpace(variantId) && !execution.VariantIds.Contains(variantId))
+                {
+                    logger.LogInformation("Invalid Variant Id '{VariantId}'.", variantId);
+                }
+            });
+
+            if (identifiedVariantIds.Count > 0)
+            {
+                string basePath = httpContext.Response.Headers["x-sc-rewrite"].FirstOrDefault() ?? path;
+                string rewritePath = ""; // TODO figure out what this is?
+            }
         }
 
         await _next.Invoke(httpContext).ConfigureAwait(false);
@@ -79,12 +100,85 @@ public partial class PersonalizeMiddleware(RequestDelegate next, IOptions<Person
     }
 
     // https://github.com/Sitecore/jss/blob/48d1fb1a44cb0678d350f34e740b927dcf759755/packages/sitecore-jss/src/personalize/utils.ts#L92
-    private string GetPageVariantId(string pageId, string language, string variantId, string scope)
+    private static string GetPageVariantId(string pageId, string language, string variantId, string? scope, string defaultVariant)
     {
         string formattedPageId = GuidReplacement().Replace(pageId, string.Empty);
         string formattedLanguage = language.Replace('-', '_');
         string scopeId = string.IsNullOrWhiteSpace(scope) ? string.Empty : $"{NormalizeScope().Replace(scope, string.Empty)}_";
-        string formattedVariantId = string.IsNullOrWhiteSpace(variantId) || variantId.Equals(_options.DefaultVariant) ? "default" : variantId;
+        string formattedVariantId = string.IsNullOrWhiteSpace(variantId) || variantId.Equals(defaultVariant) ? "default" : variantId;
         return $"{scopeId}{formattedPageId}_{formattedLanguage}_{formattedVariantId}".ToLowerInvariant();
+    }
+
+    // https://github.com/Sitecore/jss/blob/8bced38c251a598c04b1e6fa22b80ef7025eeb4e/packages/sitecore-jss-nextjs/src/middleware/personalize-middleware.ts#L168
+    private static PersonalizeExperienceParams GetExperienceParams(HttpRequest req, PersonalizeOptions.ExperienceParamKeys keys)
+    {
+        PersonalizeExperienceParams result = new()
+        {
+            Campaign = req.GetValueFromQueryOrCookies(keys.Campaign),
+            Content = req.GetValueFromQueryOrCookies(keys.Content),
+            Medium = req.GetValueFromQueryOrCookies(keys.Medium),
+            Source = req.GetValueFromQueryOrCookies(keys.Source),
+            Referrer = req.Headers.Referer
+        };
+        return result;
+    }
+
+    // https://github.com/Sitecore/jss/blob/8bced38c251a598c04b1e6fa22b80ef7025eeb4e/packages/sitecore-jss-nextjs/src/middleware/personalize-middleware.ts#L196
+    private static List<PersonalizeExecution> GetPersonalizeExecutions(PersonalizeInfo info, string language, string? scope, string defaultVariant)
+    {
+        List<PersonalizeExecution> result = [];
+        foreach (string variantId in info.VariantIds ?? [])
+        {
+            if (variantId.Contains('_') && !string.IsNullOrWhiteSpace(info.Id))
+            {
+                string componentId = variantId.Split('_')[0];
+                string friendlyId = GetComponentFriendlyId(info.Id, componentId, language, scope);
+                PersonalizeExecution? existing = result.Find(e => e.FriendlyId == friendlyId);
+                if (existing != null)
+                {
+                    existing.VariantIds.Add(variantId);
+                }
+                else
+                {
+                    // The default/control variant (format "<ComponentID>_default") is also a valid value returned by the execution
+                    string defaultVariantId = $"{componentId}{defaultVariant}";
+                    result.Add(new PersonalizeExecution
+                    {
+                        FriendlyId = friendlyId,
+                        VariantIds = [defaultVariantId, variantId]
+                    });
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(info.Id))
+            {
+                // Embedded (page-level) personalization in format "<VariantID>"
+                string friendlyId = GetPageFriendlyId(info.Id, language, scope);
+                PersonalizeExecution? existing = result.Find(e => e.FriendlyId == friendlyId);
+                if (existing != null)
+                {
+                    existing.VariantIds.Add(variantId);
+                }
+                else
+                {
+                    result.Add(new PersonalizeExecution
+                    {
+                        FriendlyId = friendlyId,
+                        VariantIds = [variantId]
+                    });
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static async Task<string?> Personalize(
+        string friendlyId,
+        List<string> variantIds,
+        PersonalizeExperienceParams experienceParams,
+        string language,
+        int? timeout)
+    {
+        return "default"; // TODO This is where we call out to Personalize API
     }
 }

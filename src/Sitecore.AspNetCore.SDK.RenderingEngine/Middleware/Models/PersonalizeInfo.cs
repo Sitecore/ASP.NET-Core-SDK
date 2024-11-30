@@ -15,5 +15,5 @@ public class PersonalizeInfo
     /// <summary>
     /// Gets or sets the variant ids.
     /// </summary>
-    public string?[] VariantIds { get; set; }
+    public string[]? VariantIds { get; set; }
 }

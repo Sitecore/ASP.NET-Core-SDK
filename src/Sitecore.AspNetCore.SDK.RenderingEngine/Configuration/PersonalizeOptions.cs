@@ -66,4 +66,40 @@ public class PersonalizeOptions
     {
         return string.IsNullOrWhiteSpace(ContextId) ? Endpoint : Endpoint.AddQueryString(ContextIdQueryStringKey, ContextId);
     }
+
+    /// <summary>
+    /// Gets or sets the optional scope identifier for personalization data to isolate between XM Cloud environments. 
+    /// </summary>
+    public string? Scope { get; set; }
+
+    /// <summary>
+    /// Gets or sets the options for experience parameter keys.
+    /// </summary>
+    public ExperienceParamKeys ExperienceParamKeyOptions { get; set; } = new();
+
+    /// <summary>
+    /// Various keys for experience parameters.
+    /// </summary>
+    public class ExperienceParamKeys
+    {
+        /// <summary>
+        /// Gets or sets the key for campaign.
+        /// </summary>
+        public string Campaign { get; set; } = "utm_campaign";
+
+        /// <summary>
+        /// Gets or sets the key for content.
+        /// </summary>
+        public string Content { get; set; } = "utm_content";
+
+        /// <summary>
+        /// Gets or sets the key for medium.
+        /// </summary>
+        public string Medium { get; set; } = "utm_medium";
+
+        /// <summary>
+        /// Gets or sets the key for source.
+        /// </summary>
+        public string Source { get; set; } = "utm_source";
+    }
 }
