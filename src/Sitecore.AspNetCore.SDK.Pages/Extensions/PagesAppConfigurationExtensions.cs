@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Middleware;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Extensions;
@@ -53,6 +57,32 @@ public static class PagesAppConfigurationExtensions
             services.Configure(options);
         }
 
+        services.Configure((Action<RenderingEngineOptions>)(renderingOptions =>
+        {
+            renderingOptions.MapToRequest((httpRequest, layoutRequest) =>
+            {
+                MapRequest(httpRequest, layoutRequest, "mode");
+                MapRequest(httpRequest, layoutRequest, "sc_itemid");
+                MapRequest(httpRequest, layoutRequest, "sc_version");
+            });
+        }));
+
         return serviceBuilder;
+    }
+
+    private static void MapRequest(HttpRequest httpRequest, SitecoreLayoutRequest layoutRequest, string paramName)
+    {
+        if (httpRequest.Query == null || !httpRequest.Query.ContainsKey(paramName))
+        {
+            return;
+        }
+
+        string[]? modeQueryValue = httpRequest.Query[paramName];
+        if (modeQueryValue == null)
+        {
+            return;
+        }
+
+        layoutRequest.AddHeader(paramName, modeQueryValue);
     }
 }

@@ -44,7 +44,7 @@ public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> 
 
     private void PerformPagesRedirect(HttpContext httpContext, PagesRenderArgs args)
     {
-        httpContext.Response.Redirect(args.Route, permanent: false);
+        httpContext.Response.Redirect($"{args.Route}?mode={args.Mode}&sc_itemid={args.ItemId}&sc_version={args.Version}", permanent: false);
     }
 
     private PagesRenderArgs ParseQueryStringArgs(HttpRequest request)
