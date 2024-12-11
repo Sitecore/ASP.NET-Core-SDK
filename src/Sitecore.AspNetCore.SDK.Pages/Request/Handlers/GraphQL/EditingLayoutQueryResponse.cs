@@ -1,4 +1,6 @@
-﻿namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
+﻿using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
+
+namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
 /// <summary>
 /// Layout Service GraphQL Response.

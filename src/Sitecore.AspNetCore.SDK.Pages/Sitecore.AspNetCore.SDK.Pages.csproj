@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.RenderingEngine\Sitecore.AspNetCore.SDK.RenderingEngine.csproj" />
   </ItemGroup>
 

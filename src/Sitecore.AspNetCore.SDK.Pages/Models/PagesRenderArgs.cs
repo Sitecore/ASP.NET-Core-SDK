@@ -46,5 +46,10 @@ namespace Sitecore.AspNetCore.SDK.Pages.Models
         /// Gets or sets the route to the item within the site.
         /// </summary>
         public string Route { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the ID of the tenant that editing is being used on.
+        /// </summary>
+        public string TenantId { get; set; } = string.Empty;
     }
 }

@@ -1,9 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
-using Sitecore.AspNetCore.SDK.Pages.Models;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 
@@ -12,85 +18,83 @@ namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 /// and wraps the response HTML in a JSON format.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="PagesConfigMiddleware"/> class.
+/// Initializes a new instance of the <see cref="PageSetupMiddleware"/> class.
 /// </remarks>
 /// <param name="next">The next middleware to call.</param>
 /// <param name="options">The Sitecore Pages configuration options.</param>
+/// <param name="requestMapper">The <see cref="ISitecoreLayoutRequestMapper"/> to map the HttpRequest to a Layout Service request.</param>
+/// <param name="layoutService">The layout service client.</param>
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
-public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ILogger<PagesConfigMiddleware> logger)
+public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ISitecoreLayoutRequestMapper requestMapper, ISitecoreLayoutClient layoutService, ILogger<PageSetupMiddleware> logger)
 {
     private readonly RequestDelegate next = next ?? throw new ArgumentNullException(nameof(next));
     private readonly PagesOptions options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
-    private readonly ILogger<PagesConfigMiddleware> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ISitecoreLayoutRequestMapper _requestMapper = requestMapper ?? throw new ArgumentNullException(nameof(requestMapper));
+    private readonly ISitecoreLayoutClient layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
+    private readonly ILogger<PageSetupMiddleware> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// The middleware Invoke method.
     /// </summary>
     /// <param name="httpContext">The current <see cref="HttpContext"/>.</param>
+    /// <param name="viewComponentHelper">The current <see cref="IViewComponentHelper"/>.</param>
+    /// <param name="htmlHelper">The current <see cref="IHtmlHelper"/>.</param>
     /// <returns>A Task to support async calls.</returns>
-    public async Task Invoke(HttpContext httpContext)
+    public async Task Invoke(HttpContext httpContext, IViewComponentHelper viewComponentHelper, IHtmlHelper htmlHelper)
     {
-        if (IsValidPagesRenderRequest(httpContext.Request))
+        ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(viewComponentHelper);
+        ArgumentNullException.ThrowIfNull(htmlHelper);
+
+        if (IsEditingRequest(httpContext))
         {
-            logger.LogDebug("Processing valid Pages Render request");
+            // this protects from multiple time executions when Global and Attribute based configurations are used at the same time.
+            if (httpContext.Items.ContainsKey(nameof(PagesRenderMiddleware)))
+            {
+                throw new ApplicationException("PagesRenderMiddleware already registered. Have you ");
+            }
 
-            PerformPagesRedirect(httpContext, ParseQueryStringArgs(httpContext.Request));
+            if (httpContext.GetSitecoreRenderingContext() == null)
+            {
+                SitecoreLayoutResponse response = await GetSitecoreLayoutResponse(httpContext).ConfigureAwait(false);
 
-            return;
+                SitecoreRenderingContext scContext = new()
+                {
+                    Response = response,
+                    RenderingHelpers = new RenderingHelpers(viewComponentHelper, htmlHelper)
+                };
+
+                httpContext.SetSitecoreRenderingContext(scContext);
+            }
+            else
+            {
+                ISitecoreRenderingContext? scContext = httpContext.GetSitecoreRenderingContext();
+                if (scContext != null)
+                {
+                    scContext.RenderingHelpers = new RenderingHelpers(viewComponentHelper, htmlHelper);
+                }
+            }
+
+            httpContext.Items.Add(nameof(PagesRenderMiddleware), null);
         }
 
         await next(httpContext).ConfigureAwait(false);
     }
 
-    private void PerformPagesRedirect(HttpContext httpContext, PagesRenderArgs args)
+    private static bool IsEditingRequest(HttpContext context)
     {
-        httpContext.Response.Redirect($"{args.Route}?mode={args.Mode}&sc_itemid={args.ItemId}&sc_version={args.Version}", permanent: false);
-    }
-
-    private PagesRenderArgs ParseQueryStringArgs(HttpRequest request)
-    {
-        return new PagesRenderArgs
+        if (context.Request.Query.TryGetValue("mode", out var mode))
         {
-            ItemId = Guid.TryParse(request.Query["sc_itemid"].FirstOrDefault(), out Guid itemId) ? itemId : Guid.Empty,
-            EditingSecret = request.Query["secret"].FirstOrDefault() ?? string.Empty,
-            Language = request.Query["sc_lang"].FirstOrDefault() ?? string.Empty,
-            LayoutKind = request.Query["sc_layoutKind"].FirstOrDefault() ?? string.Empty,
-            Mode = request.Query["mode"].FirstOrDefault() ?? string.Empty,
-            Route = request.Query["route"].FirstOrDefault() ?? string.Empty,
-            Site = request.Query["sc_site"].FirstOrDefault() ?? string.Empty,
-            Version = int.TryParse(request.Query["sc_version"].FirstOrDefault(), out int version) ? version : 0
-        };
-    }
-
-
-    private bool IsValidEditingSecret(HttpRequest httpRequest)
-    {
-        if (httpRequest.Query.TryGetValue("secret", out StringValues editingSecretValues))
-        {
-            string editingSecret = editingSecretValues.FirstOrDefault() ?? string.Empty;
-            if (editingSecret == options.EditingSecret)
-            {
-                return true;
-            }
+            return mode == "edit";
         }
 
         return false;
     }
 
-    private bool IsValidPagesRenderRequest(HttpRequest httpRequest)
+    private async Task<SitecoreLayoutResponse> GetSitecoreLayoutResponse(HttpContext httpContext)
     {
-        ArgumentNullException.ThrowIfNull(httpRequest);
-        if (httpRequest.Method != HttpMethods.Get || !httpRequest.Path.Value!.Equals(options.RenderEndpoint, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return false;
-        }
-
-        if (!IsValidEditingSecret(httpRequest))
-        {
-            logger.LogError("Invalid Pages Editing Secret Value");
-            return false;
-        }
-
-        return true;
+        SitecoreLayoutRequest request = requestMapper.Map(httpContext.Request);
+        ArgumentNullException.ThrowIfNull(request);
+        return await layoutService.Request(request, Constants.LayoutClients.Pages).ConfigureAwait(false);
     }
 }
