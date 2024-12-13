@@ -6,7 +6,7 @@ This repository contains source code for all Sitecore ASP.NET Core SDK packages 
 
 ## Documentation and Community Resources
 
-- [Official Documentation](https://doc.sitecore.com/xp/en/developers/hd/latest/sitecore-headless-development/sitecore-asp-net-rendering-sdk.html)
+- [Official Documentation](https://doc.sitecore.com/xmc/en/developers/asp-net/latest/asp-net-core-sdk/sitecore-asp-net-core-sdk.html)
 - [StackExchange](https://sitecore.stackexchange.com/)
   - Be sure to tag your question with the `aspnetcoresdk` tag.
 - [Community Slack](https://sitecorechat.slack.com/messages/general)
