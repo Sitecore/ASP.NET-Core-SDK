@@ -14,7 +14,7 @@ public interface IGraphQLClientFactory
     /// <param name="layoutKind">The layout type for this request, shared or final.</param>
     /// <param name="editMode">The edit mode version for this client.</param>
     /// <returns>Concrete implementation of <see cref="IGraphQLClient" /> interface.</returns>
-    public IGraphQLClient GenerateClient(Uri? uri, string layoutKind, string editMode);
+    public IGraphQLClient GenerateClient(Uri? uri, string layoutKind, bool editMode);
 
     /// <summary>
     /// Method used to generate an instance of <see cref="IGraphQLClient" />.
@@ -22,5 +22,5 @@ public interface IGraphQLClientFactory
     /// <param name="layoutKind">The layout type for this request, shared or final.</param>
     /// <param name="editMode">The edit mode version for this client.</param>
     /// <returns>Concrete implementation of <see cref="IGraphQLClient" /> interface.</returns>
-    public IGraphQLClient GenerateClient(string layoutKind, string editMode);
+    public IGraphQLClient GenerateClient(string layoutKind, bool editMode);
 }

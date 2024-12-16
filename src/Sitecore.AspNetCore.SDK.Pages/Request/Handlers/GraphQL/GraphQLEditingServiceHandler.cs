@@ -1,4 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Xml.Linq;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -7,8 +11,10 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.Pages.GraphQL;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
@@ -109,7 +115,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
             }
         };
 
-        IGraphQLClient client = clientFactory.GenerateClient(GetRequestArgValue(request, "sc_layoutKind"), GetRequestArgValue(request, "mode"));
+        IGraphQLClient client = clientFactory.GenerateClient(GetRequestArgValue(request, "sc_layoutKind"), GetRequestArgValue(request, "mode") == "edit");
         GraphQLResponse<EditingLayoutQueryResponse> response = await client.SendQueryAsync<EditingLayoutQueryResponse>(layoutRequest).ConfigureAwait(false);
 
         if (logger.IsEnabled(LogLevel.Debug))
@@ -126,6 +132,9 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
         else
         {
             content = serializer.Deserialize(json);
+
+            GenerateMetaDataChromes(content);
+
             if (logger.IsEnabled(LogLevel.Debug))
             {
                 object? formattedDeserializeObject = JsonSerializer.Deserialize<object?>(json);
@@ -142,7 +151,81 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
         return content;
     }
 
-    private string GetRequestArgValue(SitecoreLayoutRequest request, string argName)
+    private static void GenerateMetaDataChromes(SitecoreLayoutResponseContent? content)
+    {
+        foreach (var placeholder in content.Sitecore.Route.Placeholders)
+        {
+            string name = placeholder.Key;
+            Placeholder placeholderFeatures = placeholder.Value;
+
+            content.Sitecore.Route.Placeholders[name] = ProcessPlaceholder(name, Guid.Empty.ToString(), placeholderFeatures);
+        }
+    }
+
+    private static Placeholder ProcessPlaceholder(string name, string id, Placeholder placeholderFeatures)
+    {
+        Placeholder updatedPlaceholders = new Placeholder();
+
+        AddOpeningChrome("placeholder", $"{name}_{id}", updatedPlaceholders);
+
+        foreach (var feature in placeholderFeatures)
+        {
+            if (feature is Component component)
+            {
+                AddOpeningChrome("rendering", component.Id, updatedPlaceholders);
+
+                updatedPlaceholders.Add(feature);
+
+                foreach (var componentPlaceholder in component.Placeholders)
+                {
+                    {
+                        string componentPlaceholderName = componentPlaceholder.Key;
+                        Placeholder componentPlaceholderFeatures = componentPlaceholder.Value;
+
+                        component.Placeholders[componentPlaceholderName] = ProcessPlaceholder(name, component.Id, componentPlaceholderFeatures);
+                    }
+                }
+
+                AddClosingChrome("rendering", updatedPlaceholders);
+            }
+        }
+
+        AddClosingChrome("placeholder", updatedPlaceholders);
+
+        return updatedPlaceholders;
+    }
+
+
+    private static void AddClosingChrome(string type, Placeholder placeholderFeatures)
+    {
+        EditableChrome placeHolderClosingChrome = new EditableChrome
+        {
+            Attributes =
+                {
+                    { "chrometype", type },
+                    { "class", "scpm" },
+                    { "kind", "close" },
+                }
+        };
+        placeholderFeatures.Add(placeHolderClosingChrome);
+    }
+
+    private static void AddOpeningChrome(string type, string id, Placeholder placeholderFeatures)
+    {
+        EditableChrome placeHolderOpeningChrome = new EditableChrome
+        {
+            Attributes =
+                {
+                    { "chrometype", type },
+                    { "class", "scpm" },
+                    { "kind", "open" },
+                    { "id", id },
+                }
+        };
+        placeholderFeatures.Add(placeHolderOpeningChrome);
+    }
+
+    private static string GetRequestArgValue(SitecoreLayoutRequest request, string argName)
     {
         if (!request.ContainsKey("sc_request_headers_key") ||
             request["sc_request_headers_key"] is not Dictionary<string, string[]> headers ||
