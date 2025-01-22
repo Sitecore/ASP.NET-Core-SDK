@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 
@@ -13,8 +14,10 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement(RenderingEngineConstants.SitecoreTagHelpers.RichTextHtmlTag, Attributes = RenderingEngineConstants.SitecoreTagHelpers.TextTagHelperAttribute, TagStructure = TagStructure.NormalOrSelfClosing)]
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.TextTagHelperAttribute)]
-public class RichTextTagHelper : TagHelper
+public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+
     /// <summary>
     /// Gets or sets the model value.
     /// </summary>
@@ -48,11 +51,24 @@ public class RichTextTagHelper : TagHelper
             return;
         }
 
-        bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(richTextField.EditableMarkup);
-        HtmlString html = outputEditableMarkup
-            ? new HtmlString(richTextField.EditableMarkup)
-            : new HtmlString(richTextField.Value);
+        string html = string.Empty;
+        if (Editable && richTextField.OpeningChrome != null)
+        {
+            html += chromeRenderer.Render(richTextField.OpeningChrome);
+            html += "<div>";
+        }
 
-        output.Content.SetHtmlContent(html);
+        bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(richTextField.EditableMarkup);
+        html += outputEditableMarkup
+            ? richTextField.EditableMarkup
+            : richTextField.Value;
+
+        if (Editable && richTextField.ClosingChrome != null)
+        {
+            html += "</div>";
+            html += chromeRenderer.Render(richTextField.ClosingChrome);
+        }
+
+        output.Content.SetHtmlContent(new HtmlString(html));
     }
 }

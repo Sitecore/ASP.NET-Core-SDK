@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 
@@ -12,8 +13,10 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement(RenderingEngineConstants.SitecoreTagHelpers.NumberHtmlTag, Attributes = RenderingEngineConstants.SitecoreTagHelpers.NumberTagHelperAttribute, TagStructure = TagStructure.NormalOrSelfClosing)]
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.NumberTagHelperAttribute)]
-public class NumberTagHelper : TagHelper
+public class NumberTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+
     /// <summary>
     /// Gets or sets the model value.
     /// </summary>
@@ -70,6 +73,16 @@ public class NumberTagHelper : TagHelper
         bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(field.EditableMarkup);
         string value = outputEditableMarkup ? field.EditableMarkup : formattedNumber;
 
-        output.Content.SetHtmlContent(value);
+        if (field.OpeningChrome != null)
+        {
+            output.Content.AppendHtml(chromeRenderer.Render(field.OpeningChrome));
+        }
+
+        output.Content.AppendHtml(value);
+
+        if (field.ClosingChrome != null)
+        {
+            output.Content.AppendHtml(chromeRenderer.Render(field.ClosingChrome));
+        }
     }
 }

@@ -9,4 +9,15 @@ public interface IEditableField : IField
     /// Gets or sets the HTML markup for this <see cref="IField"/> when editing.
     /// </summary>
     public string EditableMarkup { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EditableChrome used to render the opening chrome for this field.
+    /// </summary>
+    public EditableChrome? OpeningChrome { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EditableChrome used to render the closing chrome for this field.
+    /// </summary>
+
+    public EditableChrome? ClosingChrome { get; set; }
 }

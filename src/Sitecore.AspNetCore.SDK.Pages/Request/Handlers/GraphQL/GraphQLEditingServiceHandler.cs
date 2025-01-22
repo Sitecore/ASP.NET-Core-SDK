@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Xml.Linq;
+﻿using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -13,8 +9,8 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
 using Sitecore.AspNetCore.SDK.Pages.GraphQL;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
@@ -76,6 +72,160 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
         }
 
         return headers["mode"].Contains("edit");
+    }
+
+    private static void GenerateMetaDataChromes(SitecoreLayoutResponseContent? content)
+    {
+        if (content?.Sitecore?.Route == null)
+        {
+            return;
+        }
+
+        foreach (var placeholder in content.Sitecore.Route.Placeholders)
+        {
+            string name = placeholder.Key;
+            Placeholder placeholderFeatures = placeholder.Value;
+
+            content.Sitecore.Route.Placeholders[name] = ProcessPlaceholder(name, Guid.Empty.ToString(), placeholderFeatures);
+        }
+    }
+
+    private static Placeholder ProcessPlaceholder(string name, string id, Placeholder placeholderFeatures)
+    {
+        Placeholder updatedPlaceholders = [];
+
+        AddPlaceholderOpeningChrome(name, id, updatedPlaceholders);
+
+        foreach (var feature in placeholderFeatures)
+        {
+            if (feature is Component component)
+            {
+                AddRenderingOpeningChrome(updatedPlaceholders, component);
+
+                var updatedFields = new Dictionary<string, IFieldReader>();
+                foreach (var field in component.Fields)
+                {
+                    ProcessField(updatedFields, field);
+                }
+
+                component.Fields = updatedFields;
+
+                updatedPlaceholders.Add(component);
+
+                foreach (var componentPlaceholder in component.Placeholders)
+                {
+                    {
+                        string componentPlaceholderName = componentPlaceholder.Key;
+                        Placeholder componentPlaceholderFeatures = componentPlaceholder.Value;
+
+                        component.Placeholders[componentPlaceholderName] = ProcessPlaceholder("container-{*}", component.Id, componentPlaceholderFeatures);
+                    }
+                }
+
+                AddRenderingClosingChrome(updatedPlaceholders);
+            }
+        }
+
+        AddPlaceholderClosingChrome(updatedPlaceholders);
+
+        return updatedPlaceholders;
+    }
+
+    private static void AddRenderingClosingChrome(Placeholder updatedPlaceholders)
+    {
+        updatedPlaceholders.Add(GenerateEditableChrome("rendering", "close", string.Empty, string.Empty));
+    }
+
+    private static void AddRenderingOpeningChrome(Placeholder updatedPlaceholders, Component component)
+    {
+        updatedPlaceholders.Add(GenerateEditableChrome("rendering", "open", component.Id, string.Empty));
+    }
+
+    private static void AddPlaceholderClosingChrome(Placeholder updatedPlaceholders)
+    {
+        updatedPlaceholders.Add(GenerateEditableChrome("placeholder", "close", string.Empty, string.Empty));
+    }
+
+    private static void AddPlaceholderOpeningChrome(string name, string id, Placeholder updatedPlaceholders)
+    {
+        updatedPlaceholders.Add(GenerateEditableChrome("placeholder", "open", $"{name}_{id}", string.Empty));
+    }
+
+    private static void ProcessField(Dictionary<string, IFieldReader> updatedFields, KeyValuePair<string, IFieldReader> field)
+    {
+        if (field.Value is JsonSerializedField serialisedField && field.Key != "CustomContent")
+        {
+            var editableField = serialisedField.Read<EditableField<object>>();
+            if (editableField == null)
+            {
+                return;
+            }
+
+            object openingChromeContent = new
+            {
+                datasource = new
+                {
+                    id = editableField?.MetaData.DataSource.Id,
+                    language = editableField?.MetaData.DataSource.Language,
+                    revision = editableField?.MetaData.DataSource.Revision,
+                    version = editableField?.MetaData.DataSource.Version
+                },
+                title = editableField?.MetaData.Title,
+                fieldId = editableField?.MetaData.FieldId,
+                fieldType = editableField?.MetaData.FieldType,
+                rawValue = editableField?.MetaData.RawValue
+            };
+
+            editableField.OpeningChrome = GenerateEditableChrome("field", "open", string.Empty, JsonSerializer.Serialize(openingChromeContent));
+            editableField.ClosingChrome = GenerateEditableChrome("field", "close", string.Empty, string.Empty);
+
+            var editableFieldWithChromesJson = JsonSerializer.SerializeToDocument(editableField);
+            var updatedJsonSerialisedField = new JsonSerializedField(editableFieldWithChromesJson);
+
+            updatedFields.Add(field.Key, updatedJsonSerialisedField);
+        }
+        else
+        {
+            updatedFields.Add(field.Key, field.Value);
+        }
+    }
+
+    private static EditableChrome GenerateEditableChrome(string chrometype, string kind, string id, string content)
+    {
+        EditableChrome editableChrome = new EditableChrome
+        {
+            Attributes =
+                {
+                    { "chrometype", chrometype },
+                    { "class", "scpm" },
+                    { "kind", kind },
+                    { "type", "text/sitecore" }
+                }
+        };
+
+        if (id != string.Empty)
+        {
+            editableChrome.Attributes.Add("id", id);
+        }
+
+        if (content != string.Empty)
+        {
+            editableChrome.Content = content;
+        }
+
+        return editableChrome;
+    }
+
+    private static string GetRequestArgValue(SitecoreLayoutRequest request, string argName)
+    {
+        if (!request.ContainsKey("sc_request_headers_key") ||
+            request["sc_request_headers_key"] is not Dictionary<string, string[]> headers ||
+            !headers.ContainsKey(argName))
+        {
+            throw new ArgumentException($"Unable to parse arg:{argName} for Pages MetaData Render request.");
+        }
+
+        return headers[argName].FirstOrDefault() ?? string.Empty;
     }
 
     private async Task<SitecoreLayoutResponseContent?> HandleEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage, List<SitecoreLayoutServiceClientException> errors)
@@ -149,91 +299,5 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
         }
 
         return content;
-    }
-
-    private static void GenerateMetaDataChromes(SitecoreLayoutResponseContent? content)
-    {
-        foreach (var placeholder in content.Sitecore.Route.Placeholders)
-        {
-            string name = placeholder.Key;
-            Placeholder placeholderFeatures = placeholder.Value;
-
-            content.Sitecore.Route.Placeholders[name] = ProcessPlaceholder(name, Guid.Empty.ToString(), placeholderFeatures);
-        }
-    }
-
-    private static Placeholder ProcessPlaceholder(string name, string id, Placeholder placeholderFeatures)
-    {
-        Placeholder updatedPlaceholders = new Placeholder();
-
-        AddOpeningChrome("placeholder", $"{name}_{id}", updatedPlaceholders);
-
-        foreach (var feature in placeholderFeatures)
-        {
-            if (feature is Component component)
-            {
-                AddOpeningChrome("rendering", component.Id, updatedPlaceholders);
-
-                updatedPlaceholders.Add(feature);
-
-                foreach (var componentPlaceholder in component.Placeholders)
-                {
-                    {
-                        string componentPlaceholderName = componentPlaceholder.Key;
-                        Placeholder componentPlaceholderFeatures = componentPlaceholder.Value;
-
-                        component.Placeholders[componentPlaceholderName] = ProcessPlaceholder(name, component.Id, componentPlaceholderFeatures);
-                    }
-                }
-
-                AddClosingChrome("rendering", updatedPlaceholders);
-            }
-        }
-
-        AddClosingChrome("placeholder", updatedPlaceholders);
-
-        return updatedPlaceholders;
-    }
-
-
-    private static void AddClosingChrome(string type, Placeholder placeholderFeatures)
-    {
-        EditableChrome placeHolderClosingChrome = new EditableChrome
-        {
-            Attributes =
-                {
-                    { "chrometype", type },
-                    { "class", "scpm" },
-                    { "kind", "close" },
-                }
-        };
-        placeholderFeatures.Add(placeHolderClosingChrome);
-    }
-
-    private static void AddOpeningChrome(string type, string id, Placeholder placeholderFeatures)
-    {
-        EditableChrome placeHolderOpeningChrome = new EditableChrome
-        {
-            Attributes =
-                {
-                    { "chrometype", type },
-                    { "class", "scpm" },
-                    { "kind", "open" },
-                    { "id", id },
-                }
-        };
-        placeholderFeatures.Add(placeHolderOpeningChrome);
-    }
-
-    private static string GetRequestArgValue(SitecoreLayoutRequest request, string argName)
-    {
-        if (!request.ContainsKey("sc_request_headers_key") ||
-            request["sc_request_headers_key"] is not Dictionary<string, string[]> headers ||
-            !headers.ContainsKey(argName))
-        {
-            throw new ArgumentException($"Unable to parse arg:{argName} for Pages MetaData Render request.");
-        }
-
-        return headers[argName].FirstOrDefault() ?? string.Empty;
     }
 }

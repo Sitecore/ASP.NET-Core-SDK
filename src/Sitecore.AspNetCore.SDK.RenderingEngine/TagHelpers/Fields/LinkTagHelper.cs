@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 
@@ -15,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement(RenderingEngineConstants.SitecoreTagHelpers.LinkHtmlTag, Attributes = RenderingEngineConstants.SitecoreTagHelpers.LinkTagHelperAttribute, TagStructure = TagStructure.NormalOrSelfClosing)]
 [HtmlTargetElement("a", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 [HtmlTargetElement("a", Attributes = RenderingEngineConstants.SitecoreTagHelpers.LinkTagHelperAttribute)]
-public class LinkTagHelper : TagHelper
+public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
     private const string HrefAttribute = "href";
     private const string TargetAttribute = "target";
@@ -25,6 +26,7 @@ public class LinkTagHelper : TagHelper
     private const string RelAttribute = "rel";
     private const string BlankValue = "_blank";
     private const string AnchorValue = "#";
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
 
     /// <summary>
     /// Gets or sets the model value.
@@ -50,7 +52,9 @@ public class LinkTagHelper : TagHelper
         ArgumentNullException.ThrowIfNull(output);
 
         HyperLinkField? field = LinkModel ?? For?.Model as HyperLinkField;
-        bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field.EditableMarkupLast);
+        bool outputEditableMarkup = Editable &&
+                                    ((!string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field.EditableMarkupLast)) || (field.OpeningChrome != null && field.ClosingChrome != null));
+
         if (field == null || (string.IsNullOrWhiteSpace(field.Value.Href) && !outputEditableMarkup))
         {
             return;
@@ -71,11 +75,10 @@ public class LinkTagHelper : TagHelper
         }
     }
 
-    private static void RenderMarkup(TagHelperOutput output, HyperLinkField field)
+    private void RenderMarkup(TagHelperOutput output, HyperLinkField field)
     {
         if (output.TagName == null)
         {
-            // generate full anchor markup
             output.Content.SetHtmlContent(GenerateLink(field.Value, output));
         }
         else
@@ -113,12 +116,30 @@ public class LinkTagHelper : TagHelper
         }
     }
 
-    private static void RenderEditableMarkup(TagHelperOutput output, HyperLinkField field)
+    private void RenderEditableMarkup(TagHelperOutput output, HyperLinkField field)
     {
-        DefaultTagHelperContent content = new();
-        _ = content.AppendHtml(new HtmlString(field.EditableMarkupFirst));
-        _ = content.AppendHtml(new HtmlString(field.EditableMarkupLast));
-        output.Content.SetHtmlContent(content);
+        if (field.OpeningChrome != null && field.ClosingChrome != null)
+        {
+            output.Content.AppendHtml(chromeRenderer.Render(field.OpeningChrome));
+
+            if (field.Value.Href == string.Empty)
+            {
+                output.Content.AppendHtml("<span tabindex=\"0\" style=\"cursor: pointer;\">[No text in field]</span>");
+            }
+            else
+            {
+                output.Content.AppendHtml(GenerateLink(field.Value, output));
+            }
+
+            output.Content.AppendHtml(chromeRenderer.Render(field.ClosingChrome));
+        }
+        else
+        {
+            DefaultTagHelperContent content = new();
+            _ = content.AppendHtml(new HtmlString(field.EditableMarkupFirst));
+            _ = content.AppendHtml(new HtmlString(field.EditableMarkupLast));
+            output.Content.SetHtmlContent(content);
+        }
     }
 
     /// <summary>
