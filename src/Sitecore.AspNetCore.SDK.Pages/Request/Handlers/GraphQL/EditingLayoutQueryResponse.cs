@@ -1,4 +1,5 @@
-﻿using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
+﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
@@ -11,4 +12,9 @@ public class EditingLayoutQueryResponse
     /// Gets or sets Item for the Editing Layout Response.
     /// </summary>
     public ItemModel? Item { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Site for the Editing Layout Response.
+    /// </summary>
+    public Site? Site { get; set; }
 }

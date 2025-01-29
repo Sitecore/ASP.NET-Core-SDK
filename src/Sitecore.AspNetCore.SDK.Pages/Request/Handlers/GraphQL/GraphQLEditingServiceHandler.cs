@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -165,15 +165,15 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
             {
                 datasource = new
                 {
-                    id = editableField?.MetaData.DataSource.Id,
-                    language = editableField?.MetaData.DataSource.Language,
-                    revision = editableField?.MetaData.DataSource.Revision,
-                    version = editableField?.MetaData.DataSource.Version
+                    id = editableField?.MetaData?.DataSource?.Id,
+                    language = editableField?.MetaData?.DataSource?.Language,
+                    revision = editableField?.MetaData?.DataSource?.Revision,
+                    version = editableField?.MetaData?.DataSource?.Version
                 },
-                title = editableField?.MetaData.Title,
-                fieldId = editableField?.MetaData.FieldId,
-                fieldType = editableField?.MetaData.FieldType,
-                rawValue = editableField?.MetaData.RawValue
+                title = editableField?.MetaData?.Title,
+                fieldId = editableField?.MetaData?.FieldId,
+                fieldType = editableField?.MetaData?.FieldType,
+                rawValue = editableField?.MetaData?.RawValue
             };
 
             editableField.OpeningChrome = GenerateEditableChrome("field", "open", string.Empty, JsonSerializer.Serialize(openingChromeContent));
@@ -228,12 +228,73 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
         return headers[argName].FirstOrDefault() ?? string.Empty;
     }
 
-    private async Task<SitecoreLayoutResponseContent?> HandleEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage, List<SitecoreLayoutServiceClientException> errors)
+    private static async Task GetFullDictionaryInformation(SitecoreLayoutRequest request, string requestLanguage, IGraphQLClient client, GraphQLResponse<EditingLayoutQueryResponse> response)
     {
-        GraphQLRequest layoutRequest = new()
+        var hasNext = response.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.HasNext ?? false;
+        var endCursor = response.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.EndCursor ?? string.Empty;
+        while (hasNext && endCursor != string.Empty)
+        {
+            GraphQLRequest dictionaryRequest = BuildEditingDictionaryRequest(request, requestLanguage, endCursor);
+
+            GraphQLResponse<EditingDictionaryResponse> dictionaryResponse = await client.SendQueryAsync<EditingDictionaryResponse>(dictionaryRequest).ConfigureAwait(false);
+            response.Data?.Site?.SiteInfo?.Dictionary?.Results.AddRange(dictionaryResponse.Data?.Site?.SiteInfo?.Dictionary?.Results ?? []);
+
+            hasNext = dictionaryResponse.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.HasNext ?? false;
+            endCursor = dictionaryResponse.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.EndCursor ?? string.Empty;
+        }
+    }
+
+    private static GraphQLRequest BuildEditingDictionaryRequest(SitecoreLayoutRequest request, string requestLanguage, string endCursor)
+    {
+        return new()
         {
             Query = @"
-                    query EditingQuery($siteName: String!, $itemId: String!, $language: String!, $version: String, $after: String, $pageSize: Int = 10) {
+                        query EditingDictionaryQuery(
+                            $siteName: String!
+                            $language: String!
+                            $after: String
+                            $pageSize: Int
+                          ) {
+                        site {
+                          siteInfo(site: $siteName) {
+                            dictionary(language: $language, first: $pageSize, after: $after) {
+                              results {
+                                key
+                                value
+                              }
+                              pageInfo {
+                                endCursor
+                                hasNext
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ",
+            OperationName = "EditingDictionaryQuery",
+            Variables = new
+            {
+                language = requestLanguage,
+                siteName = request.SiteName(),
+                pageSize = 10,
+                after = endCursor
+            }
+        };
+    }
+
+    private static GraphQLRequest BuildEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage)
+    {
+        return new()
+        {
+            Query = @"
+                    query EditingQuery(
+                        $siteName: String!, 
+                        $itemId: String!, 
+                        $language: String!, 
+                        $version: String, 
+                        $after: String, 
+                        $pageSize: Int
+                     ) {
                      item(path: $itemId, language: $language, version: $version) {
                          rendered
                      }
@@ -241,7 +302,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
                          siteInfo(site: $siteName) {
                              dictionary(language: $language, first: $pageSize, after: $after) {
                                  results {
-    	                    key
+    	                             key
                                      value
                                  }
                                  pageInfo {
@@ -260,13 +321,18 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
                 language = requestLanguage,
                 siteName = request.SiteName(),
                 version = GetRequestArgValue(request, "sc_version"),
-                pageSize = 50,
+                pageSize = 10,
                 after = string.Empty
             }
         };
+    }
 
+    private async Task<SitecoreLayoutResponseContent?> HandleEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage, List<SitecoreLayoutServiceClientException> errors)
+    {
         IGraphQLClient client = clientFactory.GenerateClient(GetRequestArgValue(request, "sc_layoutKind"), GetRequestArgValue(request, "mode") == "edit");
-        GraphQLResponse<EditingLayoutQueryResponse> response = await client.SendQueryAsync<EditingLayoutQueryResponse>(layoutRequest).ConfigureAwait(false);
+        GraphQLResponse<EditingLayoutQueryResponse> response = await client.SendQueryAsync<EditingLayoutQueryResponse>(BuildEditingLayoutRequest(request, requestLanguage)).ConfigureAwait(false);
+
+        await GetFullDictionaryInformation(request, requestLanguage, client, response).ConfigureAwait(false);
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
@@ -294,8 +360,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
 
         if (response.Errors != null)
         {
-            errors.AddRange(
-                response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQlException(e))));
+            errors.AddRange(response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQlException(e))));
         }
 
         return content;
