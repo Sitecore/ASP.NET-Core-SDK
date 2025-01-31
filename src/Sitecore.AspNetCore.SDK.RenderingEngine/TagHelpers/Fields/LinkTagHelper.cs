@@ -53,7 +53,7 @@ public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         HyperLinkField? field = LinkModel ?? For?.Model as HyperLinkField;
         bool outputEditableMarkup = Editable &&
-                                    ((!string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field.EditableMarkupLast)) || (field.OpeningChrome != null && field.ClosingChrome != null));
+                                    ((!string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field?.EditableMarkupLast)) || (field?.OpeningChrome != null && field?.ClosingChrome != null));
 
         if (field == null || (string.IsNullOrWhiteSpace(field.Value.Href) && !outputEditableMarkup))
         {

@@ -13,6 +13,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -38,7 +39,7 @@ public class ImageTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new ImageTagHelper());
+        f.Register(() => new ImageTagHelper(new EditableChromeRenderer()));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);

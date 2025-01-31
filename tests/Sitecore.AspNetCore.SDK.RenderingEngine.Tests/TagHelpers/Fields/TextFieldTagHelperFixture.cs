@@ -13,6 +13,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -25,10 +26,14 @@ public class TextFieldTagHelperFixture
     private const string TestHtml = "<p>This is the test text</p>";
     private static readonly string TestMultilineText = $"<p>This is the test text {Environment.NewLine} with line endings.</p>";
 
+    private static EditableChromeRenderer _editableChromeRenderer = null!;
+
     // ReSharper disable once UnusedMember.Global - Used by testing framework
     [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
+        _editableChromeRenderer = f.Freeze<EditableChromeRenderer>();
+
         TagHelperContext tagHelperContext = new(
             [],
             new Dictionary<object, object>(),
@@ -40,7 +45,7 @@ public class TextFieldTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new TextFieldTagHelper());
+        f.Register(() => new TextFieldTagHelper(_editableChromeRenderer));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);

@@ -12,6 +12,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -35,7 +36,7 @@ public class DateTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new DateTagHelper());
+        f.Register(() => new DateTagHelper(new EditableChromeRenderer()));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);

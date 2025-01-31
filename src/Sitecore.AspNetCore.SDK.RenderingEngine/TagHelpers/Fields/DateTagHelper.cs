@@ -16,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.DateTagHelperAttribute)]
 public class DateTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.

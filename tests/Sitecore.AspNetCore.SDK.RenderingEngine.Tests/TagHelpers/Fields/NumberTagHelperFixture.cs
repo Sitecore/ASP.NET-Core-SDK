@@ -12,6 +12,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -37,7 +38,7 @@ public class NumberTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new NumberTagHelper());
+        f.Register(() => new NumberTagHelper(new EditableChromeRenderer()));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);

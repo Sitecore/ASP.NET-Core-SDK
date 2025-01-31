@@ -1,7 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
@@ -13,7 +13,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 public partial class TextFieldTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.
@@ -46,26 +46,37 @@ public partial class TextFieldTagHelper(IEditableChromeRenderer chromeRenderer) 
         bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(field.EditableMarkup);
         string value = outputEditableMarkup ? field.EditableMarkup : field.Value;
 
+        string html = string.Empty;
+        bool isHtml = false;
         if (Editable && field.OpeningChrome != null)
         {
-            output.Content.AppendHtml(chromeRenderer.Render(field.OpeningChrome));
-            output.Content.AppendHtml("<div>");
+            html += chromeRenderer.Render(field.OpeningChrome);
+            html += "<div>";
         }
 
         if (outputEditableMarkup || (ConvertNewLines && NewLineRegex().IsMatch(value)))
         {
-            value = NewLineRegex().Replace(value, "<br />");
-            output.Content.AppendHtml(value);
+            html += NewLineRegex().Replace(value, "<br />");
+            isHtml = true;
         }
         else
         {
-            output.Content.Append(value);
+            html += value;
         }
 
         if (Editable && field.ClosingChrome != null)
         {
-            output.Content.AppendHtml("</div>");
-            output.Content.AppendHtml(chromeRenderer.Render(field.ClosingChrome));
+            html += "<div>";
+            html += chromeRenderer.Render(field.ClosingChrome);
+        }
+
+        if (isHtml)
+        {
+            output.Content.SetHtmlContent(html);
+        }
+        else
+        {
+            output.Content.SetContent(html);
         }
     }
 

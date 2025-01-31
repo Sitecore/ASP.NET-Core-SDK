@@ -17,12 +17,12 @@ public class FieldConverterTests
 
     public static TheoryData<IFieldReader, string> Fields => new()
     {
-        { new TextField("Test"), """{"editable":"","value":"Test"}""" },
-        { new RichTextField("Test Noencoding", false), """{"editable":"","value":"Test Noencoding"}""" },
-        { new RichTextField("Test%20Encoded"), """{"editable":"","value":"Test Encoded"}""" },
-        { new CheckboxField(true), """{"editable":"","value":true}""" },
-        { new CheckboxField(false), """{"editable":""}""" },
-        { new ImageField(new Image { Alt = "Alt Text", Border = 1, Class = "styleclass", HSpace = 1, Height = 100, Src = "https://image.com/test.jpg", Title = "Title", VSpace = 1, Width = 100 }), """{"editable":"","value":{"src":"https://image.com/test.jpg","alt":"Alt Text","height":"100","width":"100","title":"Title","hSpace":"1","vSpace":"1","border":"1","class":"styleclass"}}""" }
+        { new TextField("Test"), """{"editable":"","Id":"","value":"Test"}""" },
+        { new RichTextField("Test Noencoding", false), """{"editable":"","Id":"","value":"Test Noencoding"}""" },
+        { new RichTextField("Test%20Encoded"), """{"editable":"","Id":"","value":"Test Encoded"}""" },
+        { new CheckboxField(true), """{"editable":"","Id":"","value":true}""" },
+        { new CheckboxField(false), """{"editable":"","Id":""}""" },
+        { new ImageField(new Image { Alt = "Alt Text", Border = 1, Class = "styleclass", HSpace = 1, Height = 100, Src = "https://image.com/test.jpg", Title = "Title", VSpace = 1, Width = 100 }), """{"editable":"","Id":"","value":{"src":"https://image.com/test.jpg","alt":"Alt Text","height":"100","width":"100","title":"Title","hSpace":"1","vSpace":"1","border":"1","class":"styleclass"}}""" }
     };
 
     [Fact]

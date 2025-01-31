@@ -29,7 +29,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string VSpaceAttribute = "vspace";
     private const string TitleAttribute = "title";
     private const string BorderAttribute = "border";
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.
