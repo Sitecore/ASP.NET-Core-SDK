@@ -1,10 +1,8 @@
-﻿using System.Resources;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.Pages.Response;
-using Sitecore.AspNetCore.SDK.RenderingEngine;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
 
@@ -34,16 +32,10 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
 
             if (renderingContext?.Response?.Content?.Sitecore?.Context?.IsEditing ?? false)
             {
-                JsonDocument doc = JsonDocument.Parse(renderingContext?.Response?.Content.ContextRawData ?? string.Empty);
-                if (doc == null)
-                {
-                    throw new NullReferenceException("EditingScriptsTagHelper: Unable to process ContextRawData");
-                }
-
                 EditingContext? editingContext = JsonSerializer.Deserialize<EditingContext>(renderingContext?.Response?.Content.ContextRawData ?? string.Empty);
                 if (editingContext == null)
                 {
-                    return;
+                    throw new NullReferenceException("EditingScriptsTagHelper: Unable to process ContextRawData");
                 }
 
                 foreach (string script in editingContext.ClientScripts ?? [])
@@ -60,7 +52,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
                                     ""language"":""{editingContext?.ClientData?.CanvasState?.Language}"",
                                     ""deviceId"":""{editingContext?.ClientData?.CanvasState?.DeviceId}"",
                                     ""pageMode"":""{editingContext?.ClientData?.CanvasState?.PageMode}"",
-                                    ""variant"":""{editingContext?.ClientData?.CanvasState?.Varient}""
+                                    ""variant"":""{editingContext?.ClientData?.CanvasState?.Variant}""
                                 }}
                             </script>
                         ";

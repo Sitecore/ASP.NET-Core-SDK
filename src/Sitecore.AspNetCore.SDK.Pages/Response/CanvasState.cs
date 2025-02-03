@@ -46,6 +46,6 @@ public class CanvasState
     /// <summary>
     /// Gets or sets the current id of the Varient being edited.
     /// </summary>
-    [JsonPropertyName("varient")]
-    public string? Varient { get; set; }
+    [JsonPropertyName("variant")]
+    public string? Variant { get; set; }
 }
