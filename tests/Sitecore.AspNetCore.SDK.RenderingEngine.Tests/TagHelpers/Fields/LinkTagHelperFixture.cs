@@ -784,6 +784,34 @@ public class LinkTagHelperFixture
     }
     #endregion
 
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+       TagHelperContext tagHelperContext,
+       TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        LinkTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        HyperLinkField testField = new(_hyperLink)
+        {
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.LinkModel = testField;
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
+
     private static ModelExpression GetModelExpression(Field model)
     {
         DefaultModelMetadata? modelMetadata = Substitute.For<DefaultModelMetadata>(

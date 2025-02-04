@@ -189,6 +189,34 @@ public class TextFieldTagHelperFixture
         tagHelperOutput.Content.GetContent().Should().Be(TestText);
     }
 
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        TextFieldTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.RichTextHtmlTag;
+        TextField testField = new(TestText)
+        {
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.For = GetModelExpression(testField);
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
+
     private static IEnumerable<object[]> GetModelExpressionTestData()
     {
         yield return [null!, string.Empty];

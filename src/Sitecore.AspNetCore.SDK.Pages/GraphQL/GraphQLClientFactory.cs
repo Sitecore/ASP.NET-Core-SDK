@@ -12,7 +12,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.GraphQL;
 public class GraphQLClientFactory(string contextId)
     : IGraphQLClientFactory
 {
-    private readonly string contextId = contextId;
+    private readonly string contextId = contextId ?? throw new ArgumentNullException(nameof(contextId));
 
     /// <inheritdoc />
     public IGraphQLClient GenerateClient(Uri? uri, string layoutKind, bool editMode)

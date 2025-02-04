@@ -338,6 +338,35 @@ public class DateTagHelperFixture
     }
     #endregion
 
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+       TagHelperContext tagHelperContext,
+       TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        DateTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
+        DateField testField = new(_date)
+        {
+            EditableMarkup = Editable,
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.DateModel = testField;
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Content.GetContent().Should().Contain(Editable);
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
+
     private static ModelExpression GetModelExpression(Field model)
     {
         DefaultModelMetadata? modelMetadata = Substitute.For<DefaultModelMetadata>(
