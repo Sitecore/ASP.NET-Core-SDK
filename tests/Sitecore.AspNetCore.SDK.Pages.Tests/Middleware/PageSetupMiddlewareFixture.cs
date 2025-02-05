@@ -7,11 +7,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
-using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Middleware;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
@@ -158,6 +156,75 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
             httpContext.Response.Headers.AccessControlAllowMethods.Should().Equal("GET, POST, OPTIONS, PUT, PATCH, DELETE");
             httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
             httpContext.Response.ContentType.Should().Be("application/json");
+
+            await requestDelegate.DidNotReceive()(httpContext);
+        }
+
+        [Theory]
+        [AutoNSubstituteData]
+        public async Task Invoke_RenderRequest_InvalidEditingSecret_NextDelegateCalled(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        {
+            // Arrange
+            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
+            HttpContext httpContext = Substitute.For<HttpContext>();
+            httpContext.Request.Method.Returns("GET");
+            httpContext.Request.Path.Returns(new PathString(ValidRenderEndpoint));
+            httpContext.Request.Query.Returns(new QueryCollection(new Dictionary<string, StringValues> { { "secret", new StringValues("incorrect_secret_value") } }));
+
+            // Act
+            await sut.Invoke(httpContext);
+
+            // Assert
+            logger.Received().Log(LogLevel.Error, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Invalid Pages Editing Secret Value"), null, Arg.Any<Func<object, Exception?, string>>());
+            await requestDelegate.Received()(httpContext);
+        }
+
+        [Theory]
+        [AutoNSubstituteData]
+        public async Task Invoke_RenderRequest_ValidResponseReturned(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        {
+            // Arrange
+            string expectedRoute = "test_route";
+            string expectedMode = "test_mode";
+            string expectedItemId = "test_item_id";
+            string expectedVersion = "test_version";
+            string expectedLanguage = "test_lang";
+            string expectedSite = "test_site";
+            string expectedLayoutKind = "test_layoutKind";
+            string expectedTenantId = "test_tenant_id";
+            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
+            HttpContext httpContext = Substitute.For<HttpContext>();
+            httpContext.Request.Method.Returns("GET");
+            httpContext.Request.Path.Returns(new PathString(ValidRenderEndpoint));
+            httpContext.Request.Headers.Returns(new HeaderDictionary(new Dictionary<string, StringValues> { { "Origin", new StringValues(ValidEditingOrigin) } }));
+            httpContext.Request.Query.Returns(new QueryCollection(
+                new Dictionary<string, StringValues>
+                {
+                    { "secret", new StringValues(ValidEditingSecret) },
+                    { "sc_itemid", new StringValues(expectedItemId) },
+                    { "sc_lang", new StringValues(expectedLanguage) },
+                    { "sc_layoutKind", new StringValues(expectedLayoutKind) },
+                    { "mode", new StringValues(expectedMode) },
+                    { "route", new StringValues(expectedRoute) },
+                    { "sc_site", new StringValues(expectedSite) },
+                    { "sc_version", new StringValues(expectedVersion) },
+                    { "tenant_id", new StringValues(expectedTenantId) }
+                }));
+
+            HttpResponse httpResponse = Substitute.For<HttpResponse>();
+            httpContext.Response.Returns(httpResponse);
+            MemoryStream memoryStream = new();
+            httpResponse.Body = memoryStream;
+
+            // Act
+            await sut.Invoke(httpContext);
+
+            // Assert
+            logger.Received().Log(LogLevel.Debug, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Processing valid Pages Render request"), null, Arg.Any<Func<object, Exception?, string>>());
+
+            httpContext.Response.Headers.ContentSecurityPolicy.Should().Equal($"frame-ancestors 'self' {ValidOrigins} {ValidEditingOrigin}");
+            string validRedirectString = $"{expectedRoute}?mode={expectedMode}&sc_itemid={expectedItemId}&sc_version={expectedVersion}&sc_lang={expectedLanguage}&sc_site={expectedSite}&sc_layoutKind={expectedLayoutKind}&secret={ValidEditingSecret}&tenant_id={expectedTenantId}&route={expectedRoute}";
+            httpResponse.ReceivedWithAnyArgs().Redirect(validRedirectString, permanent: false);
 
             await requestDelegate.DidNotReceive()(httpContext);
         }
