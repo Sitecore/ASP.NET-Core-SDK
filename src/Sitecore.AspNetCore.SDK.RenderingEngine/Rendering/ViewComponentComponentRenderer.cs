@@ -37,7 +37,8 @@ public class ViewComponentComponentRenderer : IComponentRenderer
 
         return new ComponentRendererDescriptor(
             match,
-            sp => ActivatorUtilities.CreateInstance<ViewComponentComponentRenderer>(sp, locator));
+            sp => ActivatorUtilities.CreateInstance<ViewComponentComponentRenderer>(sp, locator),
+            string.Empty);
     }
 
     /// <inheritdoc />

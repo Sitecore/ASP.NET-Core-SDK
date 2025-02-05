@@ -5,6 +5,7 @@ using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Models;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 
@@ -100,39 +101,16 @@ public class PageSetupMiddleware(RequestDelegate next, IOptions<PagesOptions> op
         httpResponse.StatusCode = StatusCodes.Status200OK;
         httpResponse.ContentType = "application/json";
 
-        // TODO: change the Components list to not be hardcoded!
-        string responseBody = @"
-            {
+        string componentNames = string.Join(",\r\n", renderingEngineOptions.RendererRegistry.Select(x => $"\"{x.Value.ComponentName}\""));
+        string responseBody = $@"
+            {{
                 ""components"": [
-                    ""Title"",
-                    ""Container"",
-                    ""ColumnSplitter"",
-                    ""RowSplitter"",
-                    ""PageContent"",
-                    ""RichText"",
-                    ""Promo"",
-                    ""LinkList"",
-                    ""Image"",
-                    ""PartialDesignDynamicPlaceholder"",
-                    ""Navigation""
+                    {componentNames}
                 ],
-                ""packages"": {
-                    ""@sitecore/byoc"": ""0.2.15"",
-                    ""@sitecore/components"": ""1.1.10"",
-                    ""@sitecore/engage"": ""1.4.3"",
-                    ""@sitecore-cloudsdk/core"": ""0.3.1"",
-                    ""@sitecore-cloudsdk/events"": ""0.3.1"",
-                    ""@sitecore-cloudsdk/personalize"": ""0.3.1"",
-                    ""@sitecore-cloudsdk/utils"": ""0.3.1"",
-                    ""@sitecore-feaas/clientside"": ""0.5.18"",
-                    ""@sitecore-jss/sitecore-jss"": ""22.1.3"",
-                    ""@sitecore-jss/sitecore-jss-cli"": ""22.1.3"",
-                    ""@sitecore-jss/sitecore-jss-dev-tools"": ""22.1.3"",
-                    ""@sitecore-jss/sitecore-jss-nextjs"": ""22.1.3"",
-                    ""@sitecore-jss/sitecore-jss-react"": ""22.1.3""
-                },
+                ""packages"": {{
+                }},
                 ""editMode"": ""metadata""
-            }
+            }}
         ";
 
         await httpResponse.WriteAsync(responseBody);

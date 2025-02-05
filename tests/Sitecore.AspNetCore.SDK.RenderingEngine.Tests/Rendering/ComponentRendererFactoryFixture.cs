@@ -30,7 +30,7 @@ public class ComponentRendererFactoryFixture
         {
             RendererRegistry = new SortedList<int, ComponentRendererDescriptor>
             {
-                { 0, new ComponentRendererDescriptor(name => name == TestComponentName, _ => componentRenderer) }
+                { 0, new ComponentRendererDescriptor(name => name == TestComponentName, _ => componentRenderer, TestComponentName) }
             }
         };
 

@@ -30,7 +30,7 @@ public class ComponentRendererDescriptorFixture
     {
         // Arrange
         Func<ComponentRendererDescriptor> act =
-            () => new ComponentRendererDescriptor(null!, null!);
+            () => new ComponentRendererDescriptor(null!, null!, string.Empty);
 
         // Act & Assert
         act.Should().Throw<ArgumentNullException>();
@@ -41,7 +41,8 @@ public class ComponentRendererDescriptorFixture
     public void GetOrCreate_ServiceProviderContainsRendererType_ReturnsRendererType(IServiceProvider services, IComponentRenderer renderer)
     {
         // Arrange
-        ComponentRendererDescriptor sut = new(name => name == "Test", _ => renderer);
+        string componentName = "Test";
+        ComponentRendererDescriptor sut = new(name => name == componentName, _ => renderer, componentName);
 
         // Act
         IComponentRenderer result = sut.GetOrCreate(services);

@@ -223,7 +223,8 @@ public static class RenderingEngineOptionsExtensions
             sp => ActivatorUtilities.CreateInstance<ModelBoundViewComponentComponentRenderer<TModel>>(
                 sp,
                 RenderingEngineConstants.SitecoreViewComponents.DefaultSitecoreViewComponentName,
-                viewName));
+                viewName),
+            viewName);
 
         options.RendererRegistry.Add(options.RendererRegistry.Count, descriptor);
 
@@ -242,7 +243,7 @@ public static class RenderingEngineOptionsExtensions
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        ComponentRendererDescriptor descriptor = new(_ => true, services => ActivatorUtilities.CreateInstance<T>(services));
+        ComponentRendererDescriptor descriptor = new(_ => true, services => ActivatorUtilities.CreateInstance<T>(services), "defaultComponent");
         options.DefaultRenderer = descriptor;
 
         return options;
