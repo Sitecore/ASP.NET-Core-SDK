@@ -6,6 +6,8 @@ using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Models;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 
@@ -97,23 +99,36 @@ public class PageSetupMiddleware(RequestDelegate next, IOptions<PagesOptions> op
         httpResponse.Headers.ContentSecurityPolicy = $"frame-ancestors 'self' {options.ValidOrigins} {options.ValidEditingOrigin}";
         httpResponse.Headers.AccessControlAllowOrigin = options.ValidEditingOrigin;
         httpResponse.Headers.AccessControlAllowMethods = "GET, POST, OPTIONS, PUT, PATCH, DELETE";
-
         httpResponse.StatusCode = StatusCodes.Status200OK;
         httpResponse.ContentType = "application/json";
 
-        string componentNames = string.Join(",\r\n", renderingEngineOptions.RendererRegistry.Select(x => $"\"{x.Value.ComponentName}\""));
-        string responseBody = $@"
-            {{
-                ""components"": [
-                    {componentNames}
-                ],
-                ""packages"": {{
-                }},
-                ""editMode"": ""metadata""
-            }}
-        ";
+        Stream realResponseStream = httpResponse.Body;
+        try
+        {
+            MemoryStream tmpResponseBuffer = new();
 
-        await httpResponse.WriteAsync(responseBody);
+            httpResponse.Body = tmpResponseBuffer;
+
+            tmpResponseBuffer.Position = 0;
+            string componentNames = string.Join(",\r\n", renderingEngineOptions.RendererRegistry.Select(x => $"\"{x.Value.ComponentName}\""));
+            string responseBody = $@"
+                {{
+                    ""components"": [
+                        {componentNames}
+                    ],
+                    ""packages"": {{
+                    }},
+                    ""editMode"": ""metadata""
+                }}
+            ";
+
+            await using StreamWriter realResponseWriter = new(realResponseStream);
+            await realResponseWriter.WriteAsync(responseBody).ConfigureAwait(false);
+        }
+        finally
+        {
+            httpResponse.Body = realResponseStream;
+        }
     }
 
     private bool IsValidEditingSecret(HttpRequest httpRequest)
