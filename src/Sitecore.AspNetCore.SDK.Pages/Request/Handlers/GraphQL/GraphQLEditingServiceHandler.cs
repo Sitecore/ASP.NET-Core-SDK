@@ -26,9 +26,9 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
     ILogger<GraphQLEditingServiceHandler> logger)
     : ILayoutRequestHandler
 {
-    private readonly IGraphQLClientFactory clientFactory = clientFactory;
-    private readonly ISitecoreLayoutSerializer serializer = serializer;
-    private readonly ILogger<GraphQLEditingServiceHandler> logger = logger;
+    private readonly IGraphQLClientFactory clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+    private readonly ISitecoreLayoutSerializer serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+    private readonly ILogger<GraphQLEditingServiceHandler> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task<SitecoreLayoutResponse> Request(SitecoreLayoutRequest request, string handlerName)
