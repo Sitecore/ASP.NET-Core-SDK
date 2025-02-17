@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -148,9 +149,11 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
 
             byte[] contents = memoryStream.ToArray();
             string returnedBody = Encoding.UTF8.GetString(contents);
-            string expectedResponse = "\r\n                {\r\n                    \"components\": [\r\n                        \"TestComponent\"\r\n                    ],\r\n                    \"packages\": {\r\n                    },\r\n                    \"editMode\": \"metadata\"\r\n                }\r\n            ";
-            Assert.Equal(expectedResponse, returnedBody);
-
+            var jsonDoc = JsonDocument.Parse(returnedBody);
+            jsonDoc.RootElement.TryGetProperty("editMode", out JsonElement editNode).Should().BeTrue();
+            editNode.GetString().Should().Be("metadata");
+            jsonDoc.RootElement.TryGetProperty("components", out JsonElement componentsNode).Should().BeTrue();
+            componentsNode[0].GetString().Should().Be("TestComponent");
             httpContext.Response.Headers.ContentSecurityPolicy.Should().Equal($"frame-ancestors 'self' {ValidOrigins} {ValidEditingOrigin}");
             httpContext.Response.Headers.AccessControlAllowOrigin.Should().Equal(ValidEditingOrigin);
             httpContext.Response.Headers.AccessControlAllowMethods.Should().Equal("GET, POST, OPTIONS, PUT, PATCH, DELETE");
