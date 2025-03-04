@@ -66,7 +66,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         ImageField? field = ImageModel ?? For?.Model as ImageField;
 
-        if (field == null || string.IsNullOrWhiteSpace(field.Value.Src))
+        if (field == null || (string.IsNullOrWhiteSpace(field.Value.Src) && (field.OpeningChrome == null && field.ClosingChrome == null)))
         {
             return;
         }

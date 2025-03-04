@@ -52,6 +52,7 @@ public partial class TextFieldTagHelper(IEditableChromeRenderer chromeRenderer) 
         {
             html += chromeRenderer.Render(field.OpeningChrome);
             html += "<div>";
+            isHtml = true;
         }
 
         if (outputEditableMarkup || (ConvertNewLines && NewLineRegex().IsMatch(value)))
@@ -66,7 +67,7 @@ public partial class TextFieldTagHelper(IEditableChromeRenderer chromeRenderer) 
 
         if (Editable && field.ClosingChrome != null)
         {
-            html += "<div>";
+            html += "</div>";
             html += chromeRenderer.Render(field.ClosingChrome);
         }
 

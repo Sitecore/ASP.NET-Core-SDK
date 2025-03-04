@@ -48,7 +48,7 @@ public class ViewComponentComponentRendererFixture
         ServiceContainer services = new();
 
         // Act
-        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(_ => true, Locator);
+        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(_ => true, Locator, Locator);
 
         // Assert
         descriptor.Should().NotBeNull();
