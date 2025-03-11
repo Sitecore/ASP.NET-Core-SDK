@@ -55,7 +55,7 @@ public class SitecoreLayoutModelBinderFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void BindModelAsync_WithNullModelReturnedByBindingSource_WritesWarningLogs(
+    public void BindModelAsync_WithNullModelReturnedByBindingSource_WritesDebugLogs(
         DefaultModelBindingContext defaultModelBindingContext,
         IServiceProvider sp)
     {
@@ -67,6 +67,6 @@ public class SitecoreLayoutModelBinderFixture
         modelBinder.BindModelAsync(defaultModelBindingContext);
 
         // Assert
-        substituteLogger.Received(1).Log<IReadOnlyList<KeyValuePair<string, object?>>>(LogLevel.Warning, 0, Arg.Any<IReadOnlyList<KeyValuePair<string, object?>>>(), null, Arg.Any<Func<object, Exception?, string>>());
+        substituteLogger.Received(1).Log<IReadOnlyList<KeyValuePair<string, object?>>>(LogLevel.Debug, 0, Arg.Any<IReadOnlyList<KeyValuePair<string, object?>>>(), null, Arg.Any<Func<object, Exception?, string>>());
     }
 }
