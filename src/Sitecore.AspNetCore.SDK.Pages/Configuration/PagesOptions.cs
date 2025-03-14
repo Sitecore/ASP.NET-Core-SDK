@@ -6,6 +6,11 @@
 public class PagesOptions
 {
     /// <summary>
+    /// Key used to define the settings section in config.
+    /// </summary>
+    public static readonly string Key = "SitecoreXmcPages";
+
+    /// <summary>
     /// Gets or sets the config endpoint for Pages MetaData mode.
     /// </summary>
     public string? ConfigEndpoint { get; set; } = "/api/editing/config";

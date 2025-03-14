@@ -18,6 +18,5 @@ public interface IEditableField : IField
     /// <summary>
     /// Gets or sets the EditableChrome used to render the closing chrome for this field.
     /// </summary>
-
     public EditableChrome? ClosingChrome { get; set; }
 }

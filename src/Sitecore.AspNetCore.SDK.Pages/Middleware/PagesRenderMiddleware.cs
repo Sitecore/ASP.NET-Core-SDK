@@ -18,20 +18,20 @@ namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 /// and wraps the response HTML in a JSON format.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="PageSetupMiddleware"/> class.
+/// Initializes a new instance of the <see cref="PagesRenderMiddleware"/> class.
 /// </remarks>
 /// <param name="next">The next middleware to call.</param>
 /// <param name="options">The Sitecore Pages configuration options.</param>
 /// <param name="requestMapper">The <see cref="ISitecoreLayoutRequestMapper"/> to map the HttpRequest to a Layout Service request.</param>
 /// <param name="layoutService">The layout service client.</param>
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
-public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ISitecoreLayoutRequestMapper requestMapper, ISitecoreLayoutClient layoutService, ILogger<PageSetupMiddleware> logger)
+public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ISitecoreLayoutRequestMapper requestMapper, ISitecoreLayoutClient layoutService, ILogger<PagesRenderMiddleware> logger)
 {
     private readonly RequestDelegate next = next ?? throw new ArgumentNullException(nameof(next));
     private readonly PagesOptions options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
     private readonly ISitecoreLayoutRequestMapper _requestMapper = requestMapper ?? throw new ArgumentNullException(nameof(requestMapper));
     private readonly ISitecoreLayoutClient layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
-    private readonly ILogger<PageSetupMiddleware> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<PagesRenderMiddleware> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// The middleware Invoke method.

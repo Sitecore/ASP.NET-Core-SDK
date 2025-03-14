@@ -29,5 +29,4 @@ public class MetaData
     ///  Gets or sets the DataSource.
     /// </summary>
     public DataSource? DataSource { get; set; }
-
 }

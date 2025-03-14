@@ -25,16 +25,32 @@ public static class PagesAppConfigurationExtensions
     /// Registers the Sitecore Experience Editor middleware into the <see cref="IApplicationBuilder"/>.
     /// </summary>
     /// <param name="app">The instance of the <see cref="IApplicationBuilder"/> to extend.</param>
+    /// <param name="options">The Pages options used to configure Pages MetaData edting.</param>
     /// <returns>The <see cref="IApplicationBuilder"/> so that additional calls can be chained.</returns>
-    public static IApplicationBuilder UseSitecorePages(this IApplicationBuilder app)
+    public static IApplicationBuilder UseSitecorePages(this WebApplication app, PagesOptions options)
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        object? experienceEditorMarker = app.ApplicationServices.GetService(typeof(PagesMarkerService));
-        if (experienceEditorMarker != null)
+        object? pagesMarker = app.Services.GetService(typeof(PagesMarkerService));
+        if (pagesMarker != null)
         {
-            app.UseMiddleware<PageSetupMiddleware>();
             app.UseMiddleware<PagesRenderMiddleware>();
+
+            if (!string.IsNullOrEmpty(options.ConfigEndpoint))
+            {
+                app.MapControllerRoute(
+                    "pages-config",
+                    options.ConfigEndpoint,
+                    new { controller = "PagesSetup", action = "Config" });
+            }
+
+            if (!string.IsNullOrEmpty(options.RenderEndpoint))
+            {
+                app.MapControllerRoute(
+                    "pages-render",
+                    options.RenderEndpoint,
+                    new { controller = "PagesSetup", action = "Render" });
+            }
         }
 
         return app;
@@ -89,7 +105,6 @@ public static class PagesAppConfigurationExtensions
     /// </summary>
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> to configure.</param>
     /// <returns>The <see cref="ILayoutRequestHandlerBuilder{HttpLayoutRequestHandler}"/> so that additional calls can be chained.</returns>
-
     public static ISitecoreLayoutClientBuilder AddSitecorePagesHandler(
         this ISitecoreLayoutClientBuilder builder)
     {

@@ -8,7 +8,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Response;
 public class ClientData
 {
     /// <summary>
-    /// Gets or sets the Canvas State data of the Editing Request
+    /// Gets or sets the Canvas State data of the Editing Request.
     /// </summary>
     [JsonPropertyName("hrz-canvas-state")]
     public CanvasState? CanvasState { get; set; }

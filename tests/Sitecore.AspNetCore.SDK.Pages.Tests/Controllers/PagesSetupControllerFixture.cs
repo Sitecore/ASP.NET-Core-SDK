@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Text.Json;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
@@ -12,14 +11,15 @@ using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
-using Sitecore.AspNetCore.SDK.Pages.Middleware;
+using Sitecore.AspNetCore.SDK.Pages.Controllers;
+using Sitecore.AspNetCore.SDK.Pages.Models;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Xunit;
 
-namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
+namespace Sitecore.AspNetCore.SDK.Pages.Tests.Controllers
 {
-    public class PageSetupMiddlewareFixture
+    public class PagesSetupControllerFixture
     {
         private const string ValidConfigEndpoint = "/api/editing/config";
         private const string ValidRenderEndpoint = "/api/editing/render";
@@ -45,7 +45,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
             pagesOptions.Value.Returns(PagesOptionsValues);
             f.Inject(pagesOptions);
 
-            ILogger<PageSetupMiddleware> logger = Substitute.For<ILogger<PageSetupMiddleware>>();
+            ILogger<PagesSetupController> logger = Substitute.For<ILogger<PagesSetupController>>();
             f.Inject(logger);
 
             IOptions<RenderingEngineOptions > renderingEngineOptions = Substitute.For<IOptions<RenderingEngineOptions>>();
@@ -67,135 +67,126 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
         [AutoNSubstituteData]
         public void Ctor_InvalidArgs_Throws(GuardClauseAssertion guard)
         {
-            guard.VerifyConstructors<PageSetupMiddleware>();
+            guard.VerifyConstructors<PagesSetupController>();
         }
 
         [Theory]
         [AutoNSubstituteData]
-        public async Task Invoke_RequestIsntConfigOrRender_NextDelegateCalled(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        public void ConfigRoute_InvalidEditingSecret_ReturnsBadRequestResponse(IOptions<PagesOptions> pageOptions, ILogger<PagesSetupController> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
         {
             // Arrange
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
-            HttpContext httpContext = Substitute.For<HttpContext>();
-            HttpRequest httpRequest = Substitute.For<HttpRequest>();
-            httpRequest.Method.Returns("Post");
-            httpContext.Request.Returns(httpRequest);
-
-            // Act
-            await sut.Invoke(httpContext);
-
-            // Assert
-            await requestDelegate.Received()(httpContext);
-        }
-
-        [Theory]
-        [AutoNSubstituteData]
-        public async Task Invoke_ConfigRequest_InvalidEditingSecret_NextDelegateCalled(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
-        {
-            // Arrange
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
             HttpContext httpContext = Substitute.For<HttpContext>();
             httpContext.Request.Method.Returns("GET");
             httpContext.Request.Path.Returns(new PathString(ValidConfigEndpoint));
             httpContext.Request.Query.Returns(new QueryCollection(new Dictionary<string, StringValues> { { "secret", new StringValues("incorrect_secret_value") } }));
+            PagesSetupController sut = new(pageOptions, logger, renderingEngineOptions);
+            sut.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
 
             // Act
-            await sut.Invoke(httpContext);
+            ActionResult<PagesConfigResponse> response = sut.Config();
 
             // Assert
             logger.Received().Log(LogLevel.Error, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Invalid Pages Editing Secret Value"), null, Arg.Any<Func<object, Exception?, string>>());
-            await requestDelegate.Received()(httpContext);
+            response.Result.Should().BeOfType<BadRequestResult>();
         }
 
         [Theory]
         [AutoNSubstituteData]
-        public async Task Invoke_ConfigRequest_InvalidEditingOrigin_NextDelegateCalled(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        public void ConfigRoute_InvalidEditingOrigin_ReturnsBadRequestResponse(IOptions<PagesOptions> pageOptions, ILogger<PagesSetupController> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
         {
             // Arrange
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
             HttpContext httpContext = Substitute.For<HttpContext>();
             httpContext.Request.Method.Returns("GET");
             httpContext.Request.Path.Returns(new PathString(ValidConfigEndpoint));
             httpContext.Request.Query.Returns(new QueryCollection(new Dictionary<string, StringValues> { { "secret", new StringValues(ValidEditingSecret) } }));
             httpContext.Request.Headers.Returns(new HeaderDictionary(new Dictionary<string, StringValues> { { "Origin", new StringValues("http://an.invalid.origin.domain") } }));
+            PagesSetupController sut = new(pageOptions, logger, renderingEngineOptions);
+            sut.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
 
             // Act
-            await sut.Invoke(httpContext);
+            ActionResult<PagesConfigResponse> response = sut.Config();
 
             // Assert
             logger.Received().Log(LogLevel.Error, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Invalid Pages Editing Origin"), null, Arg.Any<Func<object, Exception?, string>>());
-            await requestDelegate.Received()(httpContext);
+            response.Result.Should().BeOfType<BadRequestResult>();
         }
 
         [Theory]
         [AutoNSubstituteData]
-        public async Task Invoke_ConfigRequest_ValidResponseReturned(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        public void ConfigRoute_ValidRequest_OkResponseReturned(IOptions<PagesOptions> pageOptions, ILogger<PagesSetupController> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
         {
             // Arrange
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
             HttpContext httpContext = Substitute.For<HttpContext>();
             httpContext.Request.Method.Returns("GET");
             httpContext.Request.Path.Returns(new PathString(ValidConfigEndpoint));
             httpContext.Request.Query.Returns(new QueryCollection(new Dictionary<string, StringValues> { { "secret", new StringValues(ValidEditingSecret) } }));
             httpContext.Request.Headers.Returns(new HeaderDictionary(new Dictionary<string, StringValues> { { "Origin", new StringValues(ValidEditingOrigin) } }));
-            MemoryStream memoryStream = new();
-            httpContext.Response.Body = memoryStream;
+            PagesSetupController sut = new(pageOptions, logger, renderingEngineOptions);
+            sut.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
 
             // Act
-            await sut.Invoke(httpContext);
+            ActionResult<PagesConfigResponse> response = sut.Config();
 
             // Assert
             logger.Received().Log(LogLevel.Debug, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Processing valid Pages Config request"), null, Arg.Any<Func<object, Exception?, string>>());
-
-            byte[] contents = memoryStream.ToArray();
-            string returnedBody = Encoding.UTF8.GetString(contents);
-            var jsonDoc = JsonDocument.Parse(returnedBody);
-            jsonDoc.RootElement.TryGetProperty("editMode", out JsonElement editNode).Should().BeTrue();
-            editNode.GetString().Should().Be("metadata");
-            jsonDoc.RootElement.TryGetProperty("components", out JsonElement componentsNode).Should().BeTrue();
-            componentsNode[0].GetString().Should().Be("TestComponent");
             httpContext.Response.Headers.ContentSecurityPolicy.Should().Equal($"frame-ancestors 'self' {ValidOrigins} {ValidEditingOrigin}");
             httpContext.Response.Headers.AccessControlAllowOrigin.Should().Equal(ValidEditingOrigin);
             httpContext.Response.Headers.AccessControlAllowMethods.Should().Equal("GET, POST, OPTIONS, PUT, PATCH, DELETE");
             httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
             httpContext.Response.ContentType.Should().Be("application/json");
-
-            await requestDelegate.DidNotReceive()(httpContext);
+            response.Result.Should().BeOfType<OkObjectResult>();
+            response.Result.As<OkObjectResult>().Value.Should().NotBeNull();
+            response.Result.As<OkObjectResult>().Value.As<PagesConfigResponse>().Should().NotBeNull();
+            response.Result.As<OkObjectResult>().Value.As<PagesConfigResponse>().EditMode.Should().Be("metadata");
+            response.Result.As<OkObjectResult>().Value.As<PagesConfigResponse>().Components.Count.Should().Be(1);
+            response.Result.As<OkObjectResult>().Value.As<PagesConfigResponse>().Components[0].Should().Be("TestComponent");
         }
 
         [Theory]
         [AutoNSubstituteData]
-        public async Task Invoke_RenderRequest_InvalidEditingSecret_NextDelegateCalled(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        public void RenderRoute_InvalidEditingSecret_ReturnsBadRequestResponse(IOptions<PagesOptions> pageOptions, ILogger<PagesSetupController> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
         {
             // Arrange
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
             HttpContext httpContext = Substitute.For<HttpContext>();
             httpContext.Request.Method.Returns("GET");
             httpContext.Request.Path.Returns(new PathString(ValidRenderEndpoint));
             httpContext.Request.Query.Returns(new QueryCollection(new Dictionary<string, StringValues> { { "secret", new StringValues("incorrect_secret_value") } }));
+            PagesSetupController sut = new(pageOptions, logger, renderingEngineOptions);
+            sut.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
 
             // Act
-            await sut.Invoke(httpContext);
+            IActionResult response = sut.Render();
 
             // Assert
             logger.Received().Log(LogLevel.Error, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Invalid Pages Editing Secret Value"), null, Arg.Any<Func<object, Exception?, string>>());
-            await requestDelegate.Received()(httpContext);
+            response.Should().BeOfType<BadRequestResult>();
         }
 
         [Theory]
         [AutoNSubstituteData]
-        public async Task Invoke_RenderRequest_ValidResponseReturned(RequestDelegate requestDelegate, IOptions<PagesOptions> pageOptions, ILogger<PageSetupMiddleware> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
+        public void RenderRoute_ValidRequest_OkResponseReturned(IOptions<PagesOptions> pageOptions, ILogger<PagesSetupController> logger, IOptions<RenderingEngineOptions> renderingEngineOptions)
         {
             // Arrange
             string expectedRoute = "test_route";
             string expectedMode = "test_mode";
-            string expectedItemId = "test_item_id";
-            string expectedVersion = "test_version";
+            Guid expectedItemId = Guid.NewGuid();
+            int expectedVersion = 0;
             string expectedLanguage = "test_lang";
             string expectedSite = "test_site";
             string expectedLayoutKind = "test_layoutKind";
             string expectedTenantId = "test_tenant_id";
-            PageSetupMiddleware sut = new(requestDelegate, pageOptions, logger, renderingEngineOptions);
             HttpContext httpContext = Substitute.For<HttpContext>();
             httpContext.Request.Method.Returns("GET");
             httpContext.Request.Path.Returns(new PathString(ValidRenderEndpoint));
@@ -204,32 +195,34 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Middleware
                 new Dictionary<string, StringValues>
                 {
                     { "secret", new StringValues(ValidEditingSecret) },
-                    { "sc_itemid", new StringValues(expectedItemId) },
+                    { "sc_itemid", new StringValues(expectedItemId.ToString()) },
                     { "sc_lang", new StringValues(expectedLanguage) },
                     { "sc_layoutKind", new StringValues(expectedLayoutKind) },
                     { "mode", new StringValues(expectedMode) },
                     { "route", new StringValues(expectedRoute) },
                     { "sc_site", new StringValues(expectedSite) },
-                    { "sc_version", new StringValues(expectedVersion) },
+                    { "sc_version", new StringValues(expectedVersion.ToString()) },
                     { "tenant_id", new StringValues(expectedTenantId) }
                 }));
-
             HttpResponse httpResponse = Substitute.For<HttpResponse>();
             httpContext.Response.Returns(httpResponse);
             MemoryStream memoryStream = new();
             httpResponse.Body = memoryStream;
+            PagesSetupController sut = new(pageOptions, logger, renderingEngineOptions);
+            sut.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
 
             // Act
-            await sut.Invoke(httpContext);
+            IActionResult response = sut.Render();
 
             // Assert
             logger.Received().Log(LogLevel.Debug, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Processing valid Pages Render request"), null, Arg.Any<Func<object, Exception?, string>>());
-
-            httpContext.Response.Headers.ContentSecurityPolicy.Should().Equal($"frame-ancestors 'self' {ValidOrigins} {ValidEditingOrigin}");
+            response.Should().BeOfType<RedirectResult>();
+            response.As<RedirectResult>().Permanent.Should().BeFalse();
             string validRedirectString = $"{expectedRoute}?mode={expectedMode}&sc_itemid={expectedItemId}&sc_version={expectedVersion}&sc_lang={expectedLanguage}&sc_site={expectedSite}&sc_layoutKind={expectedLayoutKind}&secret={ValidEditingSecret}&tenant_id={expectedTenantId}&route={expectedRoute}";
-            httpResponse.ReceivedWithAnyArgs().Redirect(validRedirectString, permanent: false);
-
-            await requestDelegate.DidNotReceive()(httpContext);
+            response.As<RedirectResult>().Url.Should().Be(validRedirectString);
         }
     }
 }
