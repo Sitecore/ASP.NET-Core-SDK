@@ -22,7 +22,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
 /// <param name="clientFactory">The GraphQlClientFactory used to generate instances of the GraphQl client.</param>
 /// <param name="serializer">The serializer to handle response data.</param>
-public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
+public partial class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
     ISitecoreLayoutSerializer serializer,
     ILogger<GraphQLEditingServiceHandler> logger)
     : ILayoutRequestHandler
@@ -93,43 +93,77 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
 
     private static Placeholder ProcessPlaceholder(string name, string id, Placeholder placeholderFeatures)
     {
-        Placeholder updatedPlaceholders = [];
+        Placeholder result = new();
 
-        AddPlaceholderOpeningChrome(name, id, updatedPlaceholders);
+        // Create a separate class outside of this method for the work item
+        // to avoid nested class compilation issues
+        var workStack = new Stack<PlaceholderWorkItem>();
+        workStack.Push(new PlaceholderWorkItem(name, id, placeholderFeatures, result));
 
-        foreach (var feature in placeholderFeatures)
+        while (workStack.Count > 0)
         {
-            if (feature is Component component)
+            var current = workStack.Pop();
+            var output = current.Output;
+
+            // Add opening chrome for placeholder
+            AddPlaceholderOpeningChrome(current.Name, current.Id, output);
+
+            // Process all features in this placeholder
+            foreach (var feature in current.Features)
             {
-                AddRenderingOpeningChrome(updatedPlaceholders, component);
-
-                var updatedFields = new Dictionary<string, IFieldReader>();
-                foreach (var field in component.Fields)
+                if (feature is Component component)
                 {
-                    ProcessField(updatedFields, field);
-                }
+                    // Add opening chrome
+                    AddRenderingOpeningChrome(output, component);
 
-                component.Fields = updatedFields;
-
-                updatedPlaceholders.Add(component);
-
-                foreach (var componentPlaceholder in component.Placeholders)
-                {
+                    // Process fields
+                    Dictionary<string, IFieldReader> updatedFields = new();
+                    foreach (var field in component.Fields)
                     {
-                        string componentPlaceholderName = componentPlaceholder.Key;
-                        Placeholder componentPlaceholderFeatures = componentPlaceholder.Value;
-
-                        component.Placeholders[componentPlaceholderName] = ProcessPlaceholder("container-{*}", component.Id, componentPlaceholderFeatures);
+                        ProcessField(updatedFields, field);
                     }
-                }
+                    component.Fields = updatedFields;
 
-                AddRenderingClosingChrome(updatedPlaceholders);
+                    // Add the component to the output
+                    output.Add(component);
+
+                    // Process component placeholders before adding closing chrome
+                    if (component.Placeholders.Count > 0)
+                    {
+                        // For each placeholder in the component, add it to the work stack
+                        foreach (var placeholder in component.Placeholders.ToList())
+                        {
+                            string placeholderKey = placeholder.Key;
+                            Placeholder placeholderValue = placeholder.Value;
+
+                            // Create a new placeholder to hold the processed content
+                            Placeholder processedPlaceholder = new();
+
+                            // Add a work item to process this placeholder
+                            workStack.Push(new PlaceholderWorkItem(
+                                "container-{*}",
+                                component.Id,
+                                placeholderValue,
+                                processedPlaceholder,
+                                component,
+                                placeholderKey
+                            ));
+
+                            // Store the processed placeholder for later assignment
+                            component.Placeholders[placeholderKey] = processedPlaceholder;
+                        }
+                    }
+
+                    // Add closing chrome for the component
+                    AddRenderingClosingChrome(output);
+                }
             }
+
+            // Add closing chrome for placeholder
+            AddPlaceholderClosingChrome(output);
         }
 
-        AddPlaceholderClosingChrome(updatedPlaceholders);
-
-        return updatedPlaceholders;
+        return result;
     }
 
     private static void AddRenderingClosingChrome(Placeholder updatedPlaceholders)
