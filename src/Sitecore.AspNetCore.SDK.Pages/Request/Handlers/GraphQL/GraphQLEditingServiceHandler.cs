@@ -11,6 +11,7 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
 using Sitecore.AspNetCore.SDK.Pages.GraphQL;
+using Sitecore.AspNetCore.SDK.Pages.Properties;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
@@ -38,7 +39,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
 
         if (!IsEditingRequest(request))
         {
-            throw new ArgumentException("GraphQLEditingServiceHandler: Error attempting to process non-editing request");
+            throw new ArgumentException(Resources.Exception_ErrorAttemptingToProcessNonEditingRequest);
         }
 
         List<SitecoreLayoutServiceClientException> errors = [];
@@ -336,7 +337,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogDebug("Layout Service GraphQL Response : {responseDataLayout}", response.Data.Item);
+            logger.LogDebug(Resources.Debug_LayoutServiceGraphQLResponse, response.Data.Item);
         }
 
         SitecoreLayoutResponseContent? content = null;
@@ -354,7 +355,7 @@ public class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
             if (logger.IsEnabled(LogLevel.Debug))
             {
                 object? formattedDeserializeObject = JsonSerializer.Deserialize<object?>(json);
-                logger.LogDebug("Layout Service Response JSON : {formattedDeserializeObject}", formattedDeserializeObject);
+                logger.LogDebug(Resources.Debug_LayoutServiceResponseJSON, formattedDeserializeObject);
             }
         }
 

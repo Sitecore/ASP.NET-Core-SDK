@@ -6,6 +6,7 @@ using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Middleware;
 using Sitecore.AspNetCore.SDK.Pages.Models;
+using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Controllers
@@ -31,7 +32,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
         {
             if (IsValidPagesConfigRequest(Request))
             {
-                logger.LogDebug("Processing valid Pages Config request");
+                logger.LogDebug(Resources.Debug_ProcessingValidPagesConfigRequest);
                 SetConfigResponseHeaders(Response);
                 return Ok(BuildConfigResponseBody());
             }
@@ -48,7 +49,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
         {
             if (IsValidPagesRenderRequest(Request))
             {
-                logger.LogDebug("Processing valid Pages Render request");
+                logger.LogDebug(Resources.Debug_ProcessingValidPagesRenderRequest);
                 PagesRenderArgs args = ParseQueryStringArgs(Request);
                 return Redirect($"{args.Route}?mode={args.Mode}&sc_itemid={args.ItemId}&sc_version={args.Version}&sc_lang={args.Language}&sc_site={args.Site}&sc_layoutKind={args.LayoutKind}&secret={args.EditingSecret}&tenant_id={args.TenantId}&route={args.Route}");
             }
@@ -78,7 +79,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
 
             if (!IsValidEditingSecret(httpRequest))
             {
-                logger.LogError("Invalid Pages Editing Secret Value");
+                logger.LogError(Resources.Error_InvalidPagesEditingSecretValue);
                 return false;
             }
 
@@ -109,13 +110,13 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
 
             if (!IsValidEditingSecret(httpRequest))
             {
-                logger.LogError("Invalid Pages Editing Secret Value");
+                logger.LogError(Resources.Error_InvalidPagesEditingSecretValue);
                 return false;
             }
 
             if (!RequestHasValidEditingOrigin(httpRequest))
             {
-                logger.LogError("Invalid Pages Editing Origin");
+                logger.LogError(Resources.Error_InvalidPagesEditingOrigin);
                 return false;
             }
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.Pages.Response;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
@@ -25,7 +26,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
             ISitecoreRenderingContext renderingContext = ViewContext?.HttpContext.GetSitecoreRenderingContext() ??
-                                             throw new NullReferenceException("EditingScriptsTagHelper: Sitecore RenderingContext is Null");
+                                             throw new NullReferenceException(Resources.Exception_EditingScriptsTagHelperSitecoreRenderingContextNull);
 
             output.TagName = string.Empty;
             string html = string.Empty;
@@ -35,7 +36,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
                 EditingContext? editingContext = JsonSerializer.Deserialize<EditingContext>(renderingContext?.Response?.Content.ContextRawData ?? string.Empty);
                 if (editingContext == null)
                 {
-                    throw new NullReferenceException("EditingScriptsTagHelper: Unable to process ContextRawData");
+                    throw new NullReferenceException(Resources.Exception_EditingScriptsTagHelperUnableToProcessContextRawData);
                 }
 
                 foreach (string script in editingContext.ClientScripts ?? [])

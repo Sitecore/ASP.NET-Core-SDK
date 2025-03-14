@@ -218,7 +218,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Controllers
             IActionResult response = sut.Render();
 
             // Assert
-            logger.Received().Log(LogLevel.Debug, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Processing valid Pages Render request"), null, Arg.Any<Func<object, Exception?, string>>());
+            logger.Received().Log(LogLevel.Debug, Arg.Any<EventId>(), Arg.Is<object>(o => o.ToString() == "Processing valid Pages Render request."), null, Arg.Any<Func<object, Exception?, string>>());
             response.Should().BeOfType<RedirectResult>();
             response.As<RedirectResult>().Permanent.Should().BeFalse();
             string validRedirectString = $"{expectedRoute}?mode={expectedMode}&sc_itemid={expectedItemId}&sc_version={expectedVersion}&sc_lang={expectedLanguage}&sc_site={expectedSite}&sc_layoutKind={expectedLayoutKind}&secret={ValidEditingSecret}&tenant_id={expectedTenantId}&route={expectedRoute}";

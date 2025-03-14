@@ -7,6 +7,7 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
+using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
@@ -51,7 +52,7 @@ public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> 
             // this protects from multiple time executions when Global and Attribute based configurations are used at the same time.
             if (httpContext.Items.ContainsKey(nameof(PagesRenderMiddleware)))
             {
-                throw new ApplicationException("PagesRenderMiddleware already registered. Have you ");
+                throw new ApplicationException(Resources.Exception_PagesRenderMiddlewareAlreadyRegistered);
             }
 
             if (httpContext.GetSitecoreRenderingContext() == null)
