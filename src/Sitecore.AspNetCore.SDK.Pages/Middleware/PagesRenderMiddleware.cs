@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
@@ -47,9 +48,8 @@ public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> 
         ArgumentNullException.ThrowIfNull(viewComponentHelper);
         ArgumentNullException.ThrowIfNull(htmlHelper);
 
-        if (IsEditingRequest(httpContext))
+        if (IsValidEditingRequest(httpContext))
         {
-            // this protects from multiple time executions when Global and Attribute based configurations are used at the same time.
             if (httpContext.Items.ContainsKey(nameof(PagesRenderMiddleware)))
             {
                 throw new ApplicationException(Resources.Exception_PagesRenderMiddlewareAlreadyRegistered);
@@ -82,11 +82,35 @@ public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> 
         await next(httpContext).ConfigureAwait(false);
     }
 
-    private static bool IsEditingRequest(HttpContext context)
+    private bool IsValidEditingRequest(HttpContext context)
     {
-        if (context.Request.Query.TryGetValue("mode", out var mode))
+        if (context.Request.Path == options.RenderEndpoint)
         {
-            return mode == "edit";
+            return false;
+        }
+
+        if (!context.Request.Query.TryGetValue("mode", out var mode) || mode != "edit")
+        {
+            return false;
+        }
+
+        if (!IsValidEditingSecret(context.Request))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsValidEditingSecret(HttpRequest httpRequest)
+    {
+        if (httpRequest.Query.TryGetValue("secret", out StringValues editingSecretValues))
+        {
+            string editingSecret = editingSecretValues.FirstOrDefault() ?? string.Empty;
+            if (editingSecret == options.EditingSecret)
+            {
+                return true;
+            }
         }
 
         return false;
