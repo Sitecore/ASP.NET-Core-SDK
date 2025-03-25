@@ -1,10 +1,10 @@
-﻿using GraphQL;
+﻿using System.Text.Json;
+using GraphQL;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
 using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
-using System.Text.Json;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
 {
@@ -21,19 +21,6 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                         Item = new ItemModel
                         {
                             Rendered = JsonDocument.Parse("{\"test\":\"value\"}").RootElement
-                        },
-                        Site = new Pages.Request.Handlers.GraphQL.Site
-                        {
-                            SiteInfo = new SiteInfo
-                            {
-                                Dictionary = new SiteInfoDictionary
-                                {
-                                    PageInfo = new PageInfo
-                                    {
-                                        HasNext = false
-                                    }
-                                }
-                            }
                         }
                     }
                 };
@@ -51,59 +38,6 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                         Item = new ItemModel
                         {
                             Rendered = JsonDocument.Parse("{\"test\":\"value\"}").RootElement
-                        },
-                        Site = new Pages.Request.Handlers.GraphQL.Site
-                        {
-                            SiteInfo = new SiteInfo
-                            {
-                                Dictionary = new SiteInfoDictionary
-                                {
-                                    PageInfo = new PageInfo
-                                    {
-                                        HasNext = true,
-                                        EndCursor = "cursor_value_1234"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-            }
-        }
-
-        public static GraphQLResponse<EditingDictionaryResponse> EditingDictionaryResponse
-        {
-            get
-            {
-                return new GraphQLResponse<EditingDictionaryResponse>
-                {
-                    Data = new EditingDictionaryResponse
-                    {
-                        Site = new Pages.Request.Handlers.GraphQL.Site
-                        {
-                            SiteInfo = new SiteInfo
-                            {
-                                Dictionary = new SiteInfoDictionary
-                                {
-                                    Results = new List<SiteInfoDictionaryItem>
-                                    {
-                                        new SiteInfoDictionaryItem
-                                        {
-                                            Key = "key1",
-                                            Value = "value1"
-                                        },
-                                        new SiteInfoDictionaryItem
-                                        {
-                                            Key = "key2",
-                                            Value = "value2"
-                                        }
-                                    },
-                                    PageInfo = new PageInfo
-                                    {
-                                        HasNext = false
-                                    }
-                                }
-                            }
                         }
                     }
                 };
@@ -121,19 +55,6 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                         Item = new ItemModel
                         {
                             Rendered = JsonDocument.Parse(@"{ ""sitecore"" : {}}").RootElement
-                        },
-                        Site = new Pages.Request.Handlers.GraphQL.Site
-                        {
-                            SiteInfo = new SiteInfo
-                            {
-                                Dictionary = new SiteInfoDictionary
-                                {
-                                    PageInfo = new PageInfo
-                                    {
-                                        HasNext = false
-                                    }
-                                }
-                            }
                         }
                     }
                 };

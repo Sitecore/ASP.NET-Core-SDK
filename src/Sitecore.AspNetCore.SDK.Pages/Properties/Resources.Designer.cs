@@ -149,5 +149,14 @@ namespace Sitecore.AspNetCore.SDK.Pages.Properties {
                 return ResourceManager.GetString("Exception_PagesRenderMiddlewareAlreadyRegistered", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphQLEditingServiceHandler.HandleEditingLayoutRequest: Response is null, unable to process EditingResponse.
+        /// </summary>
+        internal static string Exception_UableToProcessEditingResponse {
+            get {
+                return ResourceManager.GetString("Exception_UableToProcessEditingResponse", resourceCulture);
+            }
+        }
     }
 }

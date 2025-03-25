@@ -34,4 +34,9 @@ public class PagesOptions
     /// Gets or sets the Editing Secret.
     /// </summary>
     public string? EditingSecret { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the number of entries per page in a dictionary. The default value is set to 1000.
+    /// </summary>
+    public int DictionaryPageSize { get; set; } = 1000;
 }

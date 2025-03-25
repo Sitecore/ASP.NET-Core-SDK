@@ -8,5 +8,5 @@ public class Site
     /// <summary>
     /// Gets or sets the site info.
     /// </summary>
-    public SiteInfo? SiteInfo { get; set; }
+    public SiteInfo SiteInfo { get; set; } = new();
 }

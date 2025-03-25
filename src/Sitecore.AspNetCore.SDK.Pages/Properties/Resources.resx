@@ -147,4 +147,7 @@
   <data name="Exception_EditingScriptsTagHelperSitecoreRenderingContextNull" xml:space="preserve">
     <value>EditingScriptsTagHelper: Sitecore RenderingContext is Null</value>
   </data>
+  <data name="Exception_UableToProcessEditingResponse" xml:space="preserve">
+    <value>GraphQLEditingServiceHandler.HandleEditingLayoutRequest: Response is null, unable to process EditingResponse</value>
+  </data>
 </root>

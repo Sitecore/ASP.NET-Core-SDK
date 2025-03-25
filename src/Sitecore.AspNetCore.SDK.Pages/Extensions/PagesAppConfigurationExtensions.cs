@@ -10,6 +10,7 @@ using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Middleware;
 using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
+using Sitecore.AspNetCore.SDK.Pages.Services;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Interfaces;
@@ -75,6 +76,7 @@ public static class PagesAppConfigurationExtensions
 
         services.AddSingleton<PagesMarkerService>();
         services.AddSingleton<IGraphQLClientFactory>(new GraphQLClientFactory(contextId));
+        services.AddSingleton<IDictionaryService, DictionaryService>();
 
         if (options != null)
         {
