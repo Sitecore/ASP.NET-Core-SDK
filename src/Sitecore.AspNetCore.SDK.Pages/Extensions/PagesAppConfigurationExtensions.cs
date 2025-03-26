@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using GraphQL.Client.Abstractions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,6 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
-using Sitecore.AspNetCore.SDK.Pages.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Middleware;
 using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Services;
@@ -75,7 +75,6 @@ public static class PagesAppConfigurationExtensions
         }
 
         services.AddSingleton<PagesMarkerService>();
-        services.AddSingleton<IGraphQLClientFactory>(new GraphQLClientFactory(contextId));
         services.AddSingleton<IDictionaryService, DictionaryService>();
 
         if (options != null)
@@ -114,7 +113,7 @@ public static class PagesAppConfigurationExtensions
         builder.AddHandler(name, sp
             => ActivatorUtilities.CreateInstance<GraphQLEditingServiceHandler>(
                 sp,
-                sp.GetRequiredService<IGraphQLClientFactory>(),
+                sp.GetRequiredService<IGraphQLClient>(),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
                 sp.GetRequiredService<ILogger<GraphQLEditingServiceHandler>>()));
 

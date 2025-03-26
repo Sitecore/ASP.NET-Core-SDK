@@ -2,6 +2,7 @@ using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
+using Sitecore.AspNetCore.SDK.GraphQL.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Exceptions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
@@ -10,7 +11,6 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
-using Sitecore.AspNetCore.SDK.Pages.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.Pages.Services;
 
@@ -20,17 +20,17 @@ namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 /// <summary>
 /// Initializes a new instance of the <see cref="GraphQLEditingServiceHandler"/> class.
 /// </summary>
+/// <param name="client">The GraphQL Client used for requests</param>
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
 /// <param name="dictionaryService">DictionaryService used to return all dictionary items for a Sitecore site.</param>
-/// <param name="clientFactory">The GraphQlClientFactory used to generate instances of the GraphQl client.</param>
 /// <param name="serializer">The serializer to handle response data.</param>
-public partial class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFactory,
+public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
     ISitecoreLayoutSerializer serializer,
     ILogger<GraphQLEditingServiceHandler> logger,
     IDictionaryService dictionaryService)
     : ILayoutRequestHandler
 {
-    private readonly IGraphQLClientFactory clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+    private readonly IGraphQLClient client = client ?? throw new ArgumentNullException(nameof(client));
     private readonly ISitecoreLayoutSerializer serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
     private readonly ILogger<GraphQLEditingServiceHandler> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IDictionaryService dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
@@ -267,7 +267,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFa
         return headers[argName].FirstOrDefault() ?? string.Empty;
     }
 
-    private static GraphQLRequest BuildEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage)
+    private static GraphQLHttpRequestWithHeaders BuildEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage)
     {
         return new()
         {
@@ -288,14 +288,19 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClientFactory clientFa
                 itemId = GetRequestArgValue(request, "sc_itemid"),
                 language = requestLanguage,
                 version = GetRequestArgValue(request, "sc_version")
+            },
+            Headers = new Dictionary<string, string>
+            {
+                { "sc_layoutKind", GetRequestArgValue(request, "sc_layoutKind") },
+                { "sc_editmode", (GetRequestArgValue(request, "mode") == "edit").ToString() }
             }
         };
     }
 
     private async Task<SitecoreLayoutResponseContent?> HandleEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage, List<SitecoreLayoutServiceClientException> errors)
     {
-        IGraphQLClient client = clientFactory.GenerateClient(GetRequestArgValue(request, "sc_layoutKind"), GetRequestArgValue(request, "mode") == "edit");
         GraphQLResponse<EditingLayoutQueryResponse> response = await client.SendQueryAsync<EditingLayoutQueryResponse>(BuildEditingLayoutRequest(request, requestLanguage)).ConfigureAwait(false);
+
         if (response?.Data == null)
         {
             throw new Exception(Resources.Exception_UableToProcessEditingResponse);

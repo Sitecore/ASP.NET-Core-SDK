@@ -14,7 +14,6 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
-using Sitecore.AspNetCore.SDK.Pages.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 using Sitecore.AspNetCore.SDK.Pages.Services;
 using Xunit;
@@ -28,9 +27,6 @@ public class GraphQLEditingServiceHandlerFixture
     {
         IGraphQLClient client = Substitute.For<IGraphQLClient>();
         f.Inject(client);
-
-        IGraphQLClientFactory clientFactory = Substitute.For<IGraphQLClientFactory>();
-        f.Inject(clientFactory);
 
         ISitecoreLayoutSerializer mockSerializer = Substitute.For<ISitecoreLayoutSerializer>();
         f.Inject(mockSerializer);
@@ -138,12 +134,11 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_NoErrorsThrown(IGraphQLClientFactory clientFactory, IGraphQLClient client, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_NoErrorsThrown(IGraphQLClient client, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.SimpleEditingLayoutQueryResponse);
-        GraphQLEditingServiceHandler sut = new(clientFactory, Substitute.For<ISitecoreLayoutSerializer>(), Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, Substitute.For<ISitecoreLayoutSerializer>(), Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -155,13 +150,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_DictionaryServiceIsCalled(IGraphQLClientFactory clientFactory, IGraphQLClient client, SitecoreLayoutRequest request, IDictionaryService mockDictionaryService)
+    public async Task Request_ValidRequest_DictionaryServiceIsCalled(IGraphQLClient client, SitecoreLayoutRequest request, IDictionaryService mockDictionaryService)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.EditingLayoutQueryResponseWithDictionaryPaging);
 
-        GraphQLEditingServiceHandler sut = new(clientFactory, Substitute.For<ISitecoreLayoutSerializer>(), Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), mockDictionaryService);
+        GraphQLEditingServiceHandler sut = new(client, Substitute.For<ISitecoreLayoutSerializer>(), Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), mockDictionaryService);
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -174,13 +168,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_PlaceholderChromesAreAdded(IGraphQLClientFactory clientFactory, IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_PlaceholderChromesAreAdded(IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.MockEditingLayoutQueryResponse);
         mockSerializer.Deserialize(Arg.Any<string>()).Returns(Constants.MockLayoutResponse_Placeholder);
-        GraphQLEditingServiceHandler sut = new(clientFactory, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -199,13 +192,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_NestedPlaceholderChromesAreAdded(IGraphQLClientFactory clientFactory, IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_NestedPlaceholderChromesAreAdded(IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.MockEditingLayoutQueryResponse);
         mockSerializer.Deserialize(Arg.Any<string>()).Returns(Constants.MockLayoutResponse_NestedPlaceholder);
-        GraphQLEditingServiceHandler sut = new(clientFactory, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -223,13 +215,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_RenderingChromesAreAdded(IGraphQLClientFactory clientFactory, IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_RenderingChromesAreAdded(IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.MockEditingLayoutQueryResponse);
         mockSerializer.Deserialize(Arg.Any<string>()).Returns(Constants.MockLayoutResponse_WithComponentInPlaceholder);
-        GraphQLEditingServiceHandler sut = new(clientFactory, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -248,13 +239,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_RenderingInNestedPlaceholderChromesAreAdded(IGraphQLClientFactory clientFactory, IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_RenderingInNestedPlaceholderChromesAreAdded(IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.MockEditingLayoutQueryResponse);
         mockSerializer.Deserialize(Arg.Any<string>()).Returns(Constants.MockLayoutResponse_ComponentInNestedPlaceholder);
-        GraphQLEditingServiceHandler sut = new(clientFactory, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
@@ -273,13 +263,12 @@ public class GraphQLEditingServiceHandlerFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task Request_ValidRequest_FieldRenderingChromesAreAdded(IGraphQLClientFactory clientFactory, IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
+    public async Task Request_ValidRequest_FieldRenderingChromesAreAdded(IGraphQLClient client, ISitecoreLayoutSerializer mockSerializer, SitecoreLayoutRequest request)
     {
         // Arrange
-        clientFactory.GenerateClient(Arg.Any<string>(), Arg.Any<bool>()).Returns(client);
         client.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLRequest>()).Returns(Constants.MockEditingLayoutQueryResponse);
         mockSerializer.Deserialize(Arg.Any<string>()).Returns(Constants.MockLayoutResponse_ComponentWithField);
-        GraphQLEditingServiceHandler sut = new(clientFactory, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
+        GraphQLEditingServiceHandler sut = new(client, mockSerializer, Substitute.For<ILogger<GraphQLEditingServiceHandler>>(), Substitute.For<IDictionaryService>());
 
         // Act
         SitecoreLayoutResponse result = await sut.Request(request, "editingHandler");
