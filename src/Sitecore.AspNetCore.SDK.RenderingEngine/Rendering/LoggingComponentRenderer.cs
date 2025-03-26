@@ -31,8 +31,7 @@ public class LoggingComponentRenderer(ILogger<LoggingComponentRenderer> logger)
 
         return new ComponentRendererDescriptor(
             match,
-            sp => ActivatorUtilities.CreateInstance<LoggingComponentRenderer>(sp),
-            string.Empty);
+            sp => ActivatorUtilities.CreateInstance<LoggingComponentRenderer>(sp));
     }
 
     /// <inheritdoc />

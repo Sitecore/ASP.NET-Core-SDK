@@ -35,8 +35,7 @@ public class PartialViewComponentRenderer : IComponentRenderer
         ArgumentException.ThrowIfNullOrWhiteSpace(locator);
         return new ComponentRendererDescriptor(
             match,
-            sp => ActivatorUtilities.CreateInstance<PartialViewComponentRenderer>(sp, locator),
-            locator);
+            sp => ActivatorUtilities.CreateInstance<PartialViewComponentRenderer>(sp, locator));
     }
 
     /// <inheritdoc />

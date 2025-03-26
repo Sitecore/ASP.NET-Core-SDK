@@ -8,10 +8,11 @@
 /// </remarks>
 /// <param name="match">The predicate to use when retrieving a <see cref="IComponentRenderer"/>.</param>
 /// <param name="factory">The factory method to create a new instance of the <see cref="IComponentRenderer"/>.</param>
+/// <param name="componentName">The name of the component being added.</param>
 public class ComponentRendererDescriptor(
     Predicate<string> match,
     Func<IServiceProvider, IComponentRenderer> factory,
-    string componentName)
+    string componentName = "")
 {
     private readonly Func<IServiceProvider, IComponentRenderer> _factory = factory ?? throw new ArgumentNullException(nameof(factory));
     private readonly object _lock = new();

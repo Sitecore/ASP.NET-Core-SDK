@@ -91,7 +91,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
             return new PagesConfigResponse
             {
                 EditMode = "metadata",
-                Components = renderingEngineOptions.RendererRegistry.Select(x => x.Value.ComponentName).ToList()
+                Components = renderingEngineOptions.RendererRegistry.Where(x => x.Value.ComponentName != string.Empty).Select(x => x.Value.ComponentName).ToList()
             };
         }
 

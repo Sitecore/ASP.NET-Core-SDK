@@ -151,7 +151,7 @@ public static class RenderingEngineOptionsExtensions
         ArgumentNullException.ThrowIfNull(match);
         ArgumentException.ThrowIfNullOrWhiteSpace(viewComponentName);
 
-        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(match, viewComponentName, viewComponentName);
+        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(match, viewComponentName);
 
         options.RendererRegistry.Add(options.RendererRegistry.Count, descriptor);
 
