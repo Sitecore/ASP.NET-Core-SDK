@@ -23,7 +23,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
         public ViewContext? ViewContext { get; set; }
 
         /// <inheritdoc />
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             ISitecoreRenderingContext renderingContext = ViewContext?.HttpContext.GetSitecoreRenderingContext() ??
                                              throw new NullReferenceException(Resources.Exception_EditingScriptsTagHelperSitecoreRenderingContextNull);

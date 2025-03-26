@@ -15,7 +15,7 @@ public class GraphQLHttpRequestWithHeadersFixture
     [ExcludeFromCodeCoverage]
     public static Action<IFixture> AutoSetup => f =>
     {
-        GraphQLHttpClientOptions options = Substitute.For<GraphQLHttpClientOptions> ();
+        GraphQLHttpClientOptions options = Substitute.For<GraphQLHttpClientOptions>();
         f.Inject(options);
 
         IGraphQLJsonSerializer serializer = Substitute.For<IGraphQLJsonSerializer>();

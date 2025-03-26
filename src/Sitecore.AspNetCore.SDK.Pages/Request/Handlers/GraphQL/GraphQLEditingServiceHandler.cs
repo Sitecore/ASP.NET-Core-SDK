@@ -20,7 +20,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 /// <summary>
 /// Initializes a new instance of the <see cref="GraphQLEditingServiceHandler"/> class.
 /// </summary>
-/// <param name="client">The GraphQL Client used for requests</param>
+/// <param name="client">The GraphQL Client used for requests.</param>
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
 /// <param name="dictionaryService">DictionaryService used to return all dictionary items for a Sitecore site.</param>
 /// <param name="serializer">The serializer to handle response data.</param>
@@ -126,6 +126,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
                     {
                         ProcessField(updatedFields, field);
                     }
+
                     component.Fields = updatedFields;
 
                     // Add the component to the output
@@ -150,8 +151,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
                                 placeholderValue,
                                 processedPlaceholder,
                                 component,
-                                placeholderKey
-                            ));
+                                placeholderKey));
 
                             // Store the processed placeholder for later assignment
                             component.Placeholders[placeholderKey] = processedPlaceholder;
@@ -204,15 +204,15 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
             {
                 datasource = new
                 {
-                    id = editableField?.MetaData?.DataSource?.Id,
-                    language = editableField?.MetaData?.DataSource?.Language,
-                    revision = editableField?.MetaData?.DataSource?.Revision,
-                    version = editableField?.MetaData?.DataSource?.Version
+                    id = editableField.MetaData?.DataSource?.Id,
+                    language = editableField.MetaData?.DataSource?.Language,
+                    revision = editableField.MetaData?.DataSource?.Revision,
+                    version = editableField.MetaData?.DataSource?.Version
                 },
-                title = editableField?.MetaData?.Title,
-                fieldId = editableField?.MetaData?.FieldId,
-                fieldType = editableField?.MetaData?.FieldType,
-                rawValue = editableField?.MetaData?.RawValue
+                title = editableField.MetaData?.Title,
+                fieldId = editableField.MetaData?.FieldId,
+                fieldType = editableField.MetaData?.FieldType,
+                rawValue = editableField.MetaData?.RawValue
             };
 
             editableField.OpeningChrome = GenerateEditableChrome("field", "open", string.Empty, JsonSerializer.Serialize(openingChromeContent));

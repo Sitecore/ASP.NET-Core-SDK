@@ -708,7 +708,6 @@ public class RichTextTagHelperFixture
 
     #endregion
 
-
     [Theory]
     [AutoNSubstituteData]
     public void Process_RenderingChromesAreNotNull_ChromesAreOutput(

@@ -784,7 +784,6 @@ public class LinkTagHelperFixture
     }
     #endregion
 
-
     [Theory]
     [AutoNSubstituteData]
     public void Process_RenderingChromesAreNotNull_ChromesAreOutput(

@@ -189,7 +189,6 @@ public class TextFieldTagHelperFixture
         tagHelperOutput.Content.GetContent().Should().Be(TestText);
     }
 
-
     [Theory]
     [AutoNSubstituteData]
     public void Process_RenderingChromesAreNotNull_ChromesAreOutput(

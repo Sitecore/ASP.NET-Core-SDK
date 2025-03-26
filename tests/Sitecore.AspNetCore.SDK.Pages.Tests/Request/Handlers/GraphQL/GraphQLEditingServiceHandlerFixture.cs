@@ -37,7 +37,7 @@ public class GraphQLEditingServiceHandlerFixture
         SitecoreLayoutRequest request = new()
         {
             {
-                "sc_request_headers_key" , new Dictionary<string, string[]>()
+                "sc_request_headers_key", new Dictionary<string, string[]>()
                 {
                     { "mode", ["edit"] },
                     { "language", ["en"] },
@@ -118,7 +118,7 @@ public class GraphQLEditingServiceHandlerFixture
         SitecoreLayoutRequest request = new SitecoreLayoutRequest
         {
             {
-                "sc_request_headers_key" , new Dictionary<string, string[]>()
+                "sc_request_headers_key", new Dictionary<string, string[]>()
                 {
                     { "mode", ["edit"] }
                 }

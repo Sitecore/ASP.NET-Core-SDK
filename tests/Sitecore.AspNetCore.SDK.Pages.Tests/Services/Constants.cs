@@ -74,6 +74,5 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Services
                 };
             }
         }
-
     }
 }
