@@ -73,9 +73,19 @@ public static class TestConstants
 
     public const string JssEditingSecret = "mysecret";
 
+    public const string ContextId = "a_context_id";
+
+    public const string SiteName = "siteA";
+
     public const string TestParamNameValue = "ParamName-Value";
 
+    public const string ConfigRoute = "/api/editing/config";
+
+    public const string RenderRoute = "/api/editing/render";
+
     public const string HeadlessSxaLayoutId = "96e5f4ba-a2cf-4a4c-a4e7-64da88226362";
+
+    public const string PagesSampleConfigRequest = "{}";
 
 #pragma warning disable SA1401
 #pragma warning disable CA2211

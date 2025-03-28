@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.Pages.Configuration;
-using Sitecore.AspNetCore.SDK.Pages.Middleware;
 using Sitecore.AspNetCore.SDK.Pages.Models;
 using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Configuration;
