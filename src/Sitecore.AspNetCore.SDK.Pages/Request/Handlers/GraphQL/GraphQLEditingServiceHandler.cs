@@ -193,14 +193,12 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
     private static void ProcessField(Dictionary<string, IFieldReader> updatedFields, KeyValuePair<string, IFieldReader> field)
     {
-        if (field.Value is JsonSerializedField serialisedField && field.Key != "CustomContent")
+        EditableField<object>? editableField;
+        if (field.Value is JsonSerializedField serialisedField
+            && field.Key != "CustomContent" &&
+            serialisedField.TryRead(out editableField)
+            && editableField != null)
         {
-            var editableField = serialisedField.Read<EditableField<object>>();
-            if (editableField == null)
-            {
-                return;
-            }
-
             object openingChromeContent = new
             {
                 datasource = new
