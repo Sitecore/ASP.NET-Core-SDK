@@ -1,6 +1,6 @@
-using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sitecore.AspNetCore.SDK.GraphQL.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Exceptions;
@@ -13,6 +13,7 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
 using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.Pages.Services;
+using System.Text.Json;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 

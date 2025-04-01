@@ -1,5 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using GraphQL;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
+using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text.Json;
 
 namespace Sitecore.AspNetCore.SDK.TestData;
 
@@ -86,6 +90,58 @@ public static class TestConstants
     public const string HeadlessSxaLayoutId = "96e5f4ba-a2cf-4a4c-a4e7-64da88226362";
 
     public const string PagesSampleConfigRequest = "{}";
+
+    public static GraphQLResponse<EditingLayoutQueryResponse> SimpleEditingLayoutQueryResponse
+    {
+        get
+        {
+            return new GraphQLResponse<EditingLayoutQueryResponse>
+            {
+                Data = new EditingLayoutQueryResponse
+                {
+                    Item = new ItemModel
+                    {
+                        Rendered = JsonDocument.Parse(@"{ ""sitecore"" : { ""context"": { ""pageEditing"": true, ""site"": { ""name"": ""xmcloud-aspnet"" }, ""pageState"": ""edit"", ""editMode"": ""metadata"", ""clientData"": { ""hrz-canvas-state"": { ""itemId"": ""0f236cdb-b564-45df-89e3-d51c4635dc3d"", ""itemVersion"": 1, ""siteName"": ""xmcloud-aspnet"", ""language"": ""en"", ""deviceId"": ""fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3"", ""pageMode"": ""NORMAL"", ""variant"": null }, ""hrz-canvas-verification-token"": """" }, ""clientScripts"": [ ""https://xmc-sitecoresaaa790-xmcloudaspn93b0-testing80ef.sitecorecloud.io/sitecore modules/Shell/SXA/xa-inline-editor.js?v=40.2.135.4298"", ""https://feaasstatic.blob.core.windows.net/packages/page-extension/latest/page.js"", ""https://pages.sitecorecloud.io/horizon/canvas/horizon.canvas.js?v=3CD517344C4149E754F4C2E5BDED7C77"" ], ""language"": ""en"", ""itemPath"": ""/"" }, ""route"": { ""name"": ""Home"", ""displayName"": ""Home"", ""fields"": { ""Title"": { ""metadata"": { ""datasource"": { ""id"": ""{0F236CDB-B564-45DF-89E3-D51C4635DC3D}"", ""language"": ""en"", ""revision"": ""fa21d6a6-c5f0-43d6-87eb-029fae6564fc"", ""version"": 1 }, ""title"": ""Title"", ""fieldId"": ""{198CC08A-E984-4212-AD29-BFD75AF3AD6E}"", ""fieldType"": ""Single-Line Text"", ""rawValue"": ""Home"" }, ""value"": ""Home"" }, ""Content"": { ""metadata"": { ""datasource"": { ""id"": ""{0F236CDB-B564-45DF-89E3-D51C4635DC3D}"", ""language"": ""en"", ""revision"": ""fa21d6a6-c5f0-43d6-87eb-029fae6564fc"", ""version"": 1 }, ""title"": ""Content"", ""fieldId"": ""{869C97EE-296A-49B3-81B9-3FD9A131D104}"", ""fieldType"": ""Rich Text"", ""rawValue"": """" }, ""value"": """" }, ""NavigationFilter"": [], ""NavigationTitle"": { ""metadata"": { ""datasource"": { ""id"": ""{0F236CDB-B564-45DF-89E3-D51C4635DC3D}"", ""language"": ""en"", ""revision"": ""fa21d6a6-c5f0-43d6-87eb-029fae6564fc"", ""version"": 1 }, ""title"": ""Link caption in navigation"", ""fieldId"": ""{4E0720E9-9D50-4DDC-87CF-ECD65E8E94C8}"", ""fieldType"": ""Single-Line Text"", ""rawValue"": ""Home"" }, ""value"": ""Home"" }, ""NavigationClass"": null, ""Page Design"": null, ""SxaTags"": [] }, ""databaseName"": ""master"", ""deviceId"": ""fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3"", ""itemId"": ""0f236cdb-b564-45df-89e3-d51c4635dc3d"", ""itemLanguage"": ""en"", ""itemVersion"": 1, ""layoutId"": ""96e5f4ba-a2cf-4a4c-a4e7-64da88226362"", ""templateId"": ""4ab470a8-5dee-4c43-b074-73ece681d7b3"", ""templateName"": ""Page"", ""placeholders"": { ""headless-main"": [ ] } } }}").RootElement
+                    }
+                }
+            };
+        }
+    }
+
+    public static GraphQLResponse<EditingDictionaryResponse> DictionaryResponseWithoutPaging
+    {
+        get
+        {
+            return new GraphQLResponse<EditingDictionaryResponse>
+            {
+                Data = new EditingDictionaryResponse
+                {
+                    Site = new Pages.Request.Handlers.GraphQL.Site
+                    {
+                        SiteInfo = new SiteInfo
+                        {
+                            Dictionary = new SiteInfoDictionary
+                            {
+                                Results = new List<SiteInfoDictionaryItem>
+                                    {
+                                        new SiteInfoDictionaryItem
+                                        {
+                                            Key = "key1",
+                                            Value = "value1"
+                                        }
+                                    },
+                                PageInfo = new PageInfo
+                                {
+                                    HasNext = false,
+                                    EndCursor = string.Empty
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    }
 
 #pragma warning disable SA1401
 #pragma warning disable CA2211

@@ -29,6 +29,11 @@ builder.Services.AddSitecoreRenderingEngine(options =>
 WebApplication app = builder.Build();
 app.UseSitecorePages(new PagesOptions { ConfigEndpoint = TestConstants.ConfigRoute });
 app.UseRouting();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Pages}/{action=Index}");
+
 app.Run();
 
 /// <summary>
