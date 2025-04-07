@@ -12,6 +12,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -35,7 +36,7 @@ public class DateTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new DateTagHelper());
+        f.Register(() => new DateTagHelper(new EditableChromeRenderer()));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);
@@ -336,6 +337,35 @@ public class DateTagHelperFixture
         tagHelperOutput.Content.GetContent().Should().Be(Editable);
     }
     #endregion
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+       TagHelperContext tagHelperContext,
+       TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        DateTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
+        DateField testField = new(_date)
+        {
+            EditableMarkup = Editable,
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.DateModel = testField;
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Content.GetContent().Should().Contain(Editable);
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
 
     private static ModelExpression GetModelExpression(Field model)
     {

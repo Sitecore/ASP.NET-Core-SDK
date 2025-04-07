@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.ExperienceEditor\Sitecore.AspNetCore.SDK.ExperienceEditor.csproj" />
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.GraphQL\Sitecore.AspNetCore.SDK.GraphQL.csproj" />
     <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
+    <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Pages\Sitecore.AspNetCore.SDK.Pages.csproj" />
     <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.RenderingEngine\Sitecore.AspNetCore.SDK.RenderingEngine.csproj" />
     <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.SearchOptimization\Sitecore.AspNetCore.SDK.SearchOptimization.csproj" />
     <ProjectReference Include="..\..\src\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification\Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification.csproj" />

@@ -8,7 +8,7 @@ namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 /// that contains a value that can be edited using wrapped HTML markup.
 /// </summary>
 /// <typeparam name="TValue">The value type.</typeparam>
-public class WrappedEditableField<TValue> : Field<TValue>, IWrappedEditableField
+public class WrappedEditableField<TValue> : EditableField<TValue>, IWrappedEditableField
 {
     /// <inheritdoc />
     [DataMember(Name = "editableFirstPart")]

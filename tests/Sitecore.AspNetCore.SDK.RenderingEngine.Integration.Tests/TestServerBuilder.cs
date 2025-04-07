@@ -5,6 +5,7 @@ using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
 
+[Obsolete("This class is deprecated as this is based on the old .NET Core 3.0 approach app initialisation approach. Use `TestWebApplicationFactory` approach instead.")]
 public class TestServerBuilder
 {
     private readonly IWebHostBuilder _webHostBuilder = PrepareDefault();

@@ -52,7 +52,8 @@ public static class RenderingEngineOptionsExtensions
         return AddPartialView(
             options,
             name => layoutComponentName.Equals(name, StringComparison.OrdinalIgnoreCase),
-            partialViewPath);
+            partialViewPath,
+            layoutComponentName);
     }
 
     /// <summary>
@@ -61,17 +62,19 @@ public static class RenderingEngineOptionsExtensions
     /// <param name="options">The <see cref="RenderingEngineOptions"/> to configure.</param>
     /// <param name="match">The predicate to use when attempting to match a layout component.</param>
     /// <param name="partialViewPath">The path of the partial view.</param>
+    /// <param name="sitecoreComponentName">The name of the component as defined on the Sitecore Rendering Item.</param>
     /// <returns>The <see cref="RenderingEngineOptions"/> so that additional calls can be chained.</returns>
     public static RenderingEngineOptions AddPartialView(
         this RenderingEngineOptions options,
         Predicate<string> match,
-        string partialViewPath)
+        string partialViewPath,
+        string sitecoreComponentName = "")
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(match);
         ArgumentException.ThrowIfNullOrWhiteSpace(partialViewPath);
 
-        ComponentRendererDescriptor descriptor = PartialViewComponentRenderer.Describe(match, partialViewPath);
+        ComponentRendererDescriptor descriptor = PartialViewComponentRenderer.Describe(match, partialViewPath, sitecoreComponentName);
 
         options.RendererRegistry.Add(options.RendererRegistry.Count, descriptor);
 
@@ -151,7 +154,7 @@ public static class RenderingEngineOptionsExtensions
         ArgumentNullException.ThrowIfNull(match);
         ArgumentException.ThrowIfNullOrWhiteSpace(viewComponentName);
 
-        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(match, viewComponentName);
+        ComponentRendererDescriptor descriptor = ViewComponentComponentRenderer.Describe(match, viewComponentName, viewComponentName);
 
         options.RendererRegistry.Add(options.RendererRegistry.Count, descriptor);
 
@@ -198,7 +201,8 @@ public static class RenderingEngineOptionsExtensions
         return AddModelBoundView<TModel>(
             options,
             match => match.Equals(layoutComponentName, StringComparison.OrdinalIgnoreCase),
-            viewName);
+            viewName,
+            layoutComponentName);
     }
 
     /// <summary>
@@ -208,11 +212,13 @@ public static class RenderingEngineOptionsExtensions
     /// <param name="options">The <see cref="RenderingEngineOptions"/> to configure.</param>
     /// <param name="match">A predicate to use when attempting to match a layout component.</param>
     /// <param name="viewName">The view name.</param>
+    /// <param name="sitecoreComponentName">The Component name as defined on the Sitecore Rendering Item.</param>
     /// <returns>The <see cref="RenderingEngineOptions"/> so that additional calls can be chained.</returns>
     public static RenderingEngineOptions AddModelBoundView<TModel>(
         this RenderingEngineOptions options,
         Predicate<string> match,
-        string viewName)
+        string viewName,
+        string sitecoreComponentName = "")
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(match);
@@ -223,7 +229,8 @@ public static class RenderingEngineOptionsExtensions
             sp => ActivatorUtilities.CreateInstance<ModelBoundViewComponentComponentRenderer<TModel>>(
                 sp,
                 RenderingEngineConstants.SitecoreViewComponents.DefaultSitecoreViewComponentName,
-                viewName));
+                viewName),
+            sitecoreComponentName);
 
         options.RendererRegistry.Add(options.RendererRegistry.Count, descriptor);
 
@@ -242,7 +249,7 @@ public static class RenderingEngineOptionsExtensions
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        ComponentRendererDescriptor descriptor = new(_ => true, services => ActivatorUtilities.CreateInstance<T>(services));
+        ComponentRendererDescriptor descriptor = new(_ => true, services => ActivatorUtilities.CreateInstance<T>(services), "defaultComponent");
         options.DefaultRenderer = descriptor;
 
         return options;
