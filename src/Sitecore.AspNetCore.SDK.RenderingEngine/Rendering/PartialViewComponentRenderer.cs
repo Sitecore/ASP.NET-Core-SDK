@@ -28,14 +28,16 @@ public class PartialViewComponentRenderer : IComponentRenderer
     /// </summary>
     /// <param name="match">A predicate to use when attempting to match a layout component.</param>
     /// <param name="locator">The string to use when locating the Partial View.</param>
+    /// <param name="sitecoreComponentName">The component name defined on the Sitecore Rendering Item.</param>
     /// <returns>An instance of <see cref="ComponentRendererDescriptor"/> that describes the <see cref="PartialViewComponentRenderer"/>.</returns>
-    public static ComponentRendererDescriptor Describe(Predicate<string> match, string locator)
+    public static ComponentRendererDescriptor Describe(Predicate<string> match, string locator, string sitecoreComponentName = "")
     {
         ArgumentNullException.ThrowIfNull(match);
         ArgumentException.ThrowIfNullOrWhiteSpace(locator);
         return new ComponentRendererDescriptor(
             match,
-            sp => ActivatorUtilities.CreateInstance<PartialViewComponentRenderer>(sp, locator));
+            sp => ActivatorUtilities.CreateInstance<PartialViewComponentRenderer>(sp, locator),
+            sitecoreComponentName);
     }
 
     /// <inheritdoc />
