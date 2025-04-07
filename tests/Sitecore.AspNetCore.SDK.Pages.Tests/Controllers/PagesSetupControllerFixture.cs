@@ -140,6 +140,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Controllers
             httpContext.Response.Headers.ContentSecurityPolicy.Should().Equal($"frame-ancestors 'self' {ValidOrigins} {ValidEditingOrigin}");
             httpContext.Response.Headers.AccessControlAllowOrigin.Should().Equal(ValidEditingOrigin);
             httpContext.Response.Headers.AccessControlAllowMethods.Should().Equal("GET, POST, OPTIONS, PUT, PATCH, DELETE");
+            httpContext.Response.Headers.AccessControlAllowHeaders.Should().Equal("Authorization");
             httpContext.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
             httpContext.Response.ContentType.Should().Be("application/json");
             response.Result.Should().BeOfType<OkObjectResult>();

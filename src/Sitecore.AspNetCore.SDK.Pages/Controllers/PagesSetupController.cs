@@ -27,6 +27,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
         /// </summary>
         /// <returns>PagesConfigResponse object.</returns>
         [HttpGet]
+        [HttpOptions]
         public ActionResult<PagesConfigResponse> Config()
         {
             if (IsValidPagesConfigRequest(Request))
@@ -99,6 +100,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
             httpResponse.Headers.ContentSecurityPolicy = $"frame-ancestors 'self' {options.ValidOrigins} {options.ValidEditingOrigin}";
             httpResponse.Headers.AccessControlAllowOrigin = options.ValidEditingOrigin;
             httpResponse.Headers.AccessControlAllowMethods = "GET, POST, OPTIONS, PUT, PATCH, DELETE";
+            httpResponse.Headers.AccessControlAllowHeaders = "Authorization";
             httpResponse.StatusCode = StatusCodes.Status200OK;
             httpResponse.ContentType = "application/json";
         }
