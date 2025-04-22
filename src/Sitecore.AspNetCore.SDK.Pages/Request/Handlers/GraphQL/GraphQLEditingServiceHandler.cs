@@ -111,7 +111,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
             var output = current.Output;
 
             // Add opening chrome for placeholder
-            AddPlaceholderOpeningChrome(current.Name, current.Id, output);
+            AddPlaceholderOpeningChrome(current.PlaceholderKey, current.Id, output);
 
             // Process all features in this placeholder
             foreach (var feature in current.Features)
@@ -147,12 +147,11 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
                             // Add a work item to process this placeholder
                             workStack.Push(new PlaceholderWorkItem(
-                                "container-{*}",
+                                placeholderKey,
                                 component.Id,
                                 placeholderValue,
                                 processedPlaceholder,
-                                component,
-                                placeholderKey));
+                                component));
 
                             // Store the processed placeholder for later assignment
                             component.Placeholders[placeholderKey] = processedPlaceholder;

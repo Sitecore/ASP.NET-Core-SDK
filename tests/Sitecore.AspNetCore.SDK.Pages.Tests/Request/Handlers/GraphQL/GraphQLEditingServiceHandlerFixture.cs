@@ -207,7 +207,7 @@ public class GraphQLEditingServiceHandlerFixture
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][0].Should().BeOfType<EditableChrome>();
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][0].As<EditableChrome>().Attributes["chrometype"].Should().Be("placeholder");
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][0].As<EditableChrome>().Attributes["kind"].Should().Be("open");
-        result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][0].As<EditableChrome>().Attributes["id"].Should().Be("container-{*}_component_1");
+        result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][0].As<EditableChrome>().Attributes["id"].Should().Be("nested_placeholder_1_component_1");
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][1].Should().BeOfType<EditableChrome>();
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][1].As<EditableChrome>().Attributes["chrometype"].Should().Be("placeholder");
         result?.Content?.Sitecore?.Route?.Placeholders["placeholder_1"][2].As<Component>().Placeholders["nested_placeholder_1"][1].As<EditableChrome>().Attributes["kind"].Should().Be("close");
