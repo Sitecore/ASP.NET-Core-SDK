@@ -522,7 +522,7 @@ public class PlaceholderTagHelperFixture
         await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Content.GetContent().Should().Be("<div class=\"sc-empty-placeholder\"></div>");
+        tagHelperOutput.Content.GetContent().Should().Be("<div class=\"sc-jss-empty-placeholder\"></div>");
     }
 
     [Theory]
