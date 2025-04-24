@@ -4,6 +4,7 @@ using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Configuration;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Properties;
@@ -329,8 +330,14 @@ public static class SitecoreLayoutClientBuilderExtensions
         uri ??= new Uri("https://edge-platform.sitecorecloud.io/v1/content/api/graphql/v1");
         uri = uri.AddQueryString("sitecoreContextId", contextId)!;
 
-        GraphQLHttpClient client = new(uri, new SystemTextJsonSerializer());
-        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(name, client);
+        builder.Services.TryAddKeyedSingleton<IGraphQLClient>(name, (sp, serviceKey) =>
+        {
+            var optionsKeyed = sp.GetKeyedService<IOptions<GraphQLHttpClientOptions>>(serviceKey) ?? sp.GetRequiredService<IOptions<GraphQLHttpClientOptions>>();
+            var clientOptions = optionsKeyed.Value;
+            clientOptions.EndPoint = uri;
+            GraphQLHttpClient client = new(clientOptions, new SystemTextJsonSerializer());
+            return client;
+        });
 
         builder.WithDefaultRequestOptions(request =>
         {

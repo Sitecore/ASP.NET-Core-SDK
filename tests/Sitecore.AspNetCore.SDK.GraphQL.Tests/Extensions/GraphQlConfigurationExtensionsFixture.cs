@@ -31,8 +31,10 @@ public class GraphQlConfigurationExtensionsFixture
     [Fact]
     public void AddGraphQlClient_EmptyApiKey_InConfiguration_ThrowsExceptions()
     {
-        Func<IServiceCollection> act =
-            () => Substitute.For<IServiceCollection>().AddGraphQlClient(_ => { });
+        var services = new ServiceCollection();
+        services.AddGraphQlClient(_ => { });
+        var sp = services.BuildServiceProvider();
+        Func<IGraphQLClient> act = () => sp.GetRequiredService<IGraphQLClient>();
         act.Should().Throw<InvalidGraphQlConfigurationException>()
             .WithMessage(Resources.Exception_MissingApiKeyAndContextId);
     }
@@ -41,11 +43,13 @@ public class GraphQlConfigurationExtensionsFixture
     [AutoData]
     public void AddGraphQlClient_EmptyEndpoint_WithApiKey_ThrowsExceptions(string apiKey)
     {
-        Func<IServiceCollection> act =
-            () => Substitute.For<IServiceCollection>().AddGraphQlClient(options =>
-            {
-                options.ApiKey = apiKey;
-            });
+        var services = new ServiceCollection();
+        services.AddGraphQlClient(options =>
+        {
+            options.ApiKey = apiKey;
+        });
+        var sp = services.BuildServiceProvider();
+        Func<IGraphQLClient> act = () => sp.GetRequiredService<IGraphQLClient>();
         act.Should().Throw<InvalidGraphQlConfigurationException>()
             .WithMessage(Resources.Exception_MissingEndpoint);
     }
