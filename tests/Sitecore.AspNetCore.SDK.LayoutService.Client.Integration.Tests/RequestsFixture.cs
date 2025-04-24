@@ -6,6 +6,7 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NSubstitute.Extensions;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -40,13 +41,7 @@ public class RequestsFixture
         };
         message.Content.Headers.ContentType = new MediaTypeHeaderValue("application/graphql+json");
         result.Responses.Push(message);
-        ServiceDescriptor gqlClient = services.Single(s => s.ServiceKey?.ToString() == handlerName);
-        GraphQLHttpClientOptions options = ((GraphQLHttpClient)gqlClient.KeyedImplementationInstance!).Options;
-        options.HttpMessageHandler = result;
-        services.RemoveAllKeyed<IGraphQLClient>(handlerName);
-        services.AddKeyedSingleton<IGraphQLClient>(handlerName, new GraphQLHttpClient(
-            options,
-            new SystemTextJsonSerializer()));
+        services.Configure<GraphQLHttpClientOptions>(options => options.HttpMessageHandler = result);
 
         // Build and grab the sut
         IServiceProvider provider = services.BuildServiceProvider();
