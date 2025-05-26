@@ -67,11 +67,11 @@ public static class SitecoreLayoutClientBuilderExtensions
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> being configured.</param>
     /// <param name="name">The name used to identify the handler.</param>
     /// <param name="siteName">The siteName used to identify the handler.</param>
-    /// <param name="apiKey">The apiKey to access graphQl endpoint.</param>
-    /// <param name="uri">GraphQl endpoint uri.</param>
-    /// <param name="defaultLanguage">Default language for GraphQl requests.</param>
+    /// <param name="apiKey">The apiKey to access graphQL endpoint.</param>
+    /// <param name="uri">GraphQL endpoint uri.</param>
+    /// <param name="defaultLanguage">Default language for GraphQL requests.</param>
     /// <returns>The <see cref="ILayoutRequestHandlerBuilder{THandler}"/> so that additional calls can be chained.</returns>
-    public static ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> AddGraphQlHandler(
+    public static ILayoutRequestHandlerBuilder<GraphQLLayoutServiceHandler> AddGraphQLHandler(
         this ISitecoreLayoutClientBuilder builder,
         string name,
         string siteName,
@@ -101,11 +101,11 @@ public static class SitecoreLayoutClientBuilderExtensions
             }
         });
         return builder.AddHandler(name, sp
-            => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
+            => ActivatorUtilities.CreateInstance<GraphQLLayoutServiceHandler>(
                 sp,
                 sp.GetRequiredKeyedService<IGraphQLClient>(name),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
-                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
+                sp.GetRequiredService<ILogger<GraphQLLayoutServiceHandler>>()));
     }
 
     /// <summary>
@@ -114,9 +114,9 @@ public static class SitecoreLayoutClientBuilderExtensions
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> being configured.</param>
     /// <param name="name">The name used to identify the handler.</param>
     /// <param name="siteName">The siteName used to identify the handler.</param>
-    /// <param name="defaultLanguage">Default language for GraphQl requests.</param>
+    /// <param name="defaultLanguage">Default language for GraphQL requests.</param>
     /// <returns>The <see cref="ILayoutRequestHandlerBuilder{THandler}"/> so that additional calls can be chained.</returns>
-    public static ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> AddGraphQlHandler(
+    public static ILayoutRequestHandlerBuilder<GraphQLLayoutServiceHandler> AddGraphQLHandler(
         this ISitecoreLayoutClientBuilder builder,
         string name,
         string siteName,
@@ -138,11 +138,11 @@ public static class SitecoreLayoutClientBuilderExtensions
             }
         });
         return builder.AddHandler(name, sp
-            => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
+            => ActivatorUtilities.CreateInstance<GraphQLLayoutServiceHandler>(
                 sp,
                 sp.GetRequiredService<IGraphQLClient>(),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
-                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
+                sp.GetRequiredService<ILogger<GraphQLLayoutServiceHandler>>()));
     }
 
     /// <summary>
@@ -310,11 +310,11 @@ public static class SitecoreLayoutClientBuilderExtensions
     /// <param name="builder">The <see cref="ISitecoreLayoutClientBuilder"/> being configured.</param>
     /// <param name="name">The name used to identify the handler.</param>
     /// <param name="contextId">The context identifier to access graphQl endpoint.</param>
-    /// <param name="uri">GraphQl endpoint uri.</param>
+    /// <param name="uri">GraphQL endpoint uri.</param>
     /// <param name="siteName">The siteName used to identify the handler.</param>
-    /// <param name="defaultLanguage">Default language for GraphQl requests.</param>
+    /// <param name="defaultLanguage">Default language for GraphQL requests.</param>
     /// <returns>The <see cref="ILayoutRequestHandlerBuilder{THandler}"/> so that additional calls can be chained.</returns>
-    public static ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> AddGraphQlWithContextHandler(
+    public static ILayoutRequestHandlerBuilder<GraphQLLayoutServiceHandler> AddGraphQLWithContextHandler(
         this ISitecoreLayoutClientBuilder builder,
         string name,
         string contextId,
@@ -343,10 +343,10 @@ public static class SitecoreLayoutClientBuilderExtensions
             }
         });
         return builder.AddHandler(name, sp
-            => ActivatorUtilities.CreateInstance<GraphQlLayoutServiceHandler>(
+            => ActivatorUtilities.CreateInstance<GraphQLLayoutServiceHandler>(
                 sp,
                 sp.GetRequiredKeyedService<IGraphQLClient>(name),
                 sp.GetRequiredService<ISitecoreLayoutSerializer>(),
-                sp.GetRequiredService<ILogger<GraphQlLayoutServiceHandler>>()));
+                sp.GetRequiredService<ILogger<GraphQLLayoutServiceHandler>>()));
     }
 }

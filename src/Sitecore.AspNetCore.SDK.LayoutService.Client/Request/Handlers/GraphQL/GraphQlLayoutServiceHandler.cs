@@ -11,19 +11,19 @@ namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
 
 /// <inheritdoc cref="ILayoutRequestHandler" />
 /// <summary>
-/// Initializes a new instance of the <see cref="GraphQlLayoutServiceHandler"/> class.
+/// Initializes a new instance of the <see cref="GraphQLLayoutServiceHandler"/> class.
 /// </summary>
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
 /// <param name="client">The graphQl client to handle response data.</param>
 /// <param name="serializer">The serializer to handle response data.</param>
-public class GraphQlLayoutServiceHandler(
+public class GraphQLLayoutServiceHandler(
     IGraphQLClient client,
     ISitecoreLayoutSerializer serializer,
-    ILogger<GraphQlLayoutServiceHandler> logger)
+    ILogger<GraphQLLayoutServiceHandler> logger)
     : ILayoutRequestHandler
 {
     private readonly ISitecoreLayoutSerializer _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-    private readonly ILogger<GraphQlLayoutServiceHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<GraphQLLayoutServiceHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IGraphQLClient _client = client ?? throw new ArgumentNullException(nameof(client));
 
     /// <inheritdoc />
@@ -87,7 +87,7 @@ public class GraphQlLayoutServiceHandler(
             if (response.Errors != null)
             {
                 errors.AddRange(
-                    response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQlException(e))));
+                    response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQLException(e))));
             }
         }
 

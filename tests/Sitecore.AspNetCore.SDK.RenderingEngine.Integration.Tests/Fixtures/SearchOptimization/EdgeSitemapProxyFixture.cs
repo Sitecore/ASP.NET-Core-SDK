@@ -39,8 +39,8 @@ public class EdgeSitemapProxyFixture : IDisposable
                             new HttpClient(_mockClientHandler));
                 });
 
-                IGraphQLClient? mockedGraphQlClient = Substitute.For<IGraphQLClient>();
-                mockedGraphQlClient.SendQueryAsync<SiteInfoResultModel>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoResultModel>
+                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
+                mockedGraphQLClient.SendQueryAsync<SiteInfoResultModel>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoResultModel>
                 {
                     Data = new SiteInfoResultModel
                     {
@@ -57,7 +57,7 @@ public class EdgeSitemapProxyFixture : IDisposable
                     }
                 });
 
-                builder.AddSingleton(mockedGraphQlClient);
+                builder.AddSingleton(mockedGraphQLClient);
                 builder.AddEdgeSitemap();
             })
             .Configure(app =>

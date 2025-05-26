@@ -34,7 +34,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Controllers
             f.Inject(requestDelegate);
 
             IOptions<PagesOptions> pagesOptions = Substitute.For<IOptions<PagesOptions>>();
-            PagesOptions pagesOptionsValues = new PagesOptions
+            PagesOptions pagesOptionsValues = new()
             {
                 ConfigEndpoint = ValidConfigEndpoint,
                 RenderEndpoint = ValidRenderEndpoint,
@@ -51,7 +51,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Controllers
             IOptions<RenderingEngineOptions> renderingEngineOptions = Substitute.For<IOptions<RenderingEngineOptions>>();
             string componentName = "TestComponent";
             ComponentRendererDescriptor componentRendererDescriptor = new(name => name == componentName, _ => null!, componentName);
-            RenderingEngineOptions renderingEngineOptionsValues = new RenderingEngineOptions
+            RenderingEngineOptions renderingEngineOptionsValues = new()
             {
                 RendererRegistry = new SortedList<int, ComponentRendererDescriptor>
                 {

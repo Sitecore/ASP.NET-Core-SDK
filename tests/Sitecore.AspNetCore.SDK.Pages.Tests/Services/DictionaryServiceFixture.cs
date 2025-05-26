@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
@@ -88,8 +89,8 @@ public class DictionaryServiceFixture
         // Arrange
         DictionaryService sut = new(pageOptions);
         IGraphQLClient graphQLClient = Substitute.For<IGraphQLClient>();
-        graphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Is<GraphQLRequest>(x => GraphQlQueryHasAfterVariableWithValue(x, string.Empty))).Returns(Constants.DictionaryResponseWithPaging);
-        graphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Is<GraphQLRequest>(x => GraphQlQueryHasAfterVariableWithValue(x, "abcd1234"))).Returns(Constants.DictionaryResponseWithoutPaging);
+        graphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Is<GraphQLRequest>(x => GraphQLQueryHasAfterVariableWithValue(x, string.Empty))).Returns(Constants.DictionaryResponseWithPaging);
+        graphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Is<GraphQLRequest>(x => GraphQLQueryHasAfterVariableWithValue(x, "abcd1234"))).Returns(Constants.DictionaryResponseWithoutPaging);
 
         // Act
         List<SiteInfoDictionaryItem> result = await sut.GetSiteDictionary("valid_site", "valid_language", graphQLClient);
@@ -98,7 +99,7 @@ public class DictionaryServiceFixture
         result.Should().HaveCount(2);
     }
 
-    public bool GraphQlQueryHasAfterVariableWithValue(GraphQLRequest graphQlRequst, string expectedAfterValue)
+    public bool GraphQLQueryHasAfterVariableWithValue(GraphQLRequest graphQlRequst, string expectedAfterValue)
     {
         if (!graphQlRequst.ContainsKey("variables"))
         {
@@ -106,13 +107,13 @@ public class DictionaryServiceFixture
         }
 
         Type afterVariable = graphQlRequst["variables"].GetType();
-        var afterProperty = afterVariable.GetProperty("after");
+        PropertyInfo? afterProperty = afterVariable.GetProperty("after");
         if (afterProperty == null)
         {
             return false;
         }
 
-        var afterVariableValue = afterProperty.GetValue(graphQlRequst["variables"]);
+        object? afterVariableValue = afterProperty.GetValue(graphQlRequst["variables"]);
         if (afterVariableValue == null)
         {
             return false;

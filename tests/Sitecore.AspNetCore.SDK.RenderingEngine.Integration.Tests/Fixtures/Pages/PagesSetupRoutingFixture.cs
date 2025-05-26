@@ -7,17 +7,17 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Pag
 
 public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram> factory) : IClassFixture<TestWebApplicationFactory<TestPagesProgram>>
 {
-    private readonly TestWebApplicationFactory<TestPagesProgram> factory = factory;
+    private readonly TestWebApplicationFactory<TestPagesProgram> _factory = factory;
 
     [Fact]
     public async Task ConfigRoute_MissingSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret=";
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -28,11 +28,11 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task ConfigRoute_InvalidSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret=invalid_secret_value";
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -43,12 +43,12 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task ConfigRoute_InvalidRequestOrigin_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret={TestConstants.JssEditingSecret}";
         client.DefaultRequestHeaders.Add("Origin", "http://invalid_origin_domain.com");
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -59,12 +59,12 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task ConfigRoute_ValidCall_ReturnsCorrectObject()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret={TestConstants.JssEditingSecret}";
         client.DefaultRequestHeaders.Add("Origin", "https://pages.sitecorecloud.io");
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -80,11 +80,11 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task RenderRoute_MissingSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.RenderRoute}?secret=";
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -95,11 +95,11 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task RenderRoute_InvalidSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.RenderRoute}?secret=invalid_secret_value";
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();
@@ -110,7 +110,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
     public async Task RenderRoute_ValidCall_ReturnsCorrectResponse()
     {
         // Arrange
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         Guid itemId = Guid.NewGuid();
         string language = "en";
         string layoutKind = "final";
@@ -122,7 +122,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestPagesProgram
         string url = $"{TestConstants.RenderRoute}?secret={TestConstants.JssEditingSecret}&sc_itemid={itemId}&sc_lang={language}&sc_layoutKind={layoutKind}&mode={mode}&sc_site={site}&sc_version={version}&tenant_id={tenantId}&route={route}";
 
         // Act
-        var response = await client.GetAsync(url);
+        HttpResponseMessage? response = await client.GetAsync(url);
 
         // Assert
         response.Should().NotBeNull();

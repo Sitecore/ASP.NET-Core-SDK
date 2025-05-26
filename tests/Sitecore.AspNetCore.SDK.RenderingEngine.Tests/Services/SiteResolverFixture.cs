@@ -21,10 +21,10 @@ public class SiteResolverFixture
         // Arrange
         List<SiteInfo> siteCollection =
         [
-            new SiteInfo { Name = "site1", HostName = "*.eu.site.com" },
-            new SiteInfo { Name = "site2", HostName = "*.SITE.com | longsitehost.com" },
-            new SiteInfo { Name = "site3", HostName = "ordeR.eu.site.com  | longsitehost2.com" },
-            new SiteInfo { Name = "site4", HostName = "i.site.com" },
+            new() { Name = "site1", HostName = "*.eu.site.com" },
+            new() { Name = "site2", HostName = "*.SITE.com | longsitehost.com" },
+            new() { Name = "site3", HostName = "ordeR.eu.site.com  | longsitehost2.com" },
+            new() { Name = "site4", HostName = "i.site.com" },
         ];
 
         _siteCollectionService.GetSitesCollection().Returns<SiteInfo?[]?>([.. siteCollection]);
@@ -43,8 +43,8 @@ public class SiteResolverFixture
         // Arrange
         List<SiteInfo> siteCollection =
         [
-            new SiteInfo { Name = "bar", HostName = "bar.net" },
-            new SiteInfo { Name = "wildcard", HostName = "*" }
+            new() { Name = "bar", HostName = "bar.net" },
+            new() { Name = "wildcard", HostName = "*" }
         ];
 
         _siteCollectionService.GetSitesCollection().Returns<SiteInfo?[]?>([.. siteCollection]);
@@ -63,10 +63,10 @@ public class SiteResolverFixture
         // Arrange
         List<SiteInfo> siteCollection =
         [
-            new SiteInfo { Name = "foo", HostName = "*" },
-            new SiteInfo { Name = "bar", HostName = "*.app.net" },
-            new SiteInfo { Name = "i-bar", HostName = "i.app.net" },
-            new SiteInfo { Name = "baz", HostName = "baz.app.net" }
+            new() { Name = "foo", HostName = "*" },
+            new() { Name = "bar", HostName = "*.app.net" },
+            new() { Name = "i-bar", HostName = "i.app.net" },
+            new() { Name = "baz", HostName = "baz.app.net" }
         ];
 
         _siteCollectionService.GetSitesCollection().Returns<SiteInfo?[]?>([.. siteCollection]);
@@ -91,10 +91,10 @@ public class SiteResolverFixture
         // Arrange
         List<SiteInfo> siteCollection =
         [
-            new SiteInfo { Name = "foo", HostName = "*" },
-            new SiteInfo { Name = "bar", HostName = "Bar.net" },
-            new SiteInfo { Name = "foo-never", HostName = "*" },
-            new SiteInfo { Name = "bar-never", HostName = "bar.net" }
+            new() { Name = "foo", HostName = "*" },
+            new() { Name = "bar", HostName = "Bar.net" },
+            new() { Name = "foo-never", HostName = "*" },
+            new() { Name = "bar-never", HostName = "bar.net" }
         ];
 
         _siteCollectionService.GetSitesCollection().Returns<SiteInfo?[]?>([.. siteCollection]);

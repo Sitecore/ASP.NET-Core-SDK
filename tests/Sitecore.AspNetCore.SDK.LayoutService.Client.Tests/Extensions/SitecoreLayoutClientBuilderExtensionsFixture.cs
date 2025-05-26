@@ -168,10 +168,10 @@ public class SitecoreLayoutClientBuilderExtensionsFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void AddGraphQlHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string name, string siteName, string apiKey, Uri uri)
+    public void AddGraphQLHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string name, string siteName, string apiKey, Uri uri)
     {
         // Act
-        ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> result = builder.AddGraphQlHandler(name, siteName, apiKey, uri);
+        ILayoutRequestHandlerBuilder<GraphQLLayoutServiceHandler> result = builder.AddGraphQLHandler(name, siteName, apiKey, uri);
 
         // Assert
         ServiceProvider provider = result.Services.BuildServiceProvider();
@@ -183,10 +183,10 @@ public class SitecoreLayoutClientBuilderExtensionsFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void AddGraphQlWithContextHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string contextId)
+    public void AddGraphQLWithContextHandler_Minimal_IsValid(SitecoreLayoutClientBuilder builder, string contextId)
     {
         // Act
-        ILayoutRequestHandlerBuilder<GraphQlLayoutServiceHandler> result = builder.AddGraphQlWithContextHandler("Test", contextId);
+        ILayoutRequestHandlerBuilder<GraphQLLayoutServiceHandler> result = builder.AddGraphQLWithContextHandler("Test", contextId);
 
         // Assert
         ServiceProvider provider = result.Services.BuildServiceProvider();

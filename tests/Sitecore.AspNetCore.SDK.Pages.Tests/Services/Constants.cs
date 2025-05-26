@@ -19,14 +19,14 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Services
                             {
                                 Dictionary = new SiteInfoDictionary
                                 {
-                                    Results = new List<SiteInfoDictionaryItem>
-                                    {
-                                        new SiteInfoDictionaryItem
+                                    Results =
+                                    [
+                                        new()
                                         {
                                             Key = "key1",
                                             Value = "value1"
                                         }
-                                    },
+                                    ],
                                     PageInfo = new PageInfo
                                     {
                                         HasNext = false,
@@ -54,14 +54,14 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Services
                             {
                                 Dictionary = new SiteInfoDictionary
                                 {
-                                    Results = new List<SiteInfoDictionaryItem>
-                                    {
-                                        new SiteInfoDictionaryItem
+                                    Results =
+                                    [
+                                        new()
                                         {
                                             Key = "page1",
                                             Value = "page1"
                                         }
-                                    },
+                                    ],
                                     PageInfo = new PageInfo
                                     {
                                         HasNext = true,

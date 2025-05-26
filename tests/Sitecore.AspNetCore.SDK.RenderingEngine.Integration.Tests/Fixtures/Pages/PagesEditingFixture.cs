@@ -11,21 +11,21 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Pag
 
 public class PagesEditingFixture(TestWebApplicationFactory<TestPagesProgram> factory) : IClassFixture<TestWebApplicationFactory<TestPagesProgram>>
 {
-    private readonly TestWebApplicationFactory<TestPagesProgram> factory = factory;
+    private readonly TestWebApplicationFactory<TestPagesProgram> _factory = factory;
 
     [Fact]
     public async Task EditingRequest_ValidRequest_ReturnsChromeDecoratedResponse()
     {
         // Arrange
-        factory.MockGraphQLClient.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLHttpRequestWithHeaders>()).Returns(TestConstants.SimpleEditingLayoutQueryResponse);
-        factory.MockGraphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Any<GraphQLRequest>()).Returns(TestConstants.DictionaryResponseWithoutPaging);
+        _factory.MockGraphQLClient.SendQueryAsync<EditingLayoutQueryResponse>(Arg.Any<GraphQLHttpRequestWithHeaders>()).Returns(TestConstants.SimpleEditingLayoutQueryResponse);
+        _factory.MockGraphQLClient.SendQueryAsync<EditingDictionaryResponse>(Arg.Any<GraphQLRequest>()).Returns(TestConstants.DictionaryResponseWithoutPaging);
 
-        HttpClient client = factory.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"/Pages/index?mode=edit&secret={TestConstants.JssEditingSecret}&sc_itemid={TestConstants.TestItemId}&sc_version=1&sc_layoutKind=final";
 
         // Act
-        var response = await client.GetAsync(url);
-        var responseBody = await response.Content.ReadAsStringAsync();
+        HttpResponseMessage? response = await client.GetAsync(url);
+        string? responseBody = await response.Content.ReadAsStringAsync();
 
         // Assert
         response.Should().NotBeNull();

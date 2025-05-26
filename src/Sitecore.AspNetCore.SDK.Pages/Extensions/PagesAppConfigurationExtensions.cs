@@ -26,7 +26,7 @@ public static class PagesAppConfigurationExtensions
     /// Registers the Sitecore Experience Editor middleware into the <see cref="IApplicationBuilder"/>.
     /// </summary>
     /// <param name="app">The instance of the <see cref="IApplicationBuilder"/> to extend.</param>
-    /// <param name="options">The Pages options used to configure Pages MetaData edting.</param>
+    /// <param name="options">The Pages options used to configure Pages MetaData editing.</param>
     /// <returns>The <see cref="IApplicationBuilder"/> so that additional calls can be chained.</returns>
     public static IApplicationBuilder UseSitecorePages(this WebApplication app, PagesOptions options)
     {

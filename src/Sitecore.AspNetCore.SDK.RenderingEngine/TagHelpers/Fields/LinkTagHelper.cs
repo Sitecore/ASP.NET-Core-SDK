@@ -26,7 +26,7 @@ public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string RelAttribute = "rel";
     private const string BlankValue = "_blank";
     private const string AnchorValue = "#";
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer;
+    private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer;
 
     /// <summary>
     /// Gets or sets the model value.
@@ -200,7 +200,7 @@ public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     {
         if (field.OpeningChrome != null && field.ClosingChrome != null)
         {
-            output.Content.AppendHtml(chromeRenderer.Render(field.OpeningChrome));
+            output.Content.AppendHtml(_chromeRenderer.Render(field.OpeningChrome));
 
             if (field.Value.Href == string.Empty)
             {
@@ -211,7 +211,7 @@ public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 output.Content.AppendHtml(GenerateLink(field.Value, output));
             }
 
-            output.Content.AppendHtml(chromeRenderer.Render(field.ClosingChrome));
+            output.Content.AppendHtml(_chromeRenderer.Render(field.ClosingChrome));
         }
         else
         {

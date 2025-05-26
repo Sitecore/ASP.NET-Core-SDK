@@ -13,70 +13,70 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.GraphQL.Tests.Extensions;
 
-public class GraphQlConfigurationExtensionsFixture
+public class GraphQLConfigurationExtensionsFixture
 {
     [Theory]
     [AutoNSubstituteData]
-    public void AddGraphQlClient_NullProperties_ThrowsExceptions(IServiceCollection serviceCollection)
+    public void AddGraphQLClient_NullProperties_ThrowsExceptions(IServiceCollection serviceCollection)
     {
         Func<IServiceCollection> servicesNull =
-            () => GraphQlConfigurationExtensions.AddGraphQlClient(null!, null!);
+            () => GraphQLConfigurationExtensions.AddGraphQLClient(null!, null!);
         Func<IServiceCollection> configNull =
-            () => serviceCollection.AddGraphQlClient(null!);
+            () => serviceCollection.AddGraphQLClient(null!);
 
         servicesNull.Should().Throw<ArgumentNullException>().WithParameterName("services");
         configNull.Should().Throw<ArgumentNullException>().WithParameterName("configuration");
     }
 
     [Fact]
-    public void AddGraphQlClient_EmptyApiKey_InConfiguration_ThrowsExceptions()
+    public void AddGraphQLClient_EmptyApiKey_InConfiguration_ThrowsExceptions()
     {
         Func<IServiceCollection> act =
-            () => Substitute.For<IServiceCollection>().AddGraphQlClient(_ => { });
-        act.Should().Throw<InvalidGraphQlConfigurationException>()
+            () => Substitute.For<IServiceCollection>().AddGraphQLClient(_ => { });
+        act.Should().Throw<InvalidGraphQLConfigurationException>()
             .WithMessage(Resources.Exception_MissingApiKeyAndContextId);
     }
 
     [Theory]
     [AutoData]
-    public void AddGraphQlClient_EmptyEndpoint_WithApiKey_ThrowsExceptions(string apiKey)
+    public void AddGraphQLClient_EmptyEndpoint_WithApiKey_ThrowsExceptions(string apiKey)
     {
         Func<IServiceCollection> act =
-            () => Substitute.For<IServiceCollection>().AddGraphQlClient(options =>
+            () => Substitute.For<IServiceCollection>().AddGraphQLClient(options =>
             {
                 options.ApiKey = apiKey;
             });
-        act.Should().Throw<InvalidGraphQlConfigurationException>()
+        act.Should().Throw<InvalidGraphQLConfigurationException>()
             .WithMessage(Resources.Exception_MissingEndpoint);
     }
 
     [Theory]
     [AutoData]
-    public void AddGraphQlClient_EmptyEndpointUri_WithContextId_UsesDefault(string contextId)
+    public void AddGraphQLClient_EmptyEndpointUri_WithContextId_UsesDefault(string contextId)
     {
         // Arrange
         ServiceCollection serviceCollection = [];
 
         // Act
-        serviceCollection.AddGraphQlClient(configuration =>
+        serviceCollection.AddGraphQLClient(configuration =>
         {
             configuration.ContextId = contextId;
         });
         GraphQLHttpClient? graphQlClient = serviceCollection.BuildServiceProvider().GetService<IGraphQLClient>() as GraphQLHttpClient;
 
         // Assert
-        graphQlClient!.Options.EndPoint!.OriginalString.Should().Contain(SitecoreGraphQlClientOptions.DefaultEdgeEndpoint.OriginalString);
+        graphQlClient!.Options.EndPoint!.OriginalString.Should().Contain(SitecoreGraphQLClientOptions.DefaultEdgeEndpoint.OriginalString);
     }
 
     [Theory]
     [AutoData]
-    public void AddGraphQlClient_AddConfiguredGraphQlClient_To_ServiceCollection(string apiKey, Uri endpointUri, string defaultSiteName)
+    public void AddGraphQLClient_AddConfiguredGraphQLClient_To_ServiceCollection(string apiKey, Uri endpointUri, string defaultSiteName)
     {
         // Arrange
         ServiceCollection serviceCollection = [];
 
         // Act
-        serviceCollection.AddGraphQlClient(
+        serviceCollection.AddGraphQLClient(
             configuration =>
             {
                 configuration.ApiKey = apiKey;
@@ -94,13 +94,13 @@ public class GraphQlConfigurationExtensionsFixture
 
     [Theory]
     [AutoData]
-    public void AddGraphQlClient_WithContext_To_ServiceCollection(string contextId, Uri endpointUri, string defaultSiteName)
+    public void AddGraphQLClient_WithContext_To_ServiceCollection(string contextId, Uri endpointUri, string defaultSiteName)
     {
         // Arrange
         ServiceCollection serviceCollection = [];
 
         // Act
-        serviceCollection.AddGraphQlClient(
+        serviceCollection.AddGraphQLClient(
             configuration =>
             {
                 configuration.ContextId = contextId;

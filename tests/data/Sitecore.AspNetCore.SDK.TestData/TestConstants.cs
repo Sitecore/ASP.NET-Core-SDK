@@ -1,9 +1,9 @@
-﻿using GraphQL;
-using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
-using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
+using GraphQL;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request.Handlers.GraphQL;
+using Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
 namespace Sitecore.AspNetCore.SDK.TestData;
 
@@ -116,20 +116,20 @@ public static class TestConstants
             {
                 Data = new EditingDictionaryResponse
                 {
-                    Site = new Pages.Request.Handlers.GraphQL.Site
+                    Site = new Site
                     {
                         SiteInfo = new SiteInfo
                         {
                             Dictionary = new SiteInfoDictionary
                             {
-                                Results = new List<SiteInfoDictionaryItem>
+                                Results =
+                                [
+                                    new SiteInfoDictionaryItem()
                                     {
-                                        new SiteInfoDictionaryItem
-                                        {
-                                            Key = "key1",
-                                            Value = "value1"
-                                        }
-                                    },
+                                        Key = "key1",
+                                        Value = "value1"
+                                    }
+                                ],
                                 PageInfo = new PageInfo
                                 {
                                     HasNext = false,
@@ -143,6 +143,7 @@ public static class TestConstants
         }
     }
 
+#pragma warning disable SA1201
 #pragma warning disable SA1401
 #pragma warning disable CA2211
     public static readonly string TestMultilineFieldValue = $"This is {Environment.NewLine} multiline text";
@@ -150,4 +151,5 @@ public static class TestConstants
     public static DateTime DateTimeValue = DateTime.ParseExact("2012-05-04T00:00:00Z", "yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
 #pragma warning restore CA2211
 #pragma warning restore SA1401
+#pragma warning restore SA1201
 }

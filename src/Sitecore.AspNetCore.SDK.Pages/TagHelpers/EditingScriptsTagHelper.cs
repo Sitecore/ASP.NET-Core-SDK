@@ -31,9 +31,9 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
             output.TagName = string.Empty;
             string html = string.Empty;
 
-            if (renderingContext?.Response?.Content?.Sitecore?.Context?.IsEditing ?? false)
+            if (renderingContext.Response?.Content?.Sitecore?.Context?.IsEditing ?? false)
             {
-                EditingContext? editingContext = JsonSerializer.Deserialize<EditingContext>(renderingContext?.Response?.Content.ContextRawData ?? string.Empty);
+                EditingContext? editingContext = JsonSerializer.Deserialize<EditingContext>(renderingContext.Response?.Content.ContextRawData ?? string.Empty);
                 if (editingContext == null)
                 {
                     throw new NullReferenceException(Resources.Exception_EditingScriptsTagHelperUnableToProcessContextRawData);
@@ -47,18 +47,18 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
                 html += $@"
                             <script id=""hrz-canvas-state"" type=""application/json"">
                                 {{
-                                    ""itemId"":""{editingContext?.ClientData?.CanvasState?.ItemId}"",
-                                    ""itemVersion"":{editingContext?.ClientData?.CanvasState?.ItemVersion},
-                                    ""siteName"":""{editingContext?.ClientData?.CanvasState?.SiteName}"",
-                                    ""language"":""{editingContext?.ClientData?.CanvasState?.Language}"",
-                                    ""deviceId"":""{editingContext?.ClientData?.CanvasState?.DeviceId}"",
-                                    ""pageMode"":""{editingContext?.ClientData?.CanvasState?.PageMode}"",
-                                    ""variant"":""{editingContext?.ClientData?.CanvasState?.Variant}""
+                                    ""itemId"":""{editingContext.ClientData?.CanvasState?.ItemId}"",
+                                    ""itemVersion"":{editingContext.ClientData?.CanvasState?.ItemVersion},
+                                    ""siteName"":""{editingContext.ClientData?.CanvasState?.SiteName}"",
+                                    ""language"":""{editingContext.ClientData?.CanvasState?.Language}"",
+                                    ""deviceId"":""{editingContext.ClientData?.CanvasState?.DeviceId}"",
+                                    ""pageMode"":""{editingContext.ClientData?.CanvasState?.PageMode}"",
+                                    ""variant"":""{editingContext.ClientData?.CanvasState?.Variant}""
                                 }}
                             </script>
                         ";
 
-                html += $"<script id=\"hrz-canvas-verification-token\" type=\"application/json\">{editingContext?.ClientData?.CanvasVerificationToken}</script>";
+                html += $"<script id=\"hrz-canvas-verification-token\" type=\"application/json\">{editingContext.ClientData?.CanvasVerificationToken}</script>";
             }
 
             output.Content.SetHtmlContent(html);

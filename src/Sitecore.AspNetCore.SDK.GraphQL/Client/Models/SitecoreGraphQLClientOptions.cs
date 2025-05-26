@@ -7,7 +7,7 @@ namespace Sitecore.AspNetCore.SDK.GraphQL.Client.Models;
 /// <summary>
 /// GraphQL Client options needed for Preview or Edge schemas.
 /// </summary>
-public class SitecoreGraphQlClientOptions : GraphQLHttpClientOptions
+public class SitecoreGraphQLClientOptions : GraphQLHttpClientOptions
 {
     /// <summary>
     /// ContextId query string key.
@@ -35,12 +35,12 @@ public class SitecoreGraphQlClientOptions : GraphQLHttpClientOptions
     public string? ContextId { get; set; }
 
     /// <summary>
-    /// Gets or sets Default site name, used by middlewares which use GraphQl client.
+    /// Gets or sets Default site name, used by middlewares which use GraphQL client.
     /// </summary>
     public string? DefaultSiteName { get; set; }
 
     /// <summary>
     /// Gets or sets GraphQLJsonSerializer, which could be SystemTextJsonSerializer or NewtonsoftJsonSerializer, SystemTextJsonSerializer by default.
     /// </summary>
-    public IGraphQLWebsocketJsonSerializer GraphQlJsonSerializer { get; set; } = new SystemTextJsonSerializer();
+    public IGraphQLWebsocketJsonSerializer GraphQLJsonSerializer { get; set; } = new SystemTextJsonSerializer();
 }

@@ -74,7 +74,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                              Placeholders = new Dictionary<string, Placeholder>
                             {
                                 {
-                                    "placeholder_1", new Placeholder()
+                                    "placeholder_1", []
                                 }
                             }
                          }
@@ -96,8 +96,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                             Placeholders = new Dictionary<string, Placeholder>
                             {
                                 {
-                                    "placeholder_1", new Placeholder
-                                    {
+                                    "placeholder_1", [
                                         new Component
                                         {
                                             Name = "component_1",
@@ -105,11 +104,11 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                                             Placeholders = new Dictionary<string, Placeholder>
                                             {
                                                 {
-                                                    "nested_placeholder_1", new Placeholder()
+                                                    "nested_placeholder_1", []
                                                 }
                                             }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -131,14 +130,13 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                             Placeholders = new Dictionary<string, Placeholder>
                             {
                                 {
-                                    "placeholder_1", new Placeholder
-                                    {
+                                    "placeholder_1", [
                                         new Component
                                         {
                                             Name = "component_1",
                                             Id = "component_1"
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -160,8 +158,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                             Placeholders = new Dictionary<string, Placeholder>
                             {
                                 {
-                                    "placeholder_1", new Placeholder
-                                    {
+                                    "placeholder_1", [
                                         new Component
                                         {
                                             Name = "component_1",
@@ -169,18 +166,17 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                                             Placeholders = new Dictionary<string, Placeholder>
                                             {
                                                 {
-                                                    "nested_placeholder_1", new Placeholder
-                                                    {
+                                                    "nested_placeholder_1", [
                                                         new Component
                                                         {
                                                             Name = "nested_component_2",
                                                             Id = "nested_component_2"
                                                         }
-                                                    }
+                                                    ]
                                                 }
                                             }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -202,18 +198,21 @@ namespace Sitecore.AspNetCore.SDK.Pages.Tests.Request.Handlers.GraphQL
                             Placeholders = new Dictionary<string, Placeholder>
                             {
                                 {
-                                    "placeholder_1", new Placeholder
-                                    {
+                                    "placeholder_1", [
                                         new Component
                                         {
                                             Name = "component_1",
                                             Id = "component_1",
                                             Fields = new Dictionary<string, IFieldReader>
                                             {
-                                                { "field_1", new JsonSerializedField(JsonDocument.Parse("{\"metadata\":{\"datasource\":{\"id\":\"datasource_id\",\"language\":\"en\",\"revision\":\"revision_1\",\"version\":1},\"title\":\"Text\",\"fieldId\":\"field_id\",\"fieldType\":\"Text\",\"rawValue\":\"field_raw_value\"},\"value\":\"field_value\"}")) }
+                                                {
+                                                    "field_1",
+                                                    new JsonSerializedField(JsonDocument.Parse(
+                                                        "{\"metadata\":{\"datasource\":{\"id\":\"datasource_id\",\"language\":\"en\",\"revision\":\"revision_1\",\"version\":1},\"title\":\"Text\",\"fieldId\":\"field_id\",\"fieldType\":\"Text\",\"rawValue\":\"field_raw_value\"},\"value\":\"field_value\"}"))
+                                                }
                                             }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }

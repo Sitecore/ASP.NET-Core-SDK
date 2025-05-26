@@ -26,5 +26,56 @@
             /// </summary>
             public const string EditScriptsHtmlTag = "sc-editingscripts";
         }
+
+        /// <summary>
+        /// Const values for query string keys.
+        /// </summary>
+        public static class QueryStringKeys
+        {
+            /// <summary>
+            /// Mode query string key.
+            /// </summary>
+            public const string Mode = "mode";
+
+            /// <summary>
+            /// Item id query string key.
+            /// </summary>
+            public const string ItemId = "sc_itemid";
+
+            /// <summary>
+            /// Secret query string key.
+            /// </summary>
+            public const string Secret = "secret";
+
+            /// <summary>
+            /// Language query string key.
+            /// </summary>
+            public const string Language = "sc_lang";
+
+            /// <summary>
+            /// Layout kind query string key.
+            /// </summary>
+            public const string LayoutKind = "sc_layoutKind";
+
+            /// <summary>
+            /// Route query string key.
+            /// </summary>
+            public const string Route = "route";
+
+            /// <summary>
+            /// Site query string key.
+            /// </summary>
+            public const string Site = "sc_site";
+
+            /// <summary>
+            /// Version query string key.
+            /// </summary>
+            public const string Version = "sc_version";
+
+            /// <summary>
+            /// Tenant id query string key.
+            /// </summary>
+            public const string TenantId = "tenant_id";
+        }
     }
 }

@@ -41,7 +41,7 @@ public class MultisiteAppConfigurationExtensionsFixture
         serviceCollection.Should().HaveCount(8);
         serviceCollection[5].ImplementationInstance.Should().BeEquivalentTo(new ConfigureNamedOptions<MultisiteOptions>(string.Empty, multisiteOptions));
         serviceCollection[6].ServiceType.Should().Be(typeof(ISiteCollectionService));
-        serviceCollection[6].ImplementationType.Should().Be(typeof(GraphQlSiteCollectionService));
+        serviceCollection[6].ImplementationType.Should().Be(typeof(GraphQLSiteCollectionService));
         serviceCollection[7].ServiceType.Should().Be(typeof(ISiteResolver));
         serviceCollection[7].ImplementationType.Should().Be(typeof(SiteResolver));
     }

@@ -1,6 +1,6 @@
+using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sitecore.AspNetCore.SDK.GraphQL.Request;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Exceptions;
@@ -11,9 +11,9 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
+using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.Pages.Services;
-using System.Text.Json;
 
 namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 
@@ -25,16 +25,16 @@ namespace Sitecore.AspNetCore.SDK.Pages.Request.Handlers.GraphQL;
 /// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
 /// <param name="dictionaryService">DictionaryService used to return all dictionary items for a Sitecore site.</param>
 /// <param name="serializer">The serializer to handle response data.</param>
-public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
+public class GraphQLEditingServiceHandler(IGraphQLClient client,
     ISitecoreLayoutSerializer serializer,
     ILogger<GraphQLEditingServiceHandler> logger,
     IDictionaryService dictionaryService)
     : ILayoutRequestHandler
 {
-    private readonly IGraphQLClient client = client ?? throw new ArgumentNullException(nameof(client));
-    private readonly ISitecoreLayoutSerializer serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-    private readonly ILogger<GraphQLEditingServiceHandler> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IDictionaryService dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
+    private readonly IGraphQLClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly ISitecoreLayoutSerializer _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+    private readonly ILogger<GraphQLEditingServiceHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IDictionaryService _dictionaryService = dictionaryService ?? throw new ArgumentNullException(nameof(dictionaryService));
 
     /// <inheritdoc />
     public async Task<SitecoreLayoutResponse> Request(SitecoreLayoutRequest request, string handlerName)
@@ -70,14 +70,16 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
     private static bool IsEditingRequest(SitecoreLayoutRequest request)
     {
-        if (!request.ContainsKey("sc_request_headers_key") ||
-            request["sc_request_headers_key"] is not Dictionary<string, string[]> headers ||
-            !headers.ContainsKey("mode"))
+        bool result = false;
+        if (request.TryGetHeadersCollection(out Dictionary<string, string[]>? headers))
         {
-            return false;
+            if (headers != null && headers.TryGetValue(Constants.QueryStringKeys.Mode, out string[]? value))
+            {
+                result = value.Contains("edit");
+            }
         }
 
-        return headers["mode"].Contains("edit");
+        return result;
     }
 
     private static void GenerateMetaDataChromes(SitecoreLayoutResponseContent? content)
@@ -87,7 +89,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
             return;
         }
 
-        foreach (var placeholder in content.Sitecore.Route.Placeholders)
+        foreach (KeyValuePair<string, Placeholder> placeholder in content.Sitecore.Route.Placeholders)
         {
             string name = placeholder.Key;
             Placeholder placeholderFeatures = placeholder.Value;
@@ -98,23 +100,23 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
     private static Placeholder ProcessPlaceholder(string name, string id, Placeholder placeholderFeatures)
     {
-        Placeholder result = new();
+        Placeholder result = [];
 
         // Create a separate class outside of this method for the work item
         // to avoid nested class compilation issues
-        var workStack = new Stack<PlaceholderWorkItem>();
+        Stack<PlaceholderWorkItem> workStack = new();
         workStack.Push(new PlaceholderWorkItem(name, id, placeholderFeatures, result));
 
         while (workStack.Count > 0)
         {
-            var current = workStack.Pop();
-            var output = current.Output;
+            PlaceholderWorkItem current = workStack.Pop();
+            Placeholder output = current.Output;
 
             // Add opening chrome for placeholder
             AddPlaceholderOpeningChrome(current.PlaceholderKey, current.Id, output);
 
             // Process all features in this placeholder
-            foreach (var feature in current.Features)
+            foreach (IPlaceholderFeature feature in current.Features)
             {
                 if (feature is Component component)
                 {
@@ -123,7 +125,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
                     // Process fields
                     Dictionary<string, IFieldReader> updatedFields = new();
-                    foreach (var field in component.Fields)
+                    foreach (KeyValuePair<string, IFieldReader> field in component.Fields)
                     {
                         ProcessField(updatedFields, field);
                     }
@@ -137,13 +139,13 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
                     if (component.Placeholders.Count > 0)
                     {
                         // For each placeholder in the component, add it to the work stack
-                        foreach (var placeholder in component.Placeholders.ToList())
+                        foreach (KeyValuePair<string, Placeholder> placeholder in component.Placeholders.ToList())
                         {
                             string placeholderKey = placeholder.Key;
                             Placeholder placeholderValue = placeholder.Value;
 
                             // Create a new placeholder to hold the processed content
-                            Placeholder processedPlaceholder = new();
+                            Placeholder processedPlaceholder = [];
 
                             // Add a work item to process this placeholder
                             workStack.Push(new PlaceholderWorkItem(
@@ -216,8 +218,8 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
             editableField.OpeningChrome = GenerateEditableChrome("field", "open", string.Empty, JsonSerializer.Serialize(openingChromeContent));
             editableField.ClosingChrome = GenerateEditableChrome("field", "close", string.Empty, string.Empty);
 
-            var editableFieldWithChromesJson = JsonSerializer.SerializeToDocument(editableField);
-            var updatedJsonSerialisedField = new JsonSerializedField(editableFieldWithChromesJson);
+            JsonDocument editableFieldWithChromesJson = JsonSerializer.SerializeToDocument(editableField);
+            JsonSerializedField updatedJsonSerialisedField = new(editableFieldWithChromesJson);
 
             updatedFields.Add(field.Key, updatedJsonSerialisedField);
         }
@@ -229,7 +231,7 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
     private static EditableChrome GenerateEditableChrome(string chrometype, string kind, string id, string content)
     {
-        EditableChrome editableChrome = new EditableChrome
+        EditableChrome editableChrome = new()
         {
             Attributes =
                 {
@@ -297,18 +299,18 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
 
     private async Task<SitecoreLayoutResponseContent?> HandleEditingLayoutRequest(SitecoreLayoutRequest request, string requestLanguage, List<SitecoreLayoutServiceClientException> errors)
     {
-        GraphQLResponse<EditingLayoutQueryResponse> response = await client.SendQueryAsync<EditingLayoutQueryResponse>(BuildEditingLayoutRequest(request, requestLanguage)).ConfigureAwait(false);
+        GraphQLResponse<EditingLayoutQueryResponse> response = await _client.SendQueryAsync<EditingLayoutQueryResponse>(BuildEditingLayoutRequest(request, requestLanguage)).ConfigureAwait(false);
 
         if (response?.Data == null)
         {
             throw new Exception(Resources.Exception_UableToProcessEditingResponse);
         }
 
-        response.Data.Site.SiteInfo.Dictionary.Results = await dictionaryService.GetSiteDictionary(request.SiteName() ?? string.Empty, requestLanguage, client);
+        response.Data.Site.SiteInfo.Dictionary.Results = await _dictionaryService.GetSiteDictionary(request.SiteName() ?? string.Empty, requestLanguage, _client);
 
-        if (logger.IsEnabled(LogLevel.Debug))
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogDebug(Resources.Debug_LayoutServiceGraphQLResponse, response.Data.Item);
+            _logger.LogDebug(Resources.Debug_LayoutServiceGraphQLResponse, response.Data.Item);
         }
 
         SitecoreLayoutResponseContent? content = null;
@@ -319,20 +321,20 @@ public partial class GraphQLEditingServiceHandler(IGraphQLClient client,
         }
         else
         {
-            content = serializer.Deserialize(json);
+            content = _serializer.Deserialize(json);
 
             GenerateMetaDataChromes(content);
 
-            if (logger.IsEnabled(LogLevel.Debug))
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
                 object? formattedDeserializeObject = JsonSerializer.Deserialize<object?>(json);
-                logger.LogDebug(Resources.Debug_LayoutServiceResponseJSON, formattedDeserializeObject);
+                _logger.LogDebug(Resources.Debug_LayoutServiceResponseJSON, formattedDeserializeObject);
             }
         }
 
         if (response.Errors != null)
         {
-            errors.AddRange(response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQlException(e))));
+            errors.AddRange(response.Errors.Select(e => new SitecoreLayoutServiceClientException(new LayoutServiceGraphQLException(e))));
         }
 
         return content;

@@ -6,11 +6,11 @@ using Sitecore.AspNetCore.SDK.RenderingEngine.Middleware.Models;
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Services;
 
 /// <summary>
-/// GraphQl Site Collection Service.
+/// GraphQL Site Collection Service.
 /// </summary>
-/// <param name="graphQlClient">The GraphQl Client.</param>
+/// <param name="graphQlClient">The GraphQL Client.</param>
 /// <param name="logger">The Logger.</param>
-internal class GraphQlSiteCollectionService(IGraphQLClient graphQlClient, ILogger<GraphQlSiteCollectionService> logger)
+internal class GraphQLSiteCollectionService(IGraphQLClient graphQlClient, ILogger<GraphQLSiteCollectionService> logger)
     : ISiteCollectionService
 {
     private const string SiteInfoCollectionQuery = """

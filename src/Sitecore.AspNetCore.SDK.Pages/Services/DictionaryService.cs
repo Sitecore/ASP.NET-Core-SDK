@@ -11,7 +11,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Services;
 /// </summary>
 public class DictionaryService(IOptions<PagesOptions> options) : IDictionaryService
 {
-    private readonly PagesOptions options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
+    private readonly PagesOptions _options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
 
     /// <summary>
     /// Retrieves a list of site information dictionary items based on the specified site and language.
@@ -27,13 +27,12 @@ public class DictionaryService(IOptions<PagesOptions> options) : IDictionaryServ
             throw new ArgumentNullException(nameof(siteName));
         }
 
-        List<SiteInfoDictionaryItem> dictionary = new();
+        List<SiteInfoDictionaryItem> dictionary = [];
         GraphQLResponse<EditingDictionaryResponse> dictionaryPageResponse = await GetSinglePageOfDictionaryItems(siteName, requestLanguage, client, dictionary, string.Empty).ConfigureAwait(false);
 
-        while (dictionaryPageResponse.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.HasNext ?? false
-            && (dictionaryPageResponse.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.EndCursor ?? string.Empty) != string.Empty)
+        while (dictionaryPageResponse.Data.Site?.SiteInfo.Dictionary.PageInfo?.HasNext ?? false)
         {
-            dictionaryPageResponse = await GetSinglePageOfDictionaryItems(siteName, requestLanguage, client, dictionary, dictionaryPageResponse.Data?.Site?.SiteInfo?.Dictionary?.PageInfo?.EndCursor ?? string.Empty).ConfigureAwait(false);
+            dictionaryPageResponse = await GetSinglePageOfDictionaryItems(siteName, requestLanguage, client, dictionary, dictionaryPageResponse.Data.Site?.SiteInfo.Dictionary.PageInfo?.EndCursor ?? string.Empty).ConfigureAwait(false);
         }
 
         return dictionary;
@@ -43,7 +42,7 @@ public class DictionaryService(IOptions<PagesOptions> options) : IDictionaryServ
     {
         GraphQLRequest dictionaryPageRequest = BuildEditingDictionaryRequest(siteName, requestLanguage, endCursor);
         GraphQLResponse<EditingDictionaryResponse> dictionaryPageResponse = await client.SendQueryAsync<EditingDictionaryResponse>(dictionaryPageRequest).ConfigureAwait(false);
-        dictionary.AddRange(dictionaryPageResponse.Data?.Site?.SiteInfo?.Dictionary?.Results ?? []);
+        dictionary.AddRange(dictionaryPageResponse.Data.Site?.SiteInfo.Dictionary.Results ?? []);
         return dictionaryPageResponse;
     }
 
@@ -79,7 +78,7 @@ public class DictionaryService(IOptions<PagesOptions> options) : IDictionaryServ
             {
                 language = requestLanguage,
                 siteName = siteName,
-                pageSize = options.DictionaryPageSize,
+                pageSize = _options.DictionaryPageSize,
                 after = endCursor
             }
         };

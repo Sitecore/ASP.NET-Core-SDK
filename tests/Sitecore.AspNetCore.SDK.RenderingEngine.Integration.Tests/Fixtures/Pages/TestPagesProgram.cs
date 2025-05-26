@@ -10,14 +10,14 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRouting()
                 .AddMvc();
 
-builder.Services.AddGraphQlClient(configuration =>
+builder.Services.AddGraphQLClient(configuration =>
 {
     configuration.ContextId = TestConstants.ContextId;
 });
 
 builder.Services.AddSitecoreLayoutService()
                 .AddSitecorePagesHandler()
-                .AddGraphQlWithContextHandler("default", TestConstants.ContextId!, siteName: TestConstants.SiteName!)
+                .AddGraphQLWithContextHandler("default", TestConstants.ContextId!, siteName: TestConstants.SiteName!)
                 .AsDefaultHandler();
 
 builder.Services.AddSitecoreRenderingEngine(options =>

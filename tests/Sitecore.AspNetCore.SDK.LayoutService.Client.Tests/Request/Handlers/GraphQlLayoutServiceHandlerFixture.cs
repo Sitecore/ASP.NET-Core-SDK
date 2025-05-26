@@ -14,18 +14,18 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Tests.Request.Handlers;
 
-public class GraphQlLayoutServiceHandlerFixture
+public class GraphQLLayoutServiceHandlerFixture
 {
     private readonly IGraphQLClient _client;
     private readonly ISitecoreLayoutSerializer _serializer;
-    private readonly GraphQlLayoutServiceHandler _graphQlLayoutServiceHandler;
+    private readonly GraphQLLayoutServiceHandler _graphQlLayoutServiceHandler;
 
-    public GraphQlLayoutServiceHandlerFixture()
+    public GraphQLLayoutServiceHandlerFixture()
     {
         _client = Substitute.For<IGraphQLClient>();
         _serializer = Substitute.For<ISitecoreLayoutSerializer>();
-        ILogger<GraphQlLayoutServiceHandler>? logger = Substitute.For<ILogger<GraphQlLayoutServiceHandler>>();
-        _graphQlLayoutServiceHandler = new GraphQlLayoutServiceHandler(_client, _serializer, logger);
+        ILogger<GraphQLLayoutServiceHandler>? logger = Substitute.For<ILogger<GraphQLLayoutServiceHandler>>();
+        _graphQlLayoutServiceHandler = new GraphQLLayoutServiceHandler(_client, _serializer, logger);
     }
 
     [Theory]

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
@@ -26,14 +25,13 @@ namespace Sitecore.AspNetCore.SDK.Pages.Middleware;
 /// <param name="options">The Sitecore Pages configuration options.</param>
 /// <param name="requestMapper">The <see cref="ISitecoreLayoutRequestMapper"/> to map the HttpRequest to a Layout Service request.</param>
 /// <param name="layoutService">The layout service client.</param>
-/// <param name="logger">The <see cref="ILogger"/> to use for logging.</param>
-public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ISitecoreLayoutRequestMapper requestMapper, ISitecoreLayoutClient layoutService, ILogger<PagesRenderMiddleware> logger)
+public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> options, ISitecoreLayoutRequestMapper requestMapper, ISitecoreLayoutClient layoutService)
 {
-    private readonly RequestDelegate next = next ?? throw new ArgumentNullException(nameof(next));
-    private readonly PagesOptions options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
-    private readonly ISitecoreLayoutRequestMapper _requestMapper = requestMapper ?? throw new ArgumentNullException(nameof(requestMapper));
-    private readonly ISitecoreLayoutClient layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
-    private readonly ILogger<PagesRenderMiddleware> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+
+    private readonly PagesOptions _options = options != null ? options.Value : throw new ArgumentNullException(nameof(options));
+
+    private readonly ISitecoreLayoutClient _layoutService = layoutService ?? throw new ArgumentNullException(nameof(layoutService));
 
     /// <summary>
     /// The middleware Invoke method.
@@ -79,47 +77,42 @@ public class PagesRenderMiddleware(RequestDelegate next, IOptions<PagesOptions> 
             httpContext.Items.Add(nameof(PagesRenderMiddleware), null);
         }
 
-        await next(httpContext).ConfigureAwait(false);
+        await _next(httpContext).ConfigureAwait(false);
+    }
+
+    private static bool IsInEditMode(HttpContext context)
+    {
+        return context.Request.Query.TryGetValue(Constants.QueryStringKeys.Mode, out StringValues mode)
+               && mode == "edit";
     }
 
     private bool IsValidEditingRequest(HttpContext context)
     {
-        if (context.Request.Path == options.RenderEndpoint)
-        {
-            return false;
-        }
-
-        if (!context.Request.Query.TryGetValue("mode", out var mode) || mode != "edit")
-        {
-            return false;
-        }
-
-        if (!IsValidEditingSecret(context.Request))
-        {
-            return false;
-        }
-
-        return true;
+        return
+            context.Request.Path != _options.RenderEndpoint
+            && IsInEditMode(context)
+            && IsValidEditingSecret(context.Request);
     }
 
     private bool IsValidEditingSecret(HttpRequest httpRequest)
     {
-        if (httpRequest.Query.TryGetValue("secret", out StringValues editingSecretValues))
+        bool result = false;
+        if (httpRequest.Query.TryGetValue(Constants.QueryStringKeys.Secret, out StringValues editingSecretValues))
         {
             string editingSecret = editingSecretValues.FirstOrDefault() ?? string.Empty;
-            if (editingSecret == options.EditingSecret)
+            if (editingSecret == _options.EditingSecret)
             {
-                return true;
+                result = true;
             }
         }
 
-        return false;
+        return result;
     }
 
     private async Task<SitecoreLayoutResponse> GetSitecoreLayoutResponse(HttpContext httpContext)
     {
         SitecoreLayoutRequest request = requestMapper.Map(httpContext.Request);
         ArgumentNullException.ThrowIfNull(request);
-        return await layoutService.Request(request, Constants.LayoutClients.Pages).ConfigureAwait(false);
+        return await _layoutService.Request(request, Constants.LayoutClients.Pages).ConfigureAwait(false);
     }
 }

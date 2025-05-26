@@ -1,6 +1,4 @@
-﻿using GraphQL;
-
-namespace Sitecore.AspNetCore.SDK.Pages.Models
+﻿namespace Sitecore.AspNetCore.SDK.Pages.Models
 {
     /// <summary>
     /// The model used to store the args passed in to the Render route when using Pages MetaData Editing mode.
@@ -13,7 +11,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Models
         public Guid ItemId { get; set; }
 
         /// <summary>
-        /// Gets or sets the lanugage of the item being edited.
+        /// Gets or sets the language of the item being edited.
         /// </summary>
         public string Language { get; set; } = string.Empty;
 
@@ -33,7 +31,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Models
         public string LayoutKind { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the mode that the redering is running.
+        /// Gets or sets the mode that the rendering is running.
         /// </summary>
         public string Mode { get; set; } = string.Empty;
 

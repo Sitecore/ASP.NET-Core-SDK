@@ -42,7 +42,7 @@ public class LocalizationUsingAttributeMiddlewareFixture : IDisposable
                 app.UseRouting();
                 app.UseRequestLocalization(options =>
                 {
-                    List<CultureInfo> supportedCultures = [new CultureInfo("en"), new CultureInfo("uk-UA"), new CultureInfo("da-DK")];
+                    List<CultureInfo> supportedCultures = [new("en"), new("uk-UA"), new("da-DK")];
 
                     options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
                     options.SupportedCultures = supportedCultures;

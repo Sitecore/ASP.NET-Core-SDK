@@ -15,7 +15,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.NumberTagHelperAttribute)]
 public class NumberTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
+    private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.
@@ -75,14 +75,14 @@ public class NumberTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         if (field.OpeningChrome != null)
         {
-            output.Content.AppendHtml(chromeRenderer.Render(field.OpeningChrome));
+            output.Content.AppendHtml(_chromeRenderer.Render(field.OpeningChrome));
         }
 
         output.Content.AppendHtml(value);
 
         if (field.ClosingChrome != null)
         {
-            output.Content.AppendHtml(chromeRenderer.Render(field.ClosingChrome));
+            output.Content.AppendHtml(_chromeRenderer.Render(field.ClosingChrome));
         }
     }
 }

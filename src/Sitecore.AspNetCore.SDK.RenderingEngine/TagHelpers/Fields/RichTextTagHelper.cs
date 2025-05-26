@@ -16,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement("*", Attributes = RenderingEngineConstants.SitecoreTagHelpers.TextTagHelperAttribute)]
 public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
-    private readonly IEditableChromeRenderer chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
+    private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.
@@ -54,7 +54,7 @@ public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelp
         string html = string.Empty;
         if (Editable && richTextField.OpeningChrome != null)
         {
-            html += chromeRenderer.Render(richTextField.OpeningChrome);
+            html += _chromeRenderer.Render(richTextField.OpeningChrome);
             html += "<div>";
         }
 
@@ -66,7 +66,7 @@ public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelp
         if (Editable && richTextField.ClosingChrome != null)
         {
             html += "</div>";
-            html += chromeRenderer.Render(richTextField.ClosingChrome);
+            html += _chromeRenderer.Render(richTextField.ClosingChrome);
         }
 
         output.Content.SetHtmlContent(new HtmlString(html));

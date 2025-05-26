@@ -8,7 +8,7 @@ public class PagesConfigResponse
     /// <summary>
     /// Gets or sets the edit mode for the Pages Config endpoint.
     /// </summary>
-    public List<string> Components { get; set; } = new();
+    public List<string> Components { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the edit mode for the Pages Config endpoint.

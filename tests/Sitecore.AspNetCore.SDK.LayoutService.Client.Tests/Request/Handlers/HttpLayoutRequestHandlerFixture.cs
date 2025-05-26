@@ -426,7 +426,7 @@ public class HttpLayoutRequestHandlerFixture
         SitecoreLayoutRequest request)
     {
         // Arrange
-        var httpResponse = new HttpResponseMessageWrapper(System.Net.HttpStatusCode.OK)
+        HttpResponseMessageWrapper? httpResponse = new(System.Net.HttpStatusCode.OK)
         {
             Headers = null
         };

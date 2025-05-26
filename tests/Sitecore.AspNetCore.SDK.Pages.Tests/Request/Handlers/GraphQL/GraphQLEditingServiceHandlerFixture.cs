@@ -115,7 +115,7 @@ public class GraphQLEditingServiceHandlerFixture
     public async Task Request_NoLanguageSet_ErrorThrown(GraphQLEditingServiceHandler sut)
     {
         // Arrange
-        SitecoreLayoutRequest request = new SitecoreLayoutRequest
+        SitecoreLayoutRequest request = new()
         {
             {
                 "sc_request_headers_key", new Dictionary<string, string[]>()

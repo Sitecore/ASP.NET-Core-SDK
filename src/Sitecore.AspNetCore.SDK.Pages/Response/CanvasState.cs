@@ -8,7 +8,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Response;
 public class CanvasState
 {
     /// <summary>
-    /// Gets or sets the Id of the item being edited.
+    /// Gets or sets the id of the item being edited.
     /// </summary>
     [JsonPropertyName("itemId")]
     public string? ItemId { get; set; }
@@ -32,7 +32,7 @@ public class CanvasState
     public string? Language { get; set; }
 
     /// <summary>
-    /// Gets or sets the Id of the Device being edited.
+    /// Gets or sets the id of the device being edited.
     /// </summary>
     [JsonPropertyName("deviceId")]
     public string? DeviceId { get; set; }
@@ -44,7 +44,7 @@ public class CanvasState
     public string? PageMode { get; set; }
 
     /// <summary>
-    /// Gets or sets the current id of the Varient being edited.
+    /// Gets or sets the current id of the variant being edited.
     /// </summary>
     [JsonPropertyName("variant")]
     public string? Variant { get; set; }

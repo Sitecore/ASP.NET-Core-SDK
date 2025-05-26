@@ -9,15 +9,15 @@ using Sitecore.AspNetCore.SDK.SearchOptimization.Models;
 namespace Sitecore.AspNetCore.SDK.SearchOptimization.Services;
 
 /// <summary>
-/// Implements the Sitemap and Redirects services by GraphQl data retrieval from Edge or Preview Delivery API.
+/// Implements the Sitemap and Redirects services by GraphQL data retrieval from Edge or Preview Delivery API.
 /// </summary>
-/// <param name="options">Options to configure the GraphQl Client.</param>
-/// <param name="graphQlClient">GraphQl Client.</param>
+/// <param name="options">Options to configure the GraphQL Client.</param>
+/// <param name="graphQlClient">GraphQL Client.</param>
 /// <param name="logger">Logger service.</param>
-internal class GraphQlSiteInfoService(
-    IOptions<SitecoreGraphQlClientOptions> options,
+internal class GraphQLSiteInfoService(
+    IOptions<SitecoreGraphQLClientOptions> options,
     IGraphQLClient graphQlClient,
-    ILogger<GraphQlSiteInfoService> logger)
+    ILogger<GraphQLSiteInfoService> logger)
     : ISitemapService, IRedirectsService
 {
     private const string SiteInfoQuerySitemap = """
@@ -46,7 +46,7 @@ internal class GraphQlSiteInfoService(
                                                   }
                                                   """;
 
-    private readonly SitecoreGraphQlClientOptions _options = options.Value;
+    private readonly SitecoreGraphQLClientOptions _options = options.Value;
 
     /// <inheritdoc />
     public async Task<string> GetSitemapUrl(string requestedUrl, string? siteName)
@@ -128,7 +128,7 @@ internal class GraphQlSiteInfoService(
     {
         if (string.IsNullOrWhiteSpace(siteName))
         {
-            throw new InvalidGraphQlConfigurationException("Empty DefaultSiteName, provided in GraphQLClientOptions.");
+            throw new InvalidGraphQLConfigurationException("Empty DefaultSiteName, provided in GraphQLClientOptions.");
         }
     }
 }
