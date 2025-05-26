@@ -131,7 +131,7 @@ namespace Sitecore.AspNetCore.SDK.Pages.Controllers
 
             if (!result)
             {
-                _logger.LogError("{Message}", Resources.Error_InvalidPagesEditingOrigin);
+                _logger.LogError("{Message}", Resources.Error_InvalidPagesEditingSecretValue);
             }
 
             return result;
