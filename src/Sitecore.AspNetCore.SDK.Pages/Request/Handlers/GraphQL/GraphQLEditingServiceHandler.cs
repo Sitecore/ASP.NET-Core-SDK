@@ -270,7 +270,17 @@ public class GraphQLEditingServiceHandler(IGraphQLClient client,
     {
         return new()
         {
-            Query = Constants.GraphQlQueries.EditingLayoutRequest,
+            Query = @"
+                    query EditingQuery(
+		                    $itemId: String!, 
+                            $language: String!, 
+                            $version: String
+                        ) {
+                        item(path: $itemId, language: $language, version: $version) {
+                            rendered
+                        }
+                      }
+                    ",
             OperationName = "EditingQuery",
             Variables = new
             {

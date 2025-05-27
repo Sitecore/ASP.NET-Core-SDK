@@ -82,53 +82,5 @@
             /// </summary>
             public const string EditMode = "sc_editmode";
         }
-
-        /// <summary>
-        /// Class used to store the GraphQL queries used by the Pages project.
-        /// </summary>
-        public static class GraphQlQueries
-        {
-            /// <summary>
-            /// Defines a constant string for an editing layout request.
-            /// </summary>
-            public const string EditingLayoutRequest = @"
-                    query EditingQuery(
-		                    $itemId: String!, 
-                            $language: String!, 
-                            $version: String
-                        ) {
-                        item(path: $itemId, language: $language, version: $version) {
-                            rendered
-                        }
-                      }
-                    ";
-
-            /// <summary>
-            /// Define a constant string for an editing dictionary request.
-            /// </summary>
-            public const string EditingDictionaryRequest = @"
-                    query DictionaryQuery(
-                            $siteName: String!
-                            $language: String!
-                            $after: String
-                            $pageSize: Int
-                          ) {
-                        site {
-                          siteInfo(site: $siteName) {
-                            dictionary(language: $language, first: $pageSize, after: $after) {
-                              results {
-                                key
-                                value
-                              }
-                              pageInfo {
-                                endCursor
-                                hasNext
-                              }
-                            }
-                          }
-                        }
-                      }
-                    ";
-        }
     }
 }
