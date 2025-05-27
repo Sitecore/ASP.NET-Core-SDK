@@ -12,6 +12,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -706,6 +707,33 @@ public class RichTextTagHelperFixture
     }
 
     #endregion
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        RichTextTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.RichTextHtmlTag;
+        RichTextField testField = new(TestHtml, false)
+        {
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.TextModel = testField;
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
 
     private static ModelExpression GetModelExpression(Field model)
     {

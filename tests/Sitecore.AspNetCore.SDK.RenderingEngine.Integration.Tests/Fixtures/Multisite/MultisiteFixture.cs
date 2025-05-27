@@ -42,8 +42,8 @@ public class MultisiteFixture : IDisposable
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
 
-                IGraphQLClient? mockedGraphQlClient = Substitute.For<IGraphQLClient>();
-                mockedGraphQlClient.SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoCollectionResult>
+                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
+                mockedGraphQLClient.SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoCollectionResult>
                 {
                     Data = new SiteInfoCollectionResult
                     {
@@ -67,7 +67,7 @@ public class MultisiteFixture : IDisposable
                     options.AddDefaultPartialView("_ComponentNotFound");
                 });
 
-                builder.AddSingleton(mockedGraphQlClient);
+                builder.AddSingleton(mockedGraphQLClient);
                 builder.AddMultisite();
             })
             .Configure(app =>

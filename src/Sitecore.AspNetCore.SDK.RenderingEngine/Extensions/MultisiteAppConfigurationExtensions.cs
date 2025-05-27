@@ -47,7 +47,7 @@ public static class MultisiteAppConfigurationExtensions
             services.Configure(configuration);
         }
 
-        services.TryAddSingleton<ISiteCollectionService, GraphQlSiteCollectionService>();
+        services.TryAddSingleton<ISiteCollectionService, GraphQLSiteCollectionService>();
         services.TryAddSingleton<ISiteResolver, SiteResolver>();
 
         return services;

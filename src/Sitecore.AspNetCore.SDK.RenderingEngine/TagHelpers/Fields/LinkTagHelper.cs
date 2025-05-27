@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 
@@ -15,7 +16,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement(RenderingEngineConstants.SitecoreTagHelpers.LinkHtmlTag, Attributes = RenderingEngineConstants.SitecoreTagHelpers.LinkTagHelperAttribute, TagStructure = TagStructure.NormalOrSelfClosing)]
 [HtmlTargetElement("a", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 [HtmlTargetElement("a", Attributes = RenderingEngineConstants.SitecoreTagHelpers.LinkTagHelperAttribute)]
-public class LinkTagHelper : TagHelper
+public class LinkTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
     private const string HrefAttribute = "href";
     private const string TargetAttribute = "target";
@@ -25,6 +26,7 @@ public class LinkTagHelper : TagHelper
     private const string RelAttribute = "rel";
     private const string BlankValue = "_blank";
     private const string AnchorValue = "#";
+    private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer;
 
     /// <summary>
     /// Gets or sets the model value.
@@ -50,7 +52,9 @@ public class LinkTagHelper : TagHelper
         ArgumentNullException.ThrowIfNull(output);
 
         HyperLinkField? field = LinkModel ?? For?.Model as HyperLinkField;
-        bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field.EditableMarkupLast);
+        bool outputEditableMarkup = Editable &&
+                                    ((!string.IsNullOrEmpty(field?.EditableMarkupFirst) && !string.IsNullOrWhiteSpace(field?.EditableMarkupLast)) || (field?.OpeningChrome != null && field?.ClosingChrome != null));
+
         if (field == null || (string.IsNullOrWhiteSpace(field.Value.Href) && !outputEditableMarkup))
         {
             return;
@@ -69,56 +73,6 @@ public class LinkTagHelper : TagHelper
         {
             RenderMarkup(output, field);
         }
-    }
-
-    private static void RenderMarkup(TagHelperOutput output, HyperLinkField field)
-    {
-        if (output.TagName == null)
-        {
-            // generate full anchor markup
-            output.Content.SetHtmlContent(GenerateLink(field.Value, output));
-        }
-        else
-        {
-            HyperLink hyperLink = field.Value;
-
-            output.Attributes.Add(HrefAttribute, BuildHref(hyperLink));
-
-            if (!string.IsNullOrWhiteSpace(hyperLink.Target) && !output.Attributes.ContainsName(TargetAttribute))
-            {
-                output.Attributes.Add(TargetAttribute, hyperLink.Target);
-            }
-
-            if (!string.IsNullOrWhiteSpace(hyperLink.Title) && !output.Attributes.ContainsName(TitleAttribute))
-            {
-                output.Attributes.Add(TitleAttribute, hyperLink.Title);
-            }
-
-            if (!string.IsNullOrWhiteSpace(hyperLink.Class) && !output.Attributes.ContainsName(ClassAttribute))
-            {
-                output.Attributes.Add(ClassAttribute, hyperLink.Class);
-            }
-
-            if (hyperLink.Target == BlankValue && !output.Attributes.ContainsName(RelAttribute))
-            {
-                // information disclosure attack prevention keeps target blank site from getting ref to window.opener
-                output.Attributes.Add(RelAttribute, "noopener noreferrer");
-            }
-
-            string? innerContent = output.GetChildContentAsync()?.Result?.GetContent();
-            if (string.IsNullOrWhiteSpace(innerContent) && !string.IsNullOrWhiteSpace(hyperLink.Text))
-            {
-                output.Content.Append(field.Value.Text);
-            }
-        }
-    }
-
-    private static void RenderEditableMarkup(TagHelperOutput output, HyperLinkField field)
-    {
-        DefaultTagHelperContent content = new();
-        _ = content.AppendHtml(new HtmlString(field.EditableMarkupFirst));
-        _ = content.AppendHtml(new HtmlString(field.EditableMarkupLast));
-        output.Content.SetHtmlContent(content);
     }
 
     /// <summary>
@@ -199,5 +153,72 @@ public class LinkTagHelper : TagHelper
         }
 
         return sb.ToString();
+    }
+
+    private void RenderMarkup(TagHelperOutput output, HyperLinkField field)
+    {
+        if (output.TagName == null)
+        {
+            output.Content.SetHtmlContent(GenerateLink(field.Value, output));
+        }
+        else
+        {
+            HyperLink hyperLink = field.Value;
+
+            output.Attributes.Add(HrefAttribute, BuildHref(hyperLink));
+
+            if (!string.IsNullOrWhiteSpace(hyperLink.Target) && !output.Attributes.ContainsName(TargetAttribute))
+            {
+                output.Attributes.Add(TargetAttribute, hyperLink.Target);
+            }
+
+            if (!string.IsNullOrWhiteSpace(hyperLink.Title) && !output.Attributes.ContainsName(TitleAttribute))
+            {
+                output.Attributes.Add(TitleAttribute, hyperLink.Title);
+            }
+
+            if (!string.IsNullOrWhiteSpace(hyperLink.Class) && !output.Attributes.ContainsName(ClassAttribute))
+            {
+                output.Attributes.Add(ClassAttribute, hyperLink.Class);
+            }
+
+            if (hyperLink.Target == BlankValue && !output.Attributes.ContainsName(RelAttribute))
+            {
+                // information disclosure attack prevention keeps target blank site from getting ref to window.opener
+                output.Attributes.Add(RelAttribute, "noopener noreferrer");
+            }
+
+            string? innerContent = output.GetChildContentAsync()?.Result?.GetContent();
+            if (string.IsNullOrWhiteSpace(innerContent) && !string.IsNullOrWhiteSpace(hyperLink.Text))
+            {
+                output.Content.Append(field.Value.Text);
+            }
+        }
+    }
+
+    private void RenderEditableMarkup(TagHelperOutput output, HyperLinkField field)
+    {
+        if (field.OpeningChrome != null && field.ClosingChrome != null)
+        {
+            output.Content.AppendHtml(_chromeRenderer.Render(field.OpeningChrome));
+
+            if (field.Value.Href == string.Empty)
+            {
+                output.Content.AppendHtml("<span tabindex=\"0\" style=\"cursor: pointer;\">[No text in field]</span>");
+            }
+            else
+            {
+                output.Content.AppendHtml(GenerateLink(field.Value, output));
+            }
+
+            output.Content.AppendHtml(_chromeRenderer.Render(field.ClosingChrome));
+        }
+        else
+        {
+            DefaultTagHelperContent content = new();
+            _ = content.AppendHtml(new HtmlString(field.EditableMarkupFirst));
+            _ = content.AppendHtml(new HtmlString(field.EditableMarkupLast));
+            output.Content.SetHtmlContent(content);
+        }
     }
 }

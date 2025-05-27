@@ -29,7 +29,7 @@ public class RequestsFixture
 
         // Set up the client
         ISitecoreLayoutClientBuilder builder = services.AddSitecoreLayoutService();
-        builder.AddGraphQlWithContextHandler(handlerName, contextId).AsDefaultHandler();
+        builder.AddGraphQLWithContextHandler(handlerName, contextId).AsDefaultHandler();
 
         // Create an intercept for the actual HTTP call
         MockHttpMessageHandler result = new();
@@ -72,8 +72,8 @@ public class RequestsFixture
 
         // Set up the client
         ISitecoreLayoutClientBuilder builder = services.AddSitecoreLayoutService();
-        builder.AddGraphQlHandler(handler1Name, site1Name, apiKey, endpoint).AsDefaultHandler();
-        builder.AddGraphQlHandler(handler2Name, site2Name);
+        builder.AddGraphQLHandler(handler1Name, site1Name, apiKey, endpoint).AsDefaultHandler();
+        builder.AddGraphQLHandler(handler2Name, site2Name);
 
         // Create an intercept for the actual HTTP call
         MockHttpMessageHandler result = new();

@@ -63,7 +63,7 @@ public class PlaceholderTagHelperFixture
             RendererRegistry = new SortedList<int, ComponentRendererDescriptor>
             {
                 {
-                    0, new ComponentRendererDescriptor(name => name == TestComponentName, _ => componentRenderer)
+                    0, new ComponentRendererDescriptor(name => name == TestComponentName, _ => componentRenderer, TestComponentName)
                 }
             }
         };
@@ -522,7 +522,7 @@ public class PlaceholderTagHelperFixture
         await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Content.GetContent().Should().Be("<div class=\"sc-empty-placeholder\"></div>");
+        tagHelperOutput.Content.GetContent().Should().Be("<div class=\"sc-jss-empty-placeholder\"></div>");
     }
 
     [Theory]

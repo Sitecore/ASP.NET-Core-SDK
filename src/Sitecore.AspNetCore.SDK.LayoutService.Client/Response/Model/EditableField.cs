@@ -14,4 +14,15 @@ public class EditableField<TValue>
     [DataMember(Name = "editable")]
     [JsonPropertyName("editable")]
     public string EditableMarkup { get; set; } = string.Empty;
+
+    /// <inheritdoc />
+    public EditableChrome? OpeningChrome { get; set; }
+
+    /// <inheritdoc />
+    public EditableChrome? ClosingChrome { get; set; }
+
+    /// <summary>
+    /// Gets or Sets the MetaSata for the Field.
+    /// </summary>
+    public MetaData? MetaData { get; set; }
 }

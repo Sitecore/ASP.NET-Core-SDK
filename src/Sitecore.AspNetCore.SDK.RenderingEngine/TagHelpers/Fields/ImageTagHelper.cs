@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 
@@ -16,7 +17,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 [HtmlTargetElement(RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag, Attributes = RenderingEngineConstants.SitecoreTagHelpers.ImageTagHelperAttribute, TagStructure = TagStructure.NormalOrSelfClosing)]
 [HtmlTargetElement("img", Attributes = RenderingEngineConstants.SitecoreTagHelpers.AspForTagHelperAttribute)]
 [HtmlTargetElement("img", Attributes = RenderingEngineConstants.SitecoreTagHelpers.ImageTagHelperAttribute)]
-public class ImageTagHelper : TagHelper
+public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 {
     private const string ImgTag = "img";
     private const string ScrAttribute = "src";
@@ -28,6 +29,7 @@ public class ImageTagHelper : TagHelper
     private const string VSpaceAttribute = "vspace";
     private const string TitleAttribute = "title";
     private const string BorderAttribute = "border";
+    private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
     /// Gets or sets the model value.
@@ -64,7 +66,7 @@ public class ImageTagHelper : TagHelper
 
         ImageField? field = ImageModel ?? For?.Model as ImageField;
 
-        if (field == null || string.IsNullOrWhiteSpace(field.Value.Src))
+        if (field == null || (string.IsNullOrWhiteSpace(field.Value.Src) && (field.OpeningChrome == null && field.ClosingChrome == null)))
         {
             return;
         }
@@ -80,7 +82,17 @@ public class ImageTagHelper : TagHelper
         {
             if (output.TagName == null)
             {
-                output.Content.SetHtmlContent(GenerateImage(field, output));
+                if (field.OpeningChrome != null)
+                {
+                    output.Content.AppendHtml(_chromeRenderer.Render(field.OpeningChrome));
+                }
+
+                output.Content.AppendHtml(GenerateImage(field, output));
+
+                if (field.ClosingChrome != null)
+                {
+                    output.Content.AppendHtml(_chromeRenderer.Render(field.ClosingChrome));
+                }
             }
             else
             {

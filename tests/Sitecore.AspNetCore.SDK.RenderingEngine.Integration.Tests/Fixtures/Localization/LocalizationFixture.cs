@@ -41,7 +41,7 @@ public class LocalizationFixture : IDisposable
                 app.UseRouting();
                 app.UseRequestLocalization(options =>
                 {
-                    List<CultureInfo> supportedCultures = [new CultureInfo("en"), new CultureInfo("ru-RU")];
+                    List<CultureInfo> supportedCultures = [new("en"), new("ru-RU")];
 
                     options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
                     options.SupportedCultures = supportedCultures;

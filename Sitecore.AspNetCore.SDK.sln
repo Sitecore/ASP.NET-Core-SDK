@@ -112,6 +112,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEM
 		.github\ISSUE_TEMPLATE\Question.yml = .github\ISSUE_TEMPLATE\Question.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sitecore.AspNetCore.SDK.Pages", "src\Sitecore.AspNetCore.SDK.Pages\Sitecore.AspNetCore.SDK.Pages.csproj", "{F33DC6F7-83F8-41CE-852C-8279D1266139}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sitecore.AspNetCore.SDK.Pages.Tests", "tests\Sitecore.AspNetCore.SDK.Pages.Tests\Sitecore.AspNetCore.SDK.Pages.Tests.csproj", "{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -186,6 +190,14 @@ Global
 		{100C07C6-C68D-469F-9F15-139CB48CB7F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{100C07C6-C68D-469F-9F15-139CB48CB7F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{100C07C6-C68D-469F-9F15-139CB48CB7F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F33DC6F7-83F8-41CE-852C-8279D1266139}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F33DC6F7-83F8-41CE-852C-8279D1266139}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F33DC6F7-83F8-41CE-852C-8279D1266139}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F33DC6F7-83F8-41CE-852C-8279D1266139}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -221,6 +233,8 @@ Global
 		{100C07C6-C68D-469F-9F15-139CB48CB7F0} = {BDE3D3B9-8291-4AE9-B8DA-868CEBCBDC4D}
 		{1706E43D-AC19-4FBB-9BFB-18A8B195580A} = {5FE82369-DEF2-4136-B74F-6E86DB91050E}
 		{24CCC156-046B-4600-9DB0-FC3269A18747} = {5FE82369-DEF2-4136-B74F-6E86DB91050E}
+		{F33DC6F7-83F8-41CE-852C-8279D1266139} = {75482B5D-21E2-4DBE-BE78-657ECF0D409F}
+		{55601B5C-5D9C-66E5-801D-E5D5EA0E29D6} = {BDE3D3B9-8291-4AE9-B8DA-868CEBCBDC4D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2E4F7126-B772-42CB-8F90-93B221ED0A72}

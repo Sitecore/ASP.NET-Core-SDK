@@ -73,7 +73,7 @@ public class PlaceholderTagHelper(
         bool emptyEdit = IsInEditingMode(renderingContext) && IsPlaceHolderEmpty(placeholderFeatures);
         if (emptyEdit)
         {
-            output.Content.AppendHtml("<div class=\"sc-empty-placeholder\">");
+            output.Content.AppendHtml("<div class=\"sc-jss-empty-placeholder\">");
         }
 
         bool foundPlaceholderFeatures = false;

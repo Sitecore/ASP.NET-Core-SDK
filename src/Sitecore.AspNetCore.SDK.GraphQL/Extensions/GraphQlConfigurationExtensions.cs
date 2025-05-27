@@ -10,37 +10,37 @@ namespace Sitecore.AspNetCore.SDK.GraphQL.Extensions;
 /// <summary>
 /// Sitemap configuration.
 /// </summary>
-public static class GraphQlConfigurationExtensions
+public static class GraphQLConfigurationExtensions
 {
     /// <summary>
     /// Configuration for GraphQLClient.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection" /> to add services to.</param>
-    /// <param name="configuration">The <see cref="SitecoreGraphQlClientOptions" /> configuration for GraphQL client.</param>
+    /// <param name="configuration">The <see cref="SitecoreGraphQLClientOptions" /> configuration for GraphQL client.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    public static IServiceCollection AddGraphQlClient(this IServiceCollection services, Action<SitecoreGraphQlClientOptions> configuration)
+    public static IServiceCollection AddGraphQLClient(this IServiceCollection services, Action<SitecoreGraphQLClientOptions> configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.Configure(configuration);
 
-        SitecoreGraphQlClientOptions options = TryGetConfiguration(configuration);
+        SitecoreGraphQLClientOptions options = TryGetConfiguration(configuration);
 
         services.AddSingleton<IGraphQLClient, GraphQLHttpClient>(_ =>
         {
             if (!string.IsNullOrWhiteSpace(options.ContextId))
             {
                 options.EndPoint = options.EndPoint.AddQueryString(
-                    SitecoreGraphQlClientOptions.ContextIdQueryStringKey,
+                    SitecoreGraphQLClientOptions.ContextIdQueryStringKey,
                     options.ContextId);
             }
 
-            GraphQLHttpClient graphQlHttpClient = new(options.EndPoint!, options.GraphQlJsonSerializer);
+            GraphQLHttpClient graphQlHttpClient = new(options.EndPoint!, options.GraphQLJsonSerializer);
 
             if (!string.IsNullOrWhiteSpace(options.ApiKey))
             {
-                graphQlHttpClient.HttpClient.DefaultRequestHeaders.Add(SitecoreGraphQlClientOptions.ApiKeyHeaderName, options.ApiKey);
+                graphQlHttpClient.HttpClient.DefaultRequestHeaders.Add(SitecoreGraphQLClientOptions.ApiKeyHeaderName, options.ApiKey);
             }
 
             return graphQlHttpClient;
@@ -49,23 +49,23 @@ public static class GraphQlConfigurationExtensions
         return services;
     }
 
-    private static SitecoreGraphQlClientOptions TryGetConfiguration(Action<SitecoreGraphQlClientOptions> configuration)
+    private static SitecoreGraphQLClientOptions TryGetConfiguration(Action<SitecoreGraphQLClientOptions> configuration)
     {
-        SitecoreGraphQlClientOptions options = new();
+        SitecoreGraphQLClientOptions options = new();
         configuration.Invoke(options);
 
         if (string.IsNullOrWhiteSpace(options.ApiKey) && string.IsNullOrWhiteSpace(options.ContextId))
         {
-            throw new InvalidGraphQlConfigurationException(Resources.Exception_MissingApiKeyAndContextId);
+            throw new InvalidGraphQLConfigurationException(Resources.Exception_MissingApiKeyAndContextId);
         }
 
         if (options.EndPoint == null && !string.IsNullOrWhiteSpace(options.ContextId))
         {
-            options.EndPoint = SitecoreGraphQlClientOptions.DefaultEdgeEndpoint;
+            options.EndPoint = SitecoreGraphQLClientOptions.DefaultEdgeEndpoint;
         }
         else if (options.EndPoint == null)
         {
-            throw new InvalidGraphQlConfigurationException(Resources.Exception_MissingEndpoint);
+            throw new InvalidGraphQLConfigurationException(Resources.Exception_MissingEndpoint);
         }
 
         return options;

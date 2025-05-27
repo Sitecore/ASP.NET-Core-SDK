@@ -29,15 +29,17 @@ public class ViewComponentComponentRenderer : IComponentRenderer
     /// </summary>
     /// <param name="match">A predicate to use when attempting to match a layout component.</param>
     /// <param name="locator">The string to use when locating the View Component.</param>
+    /// <param name="componentName">The string to use describe the name of the components.</param>
     /// <returns>An instance of <see cref="ComponentRendererDescriptor"/>.</returns>
-    public static ComponentRendererDescriptor Describe(Predicate<string> match, string locator)
+    public static ComponentRendererDescriptor Describe(Predicate<string> match, string locator, string componentName = "")
     {
         ArgumentNullException.ThrowIfNull(match);
         ArgumentException.ThrowIfNullOrWhiteSpace(locator);
 
         return new ComponentRendererDescriptor(
             match,
-            sp => ActivatorUtilities.CreateInstance<ViewComponentComponentRenderer>(sp, locator));
+            sp => ActivatorUtilities.CreateInstance<ViewComponentComponentRenderer>(sp, locator),
+            componentName);
     }
 
     /// <inheritdoc />

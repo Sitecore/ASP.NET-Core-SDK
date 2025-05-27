@@ -13,6 +13,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
 using Xunit;
 
@@ -38,7 +39,7 @@ public class ImageTagHelperFixture
             return Task.FromResult<TagHelperContent>(tagHelperContent);
         });
 
-        f.Register(() => new ImageTagHelper());
+        f.Register(() => new ImageTagHelper(new EditableChromeRenderer()));
 
         f.Inject(tagHelperContext);
         f.Inject(tagHelperOutput);
@@ -710,6 +711,33 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().Contain(a => a.Name == "title");
     }
     #endregion
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_RenderingChromesAreNotNull_ChromesAreOutput(
+       TagHelperContext tagHelperContext,
+       TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        IEditableChromeRenderer chromeRenderer = Substitute.For<IEditableChromeRenderer>();
+        ImageTagHelper sut = new(chromeRenderer);
+        EditableChrome openingChrome = Substitute.For<EditableChrome>();
+        EditableChrome closingChrome = Substitute.For<EditableChrome>();
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        ImageField testField = new(new Image { Alt = "Sitecore Logo", Src = "/sitecore/shell/-/media/styleguide/data/media/img/sc_logo.png?iar=0" })
+        {
+            OpeningChrome = openingChrome,
+            ClosingChrome = closingChrome
+        };
+        sut.ImageModel = testField;
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        chromeRenderer.Received().Render(openingChrome);
+        chromeRenderer.Received().Render(closingChrome);
+    }
 
     private static ModelExpression GetModelExpression(Field model)
     {

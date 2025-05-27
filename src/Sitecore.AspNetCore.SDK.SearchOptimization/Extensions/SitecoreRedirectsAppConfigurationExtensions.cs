@@ -40,7 +40,7 @@ public static class SitecoreRedirectsAppConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddSingleton<IRedirectsService, GraphQlSiteInfoService>();
+        services.TryAddSingleton<IRedirectsService, GraphQLSiteInfoService>();
 
         return services;
     }

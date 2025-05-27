@@ -224,7 +224,8 @@ public class RenderingEngineOptionsExtensionsFixture
     public void AddModelBoundViewOfTModel_ValidParametersRendererRegistryIsNotEmpty_NewComponentRendererDescriptorIsAddedToTheEndOfTheList(RenderingEngineOptions options, string viewComponentName)
     {
         // Arrange
-        ComponentRendererDescriptor initialDescriptor = new(name => name == "InitialComponent", _ => null!);
+        string componentName = "InitialComponent";
+        ComponentRendererDescriptor initialDescriptor = new(name => name == componentName, _ => null!, componentName);
         options.RendererRegistry.Add(0, initialDescriptor);
 
         // Act

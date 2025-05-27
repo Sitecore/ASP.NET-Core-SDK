@@ -77,7 +77,7 @@ public static partial class SitemapAppConfigurationExtensions
 
         services.AddProxy();
 
-        services.TryAddSingleton<ISitemapService, GraphQlSiteInfoService>();
+        services.TryAddSingleton<ISitemapService, GraphQLSiteInfoService>();
 
         return services;
     }

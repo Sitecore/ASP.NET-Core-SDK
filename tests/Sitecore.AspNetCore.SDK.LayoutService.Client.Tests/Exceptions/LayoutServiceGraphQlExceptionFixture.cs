@@ -6,17 +6,17 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.LayoutService.Client.Tests.Exceptions;
 
-public class LayoutServiceGraphQlExceptionFixture
+public class LayoutServiceGraphQLExceptionFixture
 {
     [Theory]
     [AutoNSubstituteData]
-    public void LayoutServiceGraphQlException_GraphQlError_Get(GraphQLError error)
+    public void LayoutServiceGraphQLException_GraphQLError_Get(GraphQLError error)
     {
         // Arrange
-        LayoutServiceGraphQlException sut = new(error);
+        LayoutServiceGraphQLException sut = new(error);
 
         // Act
-        GraphQLError result = sut.GraphQlError;
+        GraphQLError result = sut.GraphQLError;
 
         // Assert
         result.Should().Be(error);
