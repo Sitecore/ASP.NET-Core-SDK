@@ -11,7 +11,6 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;
-using Sitecore.AspNetCore.SDK.Pages.Configuration;
 using Sitecore.AspNetCore.SDK.Pages.Properties;
 using Sitecore.AspNetCore.SDK.Pages.Services;
 
@@ -271,28 +270,18 @@ public class GraphQLEditingServiceHandler(IGraphQLClient client,
     {
         return new()
         {
-            Query = @"
-                    query EditingQuery(
-		                    $itemId: String!, 
-                            $language: String!, 
-                            $version: String
-                        ) {
-                        item(path: $itemId, language: $language, version: $version) {
-                            rendered
-                        }
-                      }
-                    ",
+            Query = Constants.GraphQlQueries.EditingLayoutRequest,
             OperationName = "EditingQuery",
             Variables = new
             {
-                itemId = GetRequestArgValue(request, "sc_itemid"),
+                itemId = GetRequestArgValue(request, Constants.QueryStringKeys.ItemId),
                 language = requestLanguage,
-                version = GetRequestArgValue(request, "sc_version")
+                version = GetRequestArgValue(request, Constants.QueryStringKeys.Version)
             },
             Headers = new Dictionary<string, string>
             {
-                { "sc_layoutKind", GetRequestArgValue(request, "sc_layoutKind") },
-                { "sc_editmode", (GetRequestArgValue(request, "mode") == "edit").ToString() }
+                { Constants.QueryStringKeys.LayoutKind, GetRequestArgValue(request, Constants.QueryStringKeys.LayoutKind) },
+                { Constants.QueryStringKeys.EditMode, (GetRequestArgValue(request, Constants.QueryStringKeys.Mode) == "edit").ToString() }
             }
         };
     }

@@ -50,29 +50,7 @@ public class DictionaryService(IOptions<PagesOptions> options) : IDictionaryServ
     {
         return new()
         {
-            Query = @"
-                        query DictionaryQuery(
-                            $siteName: String!
-                            $language: String!
-                            $after: String
-                            $pageSize: Int
-                          ) {
-                        site {
-                          siteInfo(site: $siteName) {
-                            dictionary(language: $language, first: $pageSize, after: $after) {
-                              results {
-                                key
-                                value
-                              }
-                              pageInfo {
-                                endCursor
-                                hasNext
-                              }
-                            }
-                          }
-                        }
-                      }
-                    ",
+            Query = Constants.GraphQlQueries.EditingDictionaryRequest,
             OperationName = "DictionaryQuery",
             Variables = new
             {

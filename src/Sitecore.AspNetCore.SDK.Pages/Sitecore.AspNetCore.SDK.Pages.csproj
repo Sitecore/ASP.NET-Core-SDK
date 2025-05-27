@@ -1,11 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.RenderingEngine\Sitecore.AspNetCore.SDK.RenderingEngine.csproj" />

@@ -86,15 +86,15 @@ public static class PagesAppConfigurationExtensions
         {
             renderingOptions.MapToRequest((httpRequest, layoutRequest) =>
             {
-                MapRequest(httpRequest, layoutRequest, "mode");
-                MapRequest(httpRequest, layoutRequest, "sc_itemid");
-                MapRequest(httpRequest, layoutRequest, "sc_version");
-                MapRequest(httpRequest, layoutRequest, "sc_lang");
-                MapRequest(httpRequest, layoutRequest, "sc_site");
-                MapRequest(httpRequest, layoutRequest, "sc_layoutKind");
-                MapRequest(httpRequest, layoutRequest, "secret");
-                MapRequest(httpRequest, layoutRequest, "tenant_id");
-                MapRequest(httpRequest, layoutRequest, "route");
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Mode);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.ItemId);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Version);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Language);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Site);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.LayoutKind);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Secret);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.TenantId);
+                MapRequest(httpRequest, layoutRequest, Constants.QueryStringKeys.Route);
             });
         }));
 
