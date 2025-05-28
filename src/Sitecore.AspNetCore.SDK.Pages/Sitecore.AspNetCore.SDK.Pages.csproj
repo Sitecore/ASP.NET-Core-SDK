@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Product>Sitecore ASP.Net Core SDK Pages</Product>
-    <Description>.Net SDK to allow interaction with Sitecore XM Cloud Pages application.</Description>
+    <Product>Sitecore ASP.NET Core SDK Pages</Product>
+    <Description>.NET SDK to allow interaction with Sitecore XM Cloud Pages application.</Description>
   </PropertyGroup>
 
   <ItemGroup>
