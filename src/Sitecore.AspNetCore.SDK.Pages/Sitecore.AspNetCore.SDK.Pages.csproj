@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <Product>Sitecore ASP.Net Core SDK Pages</Product>
+    <Description>.Net SDK to allow interaction with Sitecore XM Cloud Pages application.</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.LayoutService.Client\Sitecore.AspNetCore.SDK.LayoutService.Client.csproj" />
     <ProjectReference Include="..\Sitecore.AspNetCore.SDK.RenderingEngine\Sitecore.AspNetCore.SDK.RenderingEngine.csproj" />
