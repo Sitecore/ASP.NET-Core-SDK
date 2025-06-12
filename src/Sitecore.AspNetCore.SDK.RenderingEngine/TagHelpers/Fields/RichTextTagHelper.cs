@@ -55,7 +55,7 @@ public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelp
         if (Editable && richTextField.OpeningChrome != null)
         {
             html += _chromeRenderer.Render(richTextField.OpeningChrome);
-            html += "<div>";
+            html += "<span>";
         }
 
         bool outputEditableMarkup = Editable && !string.IsNullOrEmpty(richTextField.EditableMarkup);
@@ -65,7 +65,7 @@ public class RichTextTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelp
 
         if (Editable && richTextField.ClosingChrome != null)
         {
-            html += "</div>";
+            html += "</span>";
             html += _chromeRenderer.Render(richTextField.ClosingChrome);
         }
 

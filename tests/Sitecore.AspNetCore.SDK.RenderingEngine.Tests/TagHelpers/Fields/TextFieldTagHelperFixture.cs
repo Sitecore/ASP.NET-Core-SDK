@@ -214,6 +214,7 @@ public class TextFieldTagHelperFixture
         // Assert
         chromeRenderer.Received().Render(openingChrome);
         chromeRenderer.Received().Render(closingChrome);
+        tagHelperOutput.Content.GetContent().Should().Be($"{chromeRenderer.Render(openingChrome)}<span>{TestText}</span>{chromeRenderer.Render(closingChrome)}");
     }
 
     private static IEnumerable<object[]> GetModelExpressionTestData()
