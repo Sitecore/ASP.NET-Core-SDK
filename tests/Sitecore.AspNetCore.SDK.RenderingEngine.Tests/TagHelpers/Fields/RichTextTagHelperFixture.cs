@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using AutoFixture;
+﻿using AutoFixture;
 using AutoFixture.Idioms;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -14,6 +12,9 @@ using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Sitecore.AspNetCore.SDK.RenderingEngine.TagHelpers.Fields;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text.Encodings.Web;
 using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Tests.TagHelpers.Fields;
@@ -733,6 +734,7 @@ public class RichTextTagHelperFixture
         // Assert
         chromeRenderer.Received().Render(openingChrome);
         chromeRenderer.Received().Render(closingChrome);
+        tagHelperOutput.Content.GetContent().Should().Be($"{chromeRenderer.Render(openingChrome)}<span>{TestHtml}</span>{chromeRenderer.Render(closingChrome)}");
     }
 
     private static ModelExpression GetModelExpression(Field model)
