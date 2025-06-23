@@ -733,6 +733,7 @@ public class RichTextTagHelperFixture
         // Assert
         chromeRenderer.Received().Render(openingChrome);
         chromeRenderer.Received().Render(closingChrome);
+        tagHelperOutput.Content.GetContent().Should().Be($"{chromeRenderer.Render(openingChrome)}<span>{TestHtml}</span>{chromeRenderer.Render(closingChrome)}");
     }
 
     private static ModelExpression GetModelExpression(Field model)
