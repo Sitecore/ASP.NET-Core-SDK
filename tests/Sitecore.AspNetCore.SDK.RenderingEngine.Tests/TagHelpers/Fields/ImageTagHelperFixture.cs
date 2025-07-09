@@ -798,7 +798,7 @@ public class ImageTagHelperFixture
         {
             EditableMarkup = "<img src=\"/sitecore/shell/-/jssmedia/img/sc_logo.png\" alt=\"Sitecore Logo\" />"
         };
-        
+
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
         sut.For = GetModelExpression(imageField);
         sut.SrcSet = new object[] { new { mw = 600 }, new { mw = 300 } };

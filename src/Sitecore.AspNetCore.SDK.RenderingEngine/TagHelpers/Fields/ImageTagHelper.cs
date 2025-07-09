@@ -45,7 +45,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 {
                     return $"{kvp.Value}w";
                 }
-                
+
                 if (kvp.Key.Equals("w", StringComparison.OrdinalIgnoreCase) ||
                     kvp.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
                 {
@@ -57,7 +57,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             // Handle anonymous objects via reflection
             var properties = parameters.GetType().GetProperties();
-            
+
             foreach (var prop in properties)
             {
                 if (prop.Name.Equals("mw", StringComparison.OrdinalIgnoreCase) ||
@@ -65,7 +65,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 {
                     return $"{prop.GetValue(parameters)}w";
                 }
-                
+
                 if (prop.Name.Equals("w", StringComparison.OrdinalIgnoreCase) ||
                     prop.Name.Equals("width", StringComparison.OrdinalIgnoreCase))
                 {
@@ -84,13 +84,13 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             return null;
         }
-        
+
         // If already an object array, use as-is
         if (srcSetValue is object[] objectArray)
         {
             return objectArray;
         }
-        
+
         // If it's a JSON string, parse it
         if (srcSetValue is string jsonString)
         {
@@ -105,7 +105,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 return null;
             }
         }
-        
+
         // Single object - wrap in array
         return new[] { srcSetValue };
     }
@@ -260,7 +260,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         if (!string.IsNullOrWhiteSpace(image.Src))
         {
             tagBuilder.Attributes.Add(ScrAttribute, imageField.GetMediaLink(ImageParams));
-            
+
             // Add srcset if configured
             if (SrcSet != null)
             {
@@ -354,7 +354,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             }
 
             imageNode.SetAttributeValue(ScrAttribute, imageField.GetMediaLink(ImageParams));
-            
+
             // Add srcset for editable content
             if (SrcSet != null)
             {
