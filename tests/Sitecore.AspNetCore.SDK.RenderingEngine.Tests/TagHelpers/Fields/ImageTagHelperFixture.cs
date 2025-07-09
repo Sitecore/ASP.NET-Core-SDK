@@ -739,6 +739,154 @@ public class ImageTagHelperFixture
         chromeRenderer.Received().Render(closingChrome);
     }
 
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_ScImgTagWithSrcSet_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { mw = 300 }, new { mw = 100 } };
+        sut.Sizes = "(min-width: 960px) 300px, 100px";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+        content.Should().Contain("srcset=");
+        content.Should().Contain("300w");
+        content.Should().Contain("100w");
+        content.Should().Contain("sizes=\"(min-width: 960px) 300px, 100px\"");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_ImgTagWithSrcSet_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { w = 400 }, new { w = 200 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("400w");
+        srcSetValue.Should().Contain("200w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_EditableImageWithSrcSet_MergesSrcSetIntoEditableMarkup(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        Image image = new() { Src = "http://styleguide/-/media/img/sc_logo.png", Alt = "Sitecore Logo" };
+        ImageField imageField = new(image)
+        {
+            EditableMarkup = "<img src=\"/sitecore/shell/-/jssmedia/img/sc_logo.png\" alt=\"Sitecore Logo\" />"
+        };
+        
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(imageField);
+        sut.SrcSet = new object[] { new { mw = 600 }, new { mw = 300 } };
+        sut.Sizes = "(min-width: 768px) 600px, 300px";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+        content.Should().Contain("srcset=");
+        content.Should().Contain("600w");
+        content.Should().Contain("300w");
+        content.Should().Contain("sizes=\"(min-width: 768px) 600px, 300px\"");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithJsonString_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = "[{\"mw\": 500}, {\"mw\": 250}]";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("500w");
+        srcSetValue.Should().Contain("250w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithMixedParameterTypes_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 800 },  // Anonymous object with 'w'
+            new { mw = 400 }, // Anonymous object with 'mw'
+            new Dictionary<string, object> { { "width", 200 } }, // Dictionary with 'width'
+            new { maxWidth = 100 } // Anonymous object with 'maxWidth'
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+        content.Should().Contain("srcset=");
+        content.Should().Contain("800w");
+        content.Should().Contain("400w");
+        content.Should().Contain("200w");
+        content.Should().Contain("100w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithInvalidJsonString_FallsBackGracefully(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = "invalid json string";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        // Should not throw and should not add srcset attribute
+        tagHelperOutput.Attributes.Should().NotContain(a => a.Name == "srcset");
+    }
+
     private static ModelExpression GetModelExpression(Field model)
     {
         DefaultModelMetadata? modelMetadata = Substitute.For<DefaultModelMetadata>(
