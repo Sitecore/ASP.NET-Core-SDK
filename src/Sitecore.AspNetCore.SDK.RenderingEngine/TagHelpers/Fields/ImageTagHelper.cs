@@ -40,7 +40,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         // Handle Dictionary<string, object>
         if (parameters is Dictionary<string, object> dictionary)
         {
-            // Priority: w > mw (matching Content SDK behavior)
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
             if (dictionary.TryGetValue("w", out object? wValue))
             {
                 width = wValue?.ToString();
@@ -49,13 +49,21 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             {
                 width = mwValue?.ToString();
             }
+            else if (dictionary.TryGetValue("width", out object? widthValue))
+            {
+                width = widthValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthValue))
+            {
+                width = maxWidthValue?.ToString();
+            }
         }
         else
         {
             // Handle anonymous objects via reflection
             var properties = parameters.GetType().GetProperties();
 
-            // Priority: w > mw (matching Content SDK behavior)
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
             var wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
             if (wProp != null)
             {
@@ -67,6 +75,22 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 if (mwProp != null)
                 {
                     width = mwProp.GetValue(parameters)?.ToString();
+                }
+                else
+                {
+                    var widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
+                    if (widthProp != null)
+                    {
+                        width = widthProp.GetValue(parameters)?.ToString();
+                    }
+                    else
+                    {
+                        var maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
+                        if (maxWidthProp != null)
+                        {
+                            width = maxWidthProp.GetValue(parameters)?.ToString();
+                        }
+                    }
                 }
             }
         }
@@ -95,7 +119,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 var parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
                 return parsed?.Cast<object>().ToArray();
             }
-            catch
+            catch (System.Text.Json.JsonException)
             {
                 // If JSON parsing fails, return null to skip srcset generation
                 return null;

@@ -141,9 +141,9 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Parse the existing URL to separate base URL and query string
-        var uri = new Uri(url);
+        var uri = new Uri(url, UriKind.RelativeOrAbsolute);
         var baseUrl = uri.GetLeftPart(UriPartial.Path);
-        var existingQuery = HttpUtility.ParseQueryString(uri.Query);
+        var existingQuery = QueryHelpers.ParseQuery(uri.Query);
 
         // Convert parameters to dictionary and merge with existing query parameters
         var paramDict = ConvertToStringDictionary(parameters);
@@ -151,6 +151,7 @@ public static partial class SitecoreFieldExtensions
         {
             foreach (var param in paramDict)
             {
+                // QueryHelpers.ParseQuery returns StringValues, so we need to handle this properly
                 existingQuery[param.Key] = param.Value;
             }
         }
@@ -164,8 +165,8 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Build the final URL with merged parameters
-        var queryString = existingQuery.ToString();
-        return string.IsNullOrEmpty(queryString) ? finalBaseUrl : $"{finalBaseUrl}?{queryString}";
+        var queryString = QueryHelpers.AddQueryString(string.Empty, existingQuery.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString()));
+        return queryString.StartsWith("?") ? $"{finalBaseUrl}{queryString}" : finalBaseUrl;
     }
 
     /// <summary>
