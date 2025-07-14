@@ -780,14 +780,15 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        
+
         // Should contain "1000w" (from w parameter taking priority over h)
         srcSetValue.Should().Contain("1000w");
+
         // Should contain "250w" (from mw parameter)
         srcSetValue.Should().Contain("250w");
-        
+
         // Verify it contains the expected format: "url 1000w, url 250w"
-        var entries = srcSetValue.Split(", ");
+        string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(2);
         entries[0].Should().EndWith("1000w");
         entries[1].Should().EndWith("250w");
@@ -811,11 +812,12 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        
+
         // Should only contain the entry with mw parameter
         srcSetValue.Should().Contain("250w");
+
         // Should not contain entries without width parameters
-        var entries = srcSetValue.Split(", ");
+        string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(1);
     }
 
@@ -883,9 +885,9 @@ public class ImageTagHelperFixture
         sut.For = GetModelExpression(new ImageField(_image));
         sut.SrcSet = new object[]
         {
+            // Only w and mw are supported by Content SDK for srcSet
             new { w = 800 },  // Anonymous object with 'w'
             new { mw = 400 }, // Anonymous object with 'mw'
-            // Only w and mw are supported by Content SDK for srcSet
         };
 
         // Act

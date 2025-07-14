@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Web;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -47,7 +48,7 @@ public static partial class SitecoreFieldExtensions
             return null;
         }
 
-        var mergedParams = MergeParameters(imageParams, srcSetParams);
+        Dictionary<string, object?> mergedParams = MergeParameters(imageParams, srcSetParams);
         return GetSitecoreMediaUriWithPreservation(urlStr, mergedParams);
     }
 
@@ -69,7 +70,7 @@ public static partial class SitecoreFieldExtensions
             return null;
         }
 
-        var mergedParams = MergeParameters(imageParams, srcSetParams);
+        Dictionary<string, object?> mergedParams = MergeParameters(imageParams, srcSetParams);
         return GetSitecoreMediaUriWithPreservation(urlStr, mergedParams);
     }
 
@@ -81,22 +82,22 @@ public static partial class SitecoreFieldExtensions
     /// <returns>Merged parameters as dictionary.</returns>
     private static Dictionary<string, object?> MergeParameters(object? baseParams, object? overrideParams)
     {
-        var result = new Dictionary<string, object?>();
+        Dictionary<string, object?> result = new Dictionary<string, object?>();
 
         // Add base parameters first
         if (baseParams != null)
         {
             if (baseParams is Dictionary<string, object> baseDict)
             {
-                foreach (var kvp in baseDict)
+                foreach (KeyValuePair<string, object> kvp in baseDict)
                 {
                     result[kvp.Key] = kvp.Value;
                 }
             }
             else
             {
-                var baseProps = baseParams.GetType().GetProperties();
-                foreach (var prop in baseProps)
+                PropertyInfo[] baseProps = baseParams.GetType().GetProperties();
+                foreach (PropertyInfo prop in baseProps)
                 {
                     result[prop.Name] = prop.GetValue(baseParams);
                 }
@@ -108,15 +109,15 @@ public static partial class SitecoreFieldExtensions
         {
             if (overrideParams is Dictionary<string, object> overrideDict)
             {
-                foreach (var kvp in overrideDict)
+                foreach (KeyValuePair<string, object> kvp in overrideDict)
                 {
                     result[kvp.Key] = kvp.Value;
                 }
             }
             else
             {
-                var overrideProps = overrideParams.GetType().GetProperties();
-                foreach (var prop in overrideProps)
+                PropertyInfo[] overrideProps = overrideParams.GetType().GetProperties();
+                foreach (PropertyInfo prop in overrideProps)
                 {
                     result[prop.Name] = prop.GetValue(overrideParams);
                 }
@@ -141,15 +142,15 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Parse the existing URL to separate base URL and query string
-        var uri = new Uri(url, UriKind.RelativeOrAbsolute);
-        var baseUrl = uri.GetLeftPart(UriPartial.Path);
-        var existingQuery = QueryHelpers.ParseQuery(uri.Query);
+        Uri uri = new Uri(url, UriKind.RelativeOrAbsolute);
+        string baseUrl = uri.GetLeftPart(UriPartial.Path);
+        Dictionary<string, Microsoft.Extensions.Primitives.StringValues> existingQuery = QueryHelpers.ParseQuery(uri.Query);
 
         // Convert parameters to dictionary and merge with existing query parameters
-        var paramDict = ConvertToStringDictionary(parameters);
+        Dictionary<string, string>? paramDict = ConvertToStringDictionary(parameters);
         if (paramDict != null)
         {
-            foreach (var param in paramDict)
+            foreach (KeyValuePair<string, string> param in paramDict)
             {
                 // QueryHelpers.ParseQuery returns StringValues, so we need to handle this properly
                 existingQuery[param.Key] = param.Value;
@@ -157,7 +158,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Apply the media URL prefix transformation (jssmedia replacement)
-        var finalBaseUrl = baseUrl;
+        string finalBaseUrl = baseUrl;
         Match match = MediaUrlPrefixRegex().Match(finalBaseUrl);
         if (match.Success)
         {
@@ -165,7 +166,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Build the final URL with merged parameters
-        var queryString = QueryHelpers.AddQueryString(string.Empty, existingQuery.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString()));
+        string queryString = QueryHelpers.AddQueryString(string.Empty, existingQuery.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value.ToString()));
         return queryString.StartsWith("?") ? $"{finalBaseUrl}{queryString}" : finalBaseUrl;
     }
 
@@ -181,21 +182,21 @@ public static partial class SitecoreFieldExtensions
             return null;
         }
 
-        var result = new Dictionary<string, string>();
+        Dictionary<string, string> result = new Dictionary<string, string>();
 
         if (obj is Dictionary<string, object> dict)
         {
-            foreach (var kvp in dict)
+            foreach (KeyValuePair<string, object> kvp in dict)
             {
                 result[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
             }
         }
         else
         {
-            var props = obj.GetType().GetProperties();
-            foreach (var prop in props)
+            PropertyInfo[] props = obj.GetType().GetProperties();
+            foreach (PropertyInfo prop in props)
             {
-                var value = prop.GetValue(obj);
+                object? value = prop.GetValue(obj);
                 result[prop.Name] = value?.ToString() ?? string.Empty;
             }
         }

@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.Reflection;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -61,31 +62,31 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         else
         {
             // Handle anonymous objects via reflection
-            var properties = parameters.GetType().GetProperties();
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
 
             // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            var wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
+            PropertyInfo? wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
             if (wProp != null)
             {
                 width = wProp.GetValue(parameters)?.ToString();
             }
             else
             {
-                var mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
+                PropertyInfo? mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
                 if (mwProp != null)
                 {
                     width = mwProp.GetValue(parameters)?.ToString();
                 }
                 else
                 {
-                    var widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
+                    PropertyInfo? widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
                     if (widthProp != null)
                     {
                         width = widthProp.GetValue(parameters)?.ToString();
                     }
                     else
                     {
-                        var maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
+                        PropertyInfo? maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
                         if (maxWidthProp != null)
                         {
                             width = maxWidthProp.GetValue(parameters)?.ToString();
@@ -116,7 +117,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             try
             {
-                var parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
+                Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
                 return parsed?.Cast<object>().ToArray();
             }
             catch (System.Text.Json.JsonException)
