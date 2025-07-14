@@ -749,23 +749,21 @@ public class ImageTagHelperFixture
         // Arrange
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
         sut.For = GetModelExpression(new ImageField(_image));
-        sut.SrcSet = new object[] { new { mw = 300 }, new { mw = 100 } };
-        sut.Sizes = "(min-width: 960px) 300px, 100px";
+        sut.SrcSet = new object[] { new { w = 400 }, new { w = 200 } };
 
         // Act
         sut.Process(tagHelperContext, tagHelperOutput);
 
-        // Assert
+        // Assert - <sc-img> generates HTML content, not attributes
         string content = tagHelperOutput.Content.GetContent();
         content.Should().Contain("srcset=");
-        content.Should().Contain("300w");
-        content.Should().Contain("100w");
-        content.Should().Contain("sizes=\"(min-width: 960px) 300px, 100px\"");
+        content.Should().Contain("400w");
+        content.Should().Contain("200w");
     }
 
     [Theory]
     [AutoNSubstituteData]
-    public void Process_ImgTagWithSrcSet_GeneratesSrcSetAttribute(
+    public void Process_SrcSetWithContentSDKBehavior_MatchesExpectedOutput(
         ImageTagHelper sut,
         TagHelperContext tagHelperContext,
         TagHelperOutput tagHelperOutput)
@@ -773,7 +771,8 @@ public class ImageTagHelperFixture
         // Arrange
         tagHelperOutput.TagName = "img";
         sut.For = GetModelExpression(new ImageField(_image));
-        sut.SrcSet = new object[] { new { w = 400 }, new { w = 200 } };
+        sut.ImageParams = new { h = 1000 }; // Base parameters
+        sut.SrcSet = new object[] { new { h = 1000, w = 1000 }, new { mh = 250, mw = 250 } };
 
         // Act
         sut.Process(tagHelperContext, tagHelperOutput);
@@ -781,8 +780,43 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("400w");
-        srcSetValue.Should().Contain("200w");
+        
+        // Should contain "1000w" (from w parameter taking priority over h)
+        srcSetValue.Should().Contain("1000w");
+        // Should contain "250w" (from mw parameter)
+        srcSetValue.Should().Contain("250w");
+        
+        // Verify it contains the expected format: "url 1000w, url 250w"
+        var entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(2);
+        entries[0].Should().EndWith("1000w");
+        entries[1].Should().EndWith("250w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithoutValidWidth_FiltersEntries(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { h = 1000 }, new { mw = 250 }, new { quality = 80 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        
+        // Should only contain the entry with mw parameter
+        srcSetValue.Should().Contain("250w");
+        // Should not contain entries without width parameters
+        var entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(1);
     }
 
     [Theory]
@@ -851,8 +885,7 @@ public class ImageTagHelperFixture
         {
             new { w = 800 },  // Anonymous object with 'w'
             new { mw = 400 }, // Anonymous object with 'mw'
-            new Dictionary<string, object> { { "width", 200 } }, // Dictionary with 'width'
-            new { maxWidth = 100 } // Anonymous object with 'maxWidth'
+            // Only w and mw are supported by Content SDK for srcSet
         };
 
         // Act
@@ -863,8 +896,6 @@ public class ImageTagHelperFixture
         content.Should().Contain("srcset=");
         content.Should().Contain("800w");
         content.Should().Contain("400w");
-        content.Should().Contain("200w");
-        content.Should().Contain("100w");
     }
 
     [Theory]

@@ -30,6 +30,80 @@ public static partial class SitecoreFieldExtensions
     }
 
     /// <summary>
+    /// Gets modified URL string to Sitecore media item with merged parameters.
+    /// </summary>
+    /// <param name="imageField">The image field.</param>
+    /// <param name="imageParams">Base image parameters.</param>
+    /// <param name="srcSetParams">SrcSet specific parameters that override imageParams.</param>
+    /// <returns>Media item URL.</returns>
+    public static string? GetMediaLink(this ImageField imageField, object? imageParams, object? srcSetParams)
+    {
+        ArgumentNullException.ThrowIfNull(imageField);
+        string? urlStr = imageField.Value.Src;
+
+        if (urlStr == null)
+        {
+            return null;
+        }
+
+        var mergedParams = MergeParameters(imageParams, srcSetParams);
+        return GetSitecoreMediaUri(urlStr, mergedParams);
+    }
+
+    /// <summary>
+    /// Merges base parameters with override parameters.
+    /// </summary>
+    /// <param name="baseParams">Base parameters.</param>
+    /// <param name="overrideParams">Override parameters that take precedence.</param>
+    /// <returns>Merged parameters as dictionary.</returns>
+    private static Dictionary<string, object?> MergeParameters(object? baseParams, object? overrideParams)
+    {
+        var result = new Dictionary<string, object?>();
+
+        // Add base parameters first
+        if (baseParams != null)
+        {
+            if (baseParams is Dictionary<string, object> baseDict)
+            {
+                foreach (var kvp in baseDict)
+                {
+                    result[kvp.Key] = kvp.Value;
+                }
+            }
+            else
+            {
+                var baseProps = baseParams.GetType().GetProperties();
+                foreach (var prop in baseProps)
+                {
+                    result[prop.Name] = prop.GetValue(baseParams);
+                }
+            }
+        }
+
+        // Override with srcSet parameters
+        if (overrideParams != null)
+        {
+            if (overrideParams is Dictionary<string, object> overrideDict)
+            {
+                foreach (var kvp in overrideDict)
+                {
+                    result[kvp.Key] = kvp.Value;
+                }
+            }
+            else
+            {
+                var overrideProps = overrideParams.GetType().GetProperties();
+                foreach (var prop in overrideProps)
+                {
+                    result[prop.Name] = prop.GetValue(overrideParams);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Gets URL to Sitecore media item.
     /// </summary>
     /// <param name="url">The image URL.</param>

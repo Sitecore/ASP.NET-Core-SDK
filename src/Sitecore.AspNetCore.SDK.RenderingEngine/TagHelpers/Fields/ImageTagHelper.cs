@@ -33,49 +33,45 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string SizesAttribute = "sizes";
     private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
-    private static string GetWidthDescriptor(object parameters)
+    private static string? GetWidthDescriptor(object parameters)
     {
+        string? width = null;
+        
         // Handle Dictionary<string, object>
         if (parameters is Dictionary<string, object> dictionary)
         {
-            foreach (var kvp in dictionary)
+            // Priority: w > mw (matching Content SDK behavior)
+            if (dictionary.TryGetValue("w", out object? wValue))
             {
-                if (kvp.Key.Equals("mw", StringComparison.OrdinalIgnoreCase) ||
-                    kvp.Key.Equals("maxWidth", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{kvp.Value}w";
-                }
-
-                if (kvp.Key.Equals("w", StringComparison.OrdinalIgnoreCase) ||
-                    kvp.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{kvp.Value}w";
-                }
+                width = wValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("mw", out object? mwValue))
+            {
+                width = mwValue?.ToString();
             }
         }
         else
         {
             // Handle anonymous objects via reflection
             var properties = parameters.GetType().GetProperties();
-
-            foreach (var prop in properties)
+            
+            // Priority: w > mw (matching Content SDK behavior)
+            var wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
+            if (wProp != null)
             {
-                if (prop.Name.Equals("mw", StringComparison.OrdinalIgnoreCase) ||
-                    prop.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase))
+                width = wProp.GetValue(parameters)?.ToString();
+            }
+            else
+            {
+                var mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
+                if (mwProp != null)
                 {
-                    return $"{prop.GetValue(parameters)}w";
-                }
-
-                if (prop.Name.Equals("w", StringComparison.OrdinalIgnoreCase) ||
-                    prop.Name.Equals("width", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{prop.GetValue(parameters)}w";
+                    width = mwProp.GetValue(parameters)?.ToString();
                 }
             }
         }
 
-        // If no width found, use 1x as fallback
-        return "1x";
+        return width != null ? $"{width}w" : null;
     }
 
     private static object[]? ParseSrcSet(object? srcSetValue)
@@ -387,11 +383,18 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         foreach (object srcSetItem in parsedSrcSet)
         {
-            string? mediaUrl = imageField.GetMediaLink(srcSetItem);
+            // Get width descriptor first to check if this entry should be included
+            string? descriptor = GetWidthDescriptor(srcSetItem);
+            if (descriptor == null)
+            {
+                // Skip entries without valid width parameters (matching Content SDK behavior)
+                continue;
+            }
+
+            // Use the new overload that merges ImageParams with srcSetItem params
+            string? mediaUrl = imageField.GetMediaLink(ImageParams, srcSetItem);
             if (!string.IsNullOrEmpty(mediaUrl))
             {
-                // Extract width from parameters to create the descriptor
-                string descriptor = GetWidthDescriptor(srcSetItem);
                 srcSetEntries.Add($"{mediaUrl} {descriptor}");
             }
         }
