@@ -36,7 +36,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private static string? GetWidthDescriptor(object parameters)
     {
         string? width = null;
-        
+
         // Handle Dictionary<string, object>
         if (parameters is Dictionary<string, object> dictionary)
         {
@@ -54,7 +54,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             // Handle anonymous objects via reflection
             var properties = parameters.GetType().GetProperties();
-            
+
             // Priority: w > mw (matching Content SDK behavior)
             var wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
             if (wProp != null)
@@ -391,8 +391,8 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 continue;
             }
 
-            // Use the new overload that merges ImageParams with srcSetItem params
-            string? mediaUrl = imageField.GetMediaLink(ImageParams, srcSetItem);
+            // Use GetMediaLinkForSrcSet to preserve existing URL parameters (like ttc, tt, hash, quality, format)
+            string? mediaUrl = imageField.GetMediaLinkForSrcSet(ImageParams, srcSetItem);
             if (!string.IsNullOrEmpty(mediaUrl))
             {
                 srcSetEntries.Add($"{mediaUrl} {descriptor}");
