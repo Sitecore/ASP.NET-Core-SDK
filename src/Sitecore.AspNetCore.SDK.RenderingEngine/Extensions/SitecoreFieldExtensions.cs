@@ -61,7 +61,7 @@ public static partial class SitecoreFieldExtensions
     /// <returns>Merged parameters as dictionary.</returns>
     private static Dictionary<string, object?> MergeParameters(object? baseParams, object? overrideParams)
     {
-        Dictionary<string, object?> result = new Dictionary<string, object?>();
+        Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
         // Add base parameters first
         if (baseParams != null)
@@ -157,7 +157,7 @@ public static partial class SitecoreFieldExtensions
         string url = urlStr;
 
         // Parse existing query parameters
-        Dictionary<string, string> existingParams = new Dictionary<string, string>();
+        Dictionary<string, string> existingParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (url.Contains('?'))
         {
             string[] parts = url.Split('?', 2);
@@ -178,7 +178,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Merge with new parameters (new parameters override existing ones)
-        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>();
+        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
         // Add existing parameters first
         foreach (KeyValuePair<string, string> kvp in existingParams)

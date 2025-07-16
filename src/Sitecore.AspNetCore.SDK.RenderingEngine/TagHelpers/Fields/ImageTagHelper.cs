@@ -433,7 +433,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 continue;
             }
 
-            // Use GetMediaLinkForSrcSet to preserve existing URL parameters (like ttc, tt, hash, quality, format)
+            // Use GetMediaLinkForSrcSet to preserve existing URL parameters (like ttc, tt, hash, quality, format) because in preview context id the images doesn't get loaded with src-set implementation
             string? mediaUrl = imageField.GetMediaLinkForSrcSet(ImageParams, srcSetItem);
             if (!string.IsNullOrEmpty(mediaUrl))
             {
