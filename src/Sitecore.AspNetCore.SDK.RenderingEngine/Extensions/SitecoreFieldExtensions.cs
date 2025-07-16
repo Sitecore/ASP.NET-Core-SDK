@@ -32,27 +32,6 @@ public static partial class SitecoreFieldExtensions
     }
 
     /// <summary>
-    /// Gets modified URL string to Sitecore media item with merged parameters.
-    /// </summary>
-    /// <param name="imageField">The image field.</param>
-    /// <param name="imageParams">Base image parameters.</param>
-    /// <param name="srcSetParams">SrcSet specific parameters that override imageParams.</param>
-    /// <returns>Media item URL.</returns>
-    public static string? GetMediaLink(this ImageField imageField, object? imageParams, object? srcSetParams)
-    {
-        ArgumentNullException.ThrowIfNull(imageField);
-        string? urlStr = imageField.Value.Src;
-
-        if (urlStr == null)
-        {
-            return null;
-        }
-
-        Dictionary<string, object?> mergedParams = MergeParameters(imageParams, srcSetParams);
-        return GetSitecoreMediaUriWithPreservation(urlStr, mergedParams);
-    }
-
-    /// <summary>
     /// Gets modified URL string to Sitecore media item for srcSet.
     /// This method preserves existing URL parameters and merges them with new ones.
     /// </summary>
