@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.Reflection;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -33,49 +34,80 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string SizesAttribute = "sizes";
     private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
-    private static string GetWidthDescriptor(object parameters)
+    private static string? GetWidthDescriptor(object? parameters)
     {
+        if (parameters == null)
+        {
+            return null;
+        }
+
+        string? width = null;
+
         // Handle Dictionary<string, object>
         if (parameters is Dictionary<string, object> dictionary)
         {
-            foreach (var kvp in dictionary)
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+            if (dictionary.TryGetValue("w", out object? wValue))
             {
-                if (kvp.Key.Equals("mw", StringComparison.OrdinalIgnoreCase) ||
-                    kvp.Key.Equals("maxWidth", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{kvp.Value}w";
-                }
-
-                if (kvp.Key.Equals("w", StringComparison.OrdinalIgnoreCase) ||
-                    kvp.Key.Equals("width", StringComparison.OrdinalIgnoreCase))
-                {
-                    return $"{kvp.Value}w";
-                }
+                width = wValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("mw", out object? mwValue))
+            {
+                width = mwValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("width", out object? widthObj))
+            {
+                width = widthObj?.ToString();
+            }
+            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthObj))
+            {
+                width = maxWidthObj?.ToString();
             }
         }
         else
         {
             // Handle anonymous objects via reflection
-            var properties = parameters.GetType().GetProperties();
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
 
-            foreach (var prop in properties)
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+            PropertyInfo? wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
+            if (wProp != null)
             {
-                if (prop.Name.Equals("mw", StringComparison.OrdinalIgnoreCase) ||
-                    prop.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase))
+                width = wProp.GetValue(parameters)?.ToString();
+            }
+            else
+            {
+                PropertyInfo? mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
+                if (mwProp != null)
                 {
-                    return $"{prop.GetValue(parameters)}w";
+                    width = mwProp.GetValue(parameters)?.ToString();
                 }
-
-                if (prop.Name.Equals("w", StringComparison.OrdinalIgnoreCase) ||
-                    prop.Name.Equals("width", StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    return $"{prop.GetValue(parameters)}w";
+                    PropertyInfo? widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
+                    if (widthProp != null)
+                    {
+                        width = widthProp.GetValue(parameters)?.ToString();
+                    }
+                    else
+                    {
+                        PropertyInfo? maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
+                        if (maxWidthProp != null)
+                        {
+                            width = maxWidthProp.GetValue(parameters)?.ToString();
+                        }
+                    }
                 }
             }
         }
 
-        // If no width found, use 1x as fallback
-        return "1x";
+        // Validate width is positive
+        if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
+        {
+            return null;
+        }
+
+        return width != null ? $"{width}w" : null;
     }
 
     private static object[]? ParseSrcSet(object? srcSetValue)
@@ -96,10 +128,10 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             try
             {
-                var parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
+                Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
                 return parsed?.Cast<object>().ToArray();
             }
-            catch
+            catch (System.Text.Json.JsonException)
             {
                 // If JSON parsing fails, return null to skip srcset generation
                 return null;
@@ -387,11 +419,24 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         foreach (object srcSetItem in parsedSrcSet)
         {
-            string? mediaUrl = imageField.GetMediaLink(srcSetItem);
+            // Skip null items
+            if (srcSetItem == null)
+            {
+                continue;
+            }
+
+            // Get width descriptor first to check if this entry should be included
+            string? descriptor = GetWidthDescriptor(srcSetItem);
+            if (descriptor == null)
+            {
+                // Skip entries without valid width parameters (matching Content SDK behavior)
+                continue;
+            }
+
+            // Use GetMediaLinkForSrcSet to preserve existing URL parameters (like ttc, tt, hash, quality, format)
+            string? mediaUrl = imageField.GetMediaLinkForSrcSet(ImageParams, srcSetItem);
             if (!string.IsNullOrEmpty(mediaUrl))
             {
-                // Extract width from parameters to create the descriptor
-                string descriptor = GetWidthDescriptor(srcSetItem);
                 srcSetEntries.Add($"{mediaUrl} {descriptor}");
             }
         }
