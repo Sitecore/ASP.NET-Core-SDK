@@ -34,8 +34,13 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string SizesAttribute = "sizes";
     private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
-    private static string? GetWidthDescriptor(object parameters)
+    private static string? GetWidthDescriptor(object? parameters)
     {
+        if (parameters == null)
+        {
+            return null;
+        }
+
         string? width = null;
 
         // Handle Dictionary<string, object>
@@ -50,13 +55,13 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             {
                 width = mwValue?.ToString();
             }
-            else if (dictionary.TryGetValue("width", out object? widthValue))
+            else if (dictionary.TryGetValue("width", out object? widthObj))
             {
-                width = widthValue?.ToString();
+                width = widthObj?.ToString();
             }
-            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthValue))
+            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthObj))
             {
-                width = maxWidthValue?.ToString();
+                width = maxWidthObj?.ToString();
             }
         }
         else
@@ -94,6 +99,12 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                     }
                 }
             }
+        }
+
+        // Validate width is positive
+        if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
+        {
+            return null;
         }
 
         return width != null ? $"{width}w" : null;
@@ -408,6 +419,12 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         foreach (object srcSetItem in parsedSrcSet)
         {
+            // Skip null items
+            if (srcSetItem == null)
+            {
+                continue;
+            }
+
             // Get width descriptor first to check if this entry should be included
             string? descriptor = GetWidthDescriptor(srcSetItem);
             if (descriptor == null)

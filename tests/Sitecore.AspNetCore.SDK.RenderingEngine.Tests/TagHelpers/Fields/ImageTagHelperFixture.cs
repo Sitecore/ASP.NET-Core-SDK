@@ -920,6 +920,275 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().NotContain(a => a.Name == "srcset");
     }
 
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithImageParamsConflict_SrcSetParametersWin(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.ImageParams = new { w = 1000, quality = 50, format = "jpg" };
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("w=320");
+        srcSetValue.Should().Contain("quality=75");
+        srcSetValue.Should().Contain("format=jpg"); // Inherited from ImageParams
+        srcSetValue.Should().NotContain("w=1000");
+        srcSetValue.Should().NotContain("quality=50");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithWidthParameterPriority_UsesCorrectPrecedence(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange - Test priority: w > mw > width > maxWidth
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 100, mw = 200, width = 300, maxWidth = 400 }, // Should use w=100
+            new { mw = 200, width = 300, maxWidth = 400 }, // Should use mw=200
+            new { width = 300, maxWidth = 400 }, // Should use width=300
+            new { maxWidth = 400 } // Should use maxWidth=400
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("100w");
+        srcSetValue.Should().Contain("200w");
+        srcSetValue.Should().Contain("300w");
+        srcSetValue.Should().Contain("400w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithZeroOrNegativeWidths_SkipsInvalidEntries(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 0, quality = 75 },    // Should skip
+            new { w = -100, quality = 80 }, // Should skip
+            new { w = 320, quality = 75 },  // Should include
+            new { quality = 90 } // Should skip - no width
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("320w");
+        srcSetValue.Should().NotContain(" 0w");
+        srcSetValue.Should().NotContain(" -100w");
+
+        // Should only have one entry
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(1);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithExistingUrlParameters_PreservesAndMergesParameters(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        Image imageWithParams = new Image
+        {
+            Src = "https://edge.sitecorecloud.io/media/image.jpg?h=2001&iar=0&hash=abc123&w=3000",
+            Alt = "Test Image"
+        };
+
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(imageWithParams));
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Should preserve existing parameters and merge with new ones
+        srcSetValue.Should().Contain("h=2001");
+        srcSetValue.Should().Contain("iar=0");
+        srcSetValue.Should().Contain("hash=abc123");
+        srcSetValue.Should().Contain("quality=75");
+
+        // New w parameter should override existing w=3000
+        srcSetValue.Should().Contain("w=320");
+        srcSetValue.Should().NotContain("w=3000");
+        srcSetValue.Should().Contain("320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithMediaUrlTransformation_TransformsCorrectly(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        Image imageWithMediaUrl = new Image
+        {
+            Src = "/~/media/images/test.jpg",
+            Alt = "Test Image"
+        };
+
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(imageWithMediaUrl));
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Should transform /~/media/ to /~/jssmedia/
+        srcSetValue.Should().Contain("/~/jssmedia/images/test.jpg");
+        srcSetValue.Should().NotContain("/~/media/images/test.jpg");
+        srcSetValue.Should().Contain("320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithNullAndEmptyEntries_HandlesGracefully(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object?[]
+        {
+            new { w = 320, quality = 75 },
+            null, // Should skip
+            new { w = 480, quality = 80 },
+            new { } // Should skip - no width parameter
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("320w");
+        srcSetValue.Should().Contain("480w");
+
+        // Should only have two entries
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(2);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithComplexParameters_HandlesAllParameters(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 320, quality = 75, format = "webp", dpr = 2, fit = "crop" }
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("320w");
+        srcSetValue.Should().Contain("quality=75");
+        srcSetValue.Should().Contain("format=webp");
+        srcSetValue.Should().Contain("dpr=2");
+        srcSetValue.Should().Contain("fit=crop");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithDictionaryParameters_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new Dictionary<string, object> { { "w", 320 }, { "quality", 75 } },
+            new Dictionary<string, object> { { "mw", 480 }, { "quality", 80 } }
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        srcSetValue.Should().Contain("320w");
+        srcSetValue.Should().Contain("480w");
+        srcSetValue.Should().Contain("quality=75");
+        srcSetValue.Should().Contain("quality=80");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithSizesAttribute_AddsBothAttributes(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { w = 320 }, new { w = 480 } };
+        sut.Sizes = "(min-width: 768px) 480px, 320px";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().Contain(a => a.Name == "srcset");
+        tagHelperOutput.Attributes.Should().Contain(a => a.Name == "sizes");
+
+        string sizesValue = tagHelperOutput.Attributes["sizes"].Value.ToString()!;
+        sizesValue.Should().Be("(min-width: 768px) 480px, 320px");
+    }
+
     private static ModelExpression GetModelExpression(Field model)
     {
         DefaultModelMetadata? modelMetadata = Substitute.For<DefaultModelMetadata>(

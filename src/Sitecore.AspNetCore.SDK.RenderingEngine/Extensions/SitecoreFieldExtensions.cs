@@ -53,8 +53,8 @@ public static partial class SitecoreFieldExtensions
     }
 
     /// <summary>
-    /// Gets modified URL string to Sitecore media item for srcSet with parameter preservation.
-    /// This method preserves critical Sitecore parameters needed for proper image processing.
+    /// Gets modified URL string to Sitecore media item for srcSet.
+    /// This method preserves existing URL parameters and merges them with new ones.
     /// </summary>
     /// <param name="imageField">The image field.</param>
     /// <param name="imageParams">Base image parameters.</param>
@@ -128,83 +128,6 @@ public static partial class SitecoreFieldExtensions
     }
 
     /// <summary>
-    /// Gets modified URL string to Sitecore media item with parameter preservation.
-    /// This preserves existing query parameters while adding new ones.
-    /// </summary>
-    /// <param name="url">Media item source URL.</param>
-    /// <param name="parameters">Additional parameters to merge with existing ones.</param>
-    /// <returns>Media item URL with preserved and merged parameters.</returns>
-    private static string GetSitecoreMediaUriWithPreservation(string url, object? parameters)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            return url;
-        }
-
-        // Parse the existing URL to separate base URL and query string
-        Uri uri = new Uri(url, UriKind.RelativeOrAbsolute);
-        string baseUrl = uri.GetLeftPart(UriPartial.Path);
-        Dictionary<string, Microsoft.Extensions.Primitives.StringValues> existingQuery = QueryHelpers.ParseQuery(uri.Query);
-
-        // Convert parameters to dictionary and merge with existing query parameters
-        Dictionary<string, string>? paramDict = ConvertToStringDictionary(parameters);
-        if (paramDict != null)
-        {
-            foreach (KeyValuePair<string, string> param in paramDict)
-            {
-                // QueryHelpers.ParseQuery returns StringValues, so we need to handle this properly
-                existingQuery[param.Key] = param.Value;
-            }
-        }
-
-        // Apply the media URL prefix transformation (jssmedia replacement)
-        string finalBaseUrl = baseUrl;
-        Match match = MediaUrlPrefixRegex().Match(finalBaseUrl);
-        if (match.Success)
-        {
-            finalBaseUrl = finalBaseUrl.Replace(match.Value, $"/{match.Groups[1]}/jssmedia/", StringComparison.InvariantCulture);
-        }
-
-        // Build the final URL with merged parameters
-        string queryString = QueryHelpers.AddQueryString(string.Empty, existingQuery.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value.ToString()));
-        return queryString.StartsWith("?") ? $"{finalBaseUrl}{queryString}" : finalBaseUrl;
-    }
-
-    /// <summary>
-    /// Converts an object to a string dictionary.
-    /// </summary>
-    /// <param name="obj">The object to convert.</param>
-    /// <returns>Dictionary representation of the object.</returns>
-    private static Dictionary<string, string>? ConvertToStringDictionary(object? obj)
-    {
-        if (obj == null)
-        {
-            return null;
-        }
-
-        Dictionary<string, string> result = new Dictionary<string, string>();
-
-        if (obj is Dictionary<string, object> dict)
-        {
-            foreach (KeyValuePair<string, object> kvp in dict)
-            {
-                result[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
-            }
-        }
-        else
-        {
-            PropertyInfo[] props = obj.GetType().GetProperties();
-            foreach (PropertyInfo prop in props)
-            {
-                object? value = prop.GetValue(obj);
-                result[prop.Name] = value?.ToString() ?? string.Empty;
-            }
-        }
-
-        return result;
-    }
-
-    /// <summary>
     /// Gets URL to Sitecore media item.
     /// </summary>
     /// <param name="url">The image URL.</param>
@@ -225,6 +148,95 @@ public static partial class SitecoreFieldExtensions
             foreach (string key in parameters.Keys)
             {
                 url = QueryHelpers.AddQueryString(url, key, parameters[key]?.ToString() ?? string.Empty);
+            }
+        }
+
+        // TODO Review hardcoded matching and replacement
+        Match match = MediaUrlPrefixRegex().Match(url);
+        if (match.Success)
+        {
+            url = url.Replace(match.Value, $"/{match.Groups[1]}/jssmedia/", StringComparison.InvariantCulture);
+        }
+
+        return url;
+    }
+
+    /// <summary>
+    /// Gets modified URL string to Sitecore media item with parameter preservation.
+    /// This method preserves existing URL parameters and merges them with new ones.
+    /// </summary>
+    /// <param name="urlStr">The URL string.</param>
+    /// <param name="parameters">Parameters to merge.</param>
+    /// <returns>Modified URL string.</returns>
+    private static string GetSitecoreMediaUriWithPreservation(string urlStr, object? parameters)
+    {
+        if (string.IsNullOrEmpty(urlStr))
+        {
+            return urlStr;
+        }
+
+        string url = urlStr;
+
+        // Parse existing query parameters
+        Dictionary<string, string> existingParams = new Dictionary<string, string>();
+        if (url.Contains('?'))
+        {
+            string[] parts = url.Split('?', 2);
+            url = parts[0];
+            string queryString = parts[1];
+
+            string[] paramPairs = queryString.Split('&');
+            foreach (string paramPair in paramPairs)
+            {
+                string[] keyValue = paramPair.Split('=', 2);
+                if (keyValue.Length == 2)
+                {
+                    string key = HttpUtility.UrlDecode(keyValue[0]);
+                    string value = HttpUtility.UrlDecode(keyValue[1]);
+                    existingParams[key] = value;
+                }
+            }
+        }
+
+        // Merge with new parameters (new parameters override existing ones)
+        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>();
+
+        // Add existing parameters first
+        foreach (KeyValuePair<string, string> kvp in existingParams)
+        {
+            mergedParams[kvp.Key] = kvp.Value;
+        }
+
+        // Add new parameters (these will override existing ones)
+        if (parameters != null)
+        {
+            if (parameters is Dictionary<string, object> paramDict)
+            {
+                foreach (KeyValuePair<string, object> kvp in paramDict)
+                {
+                    mergedParams[kvp.Key] = kvp.Value;
+                }
+            }
+            else
+            {
+                PropertyInfo[] properties = parameters.GetType().GetProperties();
+                foreach (PropertyInfo prop in properties)
+                {
+                    object? value = prop.GetValue(parameters);
+                    if (value != null)
+                    {
+                        mergedParams[prop.Name] = value;
+                    }
+                }
+            }
+        }
+
+        // Add query parameters
+        foreach (KeyValuePair<string, object?> kvp in mergedParams)
+        {
+            if (kvp.Value != null)
+            {
+                url = QueryHelpers.AddQueryString(url, kvp.Key, kvp.Value.ToString() ?? string.Empty);
             }
         }
 
