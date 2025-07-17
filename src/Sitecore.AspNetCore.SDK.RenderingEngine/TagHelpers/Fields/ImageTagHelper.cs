@@ -247,19 +247,8 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         return width != null ? $"{width}w" : null;
     }
 
-    private static object[]? ParseJsonSrcSet(object? srcSetValue)
+    private static object[]? ParseJsonSrcSet(object srcSetValue)
     {
-        if (srcSetValue == null)
-        {
-            return null;
-        }
-
-        // If already an object array, use as-is
-        if (srcSetValue is object[] objectArray)
-        {
-            return objectArray;
-        }
-
         // If it's a JSON string, parse it
         if (srcSetValue is string jsonString)
         {
@@ -403,7 +392,24 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
     private string GenerateSrcSetAttribute(ImageField imageField)
     {
-        object[]? parsedSrcSet = ParseJsonSrcSet(SrcSet);
+        if (SrcSet == null)
+        {
+            return string.Empty;
+        }
+
+        object[]? parsedSrcSet;
+
+        // If already an object array, use as-is
+        if (SrcSet is object[] objectArray)
+        {
+            parsedSrcSet = objectArray;
+        }
+        else
+        {
+            // Parse JSON string or wrap single object
+            parsedSrcSet = ParseJsonSrcSet(SrcSet);
+        }
+
         if (parsedSrcSet == null || parsedSrcSet.Length == 0)
         {
             return string.Empty;
