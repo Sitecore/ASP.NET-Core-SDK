@@ -754,11 +754,20 @@ public class ImageTagHelperFixture
         // Act
         sut.Process(tagHelperContext, tagHelperOutput);
 
-        // Assert - <sc-img> generates HTML content, not attributes
+        // Assert
         string content = tagHelperOutput.Content.GetContent();
-        content.Should().Contain("srcset=");
-        content.Should().Contain("400w");
-        content.Should().Contain("200w");
+
+        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue("srcset attribute should be present in the HTML");
+
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        // Verify each entry precisely with preserved query parameters and new width parameters
+        srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=400 400w");
+        srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=200 200w");
+
+        var entries = srcsetValue.Split(", ");
+        entries.Should().HaveCount(2);
     }
 
     [Theory]
@@ -781,17 +790,11 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
 
-        // Should contain "1000w" (from w parameter taking priority over h)
-        srcSetValue.Should().Contain("1000w");
-
-        // Should contain "250w" (from mw parameter)
-        srcSetValue.Should().Contain("250w");
-
-        // Verify it contains the expected format: "url 1000w, url 250w"
+        // Full string comparison - verify exact srcset format
         string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(2);
-        entries[0].Should().EndWith("1000w");
-        entries[1].Should().EndWith("250w");
+        entries[0].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&h=1000&w=1000 1000w");
+        entries[1].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&h=1000&mh=250&mw=250 250w");
     }
 
     [Theory]
@@ -813,10 +816,9 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
 
-        // Should only contain the entry with mw parameter
-        srcSetValue.Should().Contain("250w");
+        // Full string comparison - verify exact entry
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=250 250w");
 
-        // Should not contain entries without width parameters
         string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(1);
     }
@@ -829,10 +831,9 @@ public class ImageTagHelperFixture
         TagHelperOutput tagHelperOutput)
     {
         // Arrange
-        Image image = new() { Src = "http://styleguide/-/media/img/sc_logo.png", Alt = "Sitecore Logo" };
-        ImageField imageField = new(image)
+        ImageField imageField = new(_image)
         {
-            EditableMarkup = "<img src=\"/sitecore/shell/-/jssmedia/img/sc_logo.png\" alt=\"Sitecore Logo\" />"
+            EditableMarkup = "<img src=\"/sitecore/shell/-/jssmedia/styleguide/data/media/img/sc_logo.png\" alt=\"Sitecore Logo\" />"
         };
 
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
@@ -845,10 +846,19 @@ public class ImageTagHelperFixture
 
         // Assert
         string content = tagHelperOutput.Content.GetContent();
-        content.Should().Contain("srcset=");
-        content.Should().Contain("600w");
-        content.Should().Contain("300w");
-        content.Should().Contain("sizes=\"(min-width: 768px) 600px, 300px\"");
+
+        // Extract srcset and sizes using regex for full string comparison
+        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue();
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        var sizesMatch = System.Text.RegularExpressions.Regex.Match(content, "sizes=\"([^\"]*)\"");
+        sizesMatch.Success.Should().BeTrue();
+        string sizesValue = sizesMatch.Groups[1].Value;
+
+        // Full string comparison
+        srcsetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=600 600w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=300 300w");
+        sizesValue.Should().Be("(min-width: 768px) 600px, 300px");
     }
 
     [Theory]
@@ -869,8 +879,9 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("500w");
-        srcSetValue.Should().Contain("250w");
+
+        // Full string comparison
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=500 500w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=250 250w");
     }
 
     [Theory]
@@ -885,7 +896,6 @@ public class ImageTagHelperFixture
         sut.For = GetModelExpression(new ImageField(_image));
         sut.SrcSet = new object[]
         {
-            // Only w and mw are supported by Content SDK for srcSet
             new { w = 800 },  // Anonymous object with 'w'
             new { mw = 400 }, // Anonymous object with 'mw'
         };
@@ -895,9 +905,14 @@ public class ImageTagHelperFixture
 
         // Assert
         string content = tagHelperOutput.Content.GetContent();
-        content.Should().Contain("srcset=");
-        content.Should().Contain("800w");
-        content.Should().Contain("400w");
+
+        // Extract srcset using regex for full string comparison
+        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue();
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        // Full string comparison
+        srcsetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=800 800w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;mw=400 400w");
     }
 
     [Theory]
@@ -913,7 +928,6 @@ public class ImageTagHelperFixture
         sut.SrcSet = "invalid json string";
 
         // Act & Assert
-        // Should throw InvalidOperationException due to invalid JSON
         Action act = () => sut.Process(tagHelperContext, tagHelperOutput);
         act.Should().Throw<InvalidOperationException>()
            .WithMessage("Failed to parse srcset JSON: invalid json string*")
@@ -922,7 +936,7 @@ public class ImageTagHelperFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void Process_SrcSetWithImageParamsConflict_SrcSetParametersWin(
+    public void Process_SrcSetWithImageParamsConflict_SrcSetParametersArePreferred(
         ImageTagHelper sut,
         TagHelperContext tagHelperContext,
         TagHelperOutput tagHelperOutput)
@@ -939,11 +953,9 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("w=320");
-        srcSetValue.Should().Contain("quality=75");
-        srcSetValue.Should().Contain("format=jpg"); // Inherited from ImageParams
-        srcSetValue.Should().NotContain("w=1000");
-        srcSetValue.Should().NotContain("quality=50");
+
+        // Full string comparison - verify SrcSet parameters are preferred over ImageParams
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75&format=jpg 320w");
     }
 
     [Theory]
@@ -970,10 +982,14 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("100w");
-        srcSetValue.Should().Contain("200w");
-        srcSetValue.Should().Contain("300w");
-        srcSetValue.Should().Contain("400w");
+
+        // Full string comparison - verify parameter priority
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(4);
+        entries[0].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=100&mw=200&width=300&maxWidth=400 100w");
+        entries[1].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=200&width=300&maxWidth=400 200w");
+        entries[2].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&width=300&maxWidth=400 300w");
+        entries[3].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&maxWidth=400 400w");
     }
 
     [Theory]
@@ -1000,11 +1016,10 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("320w");
-        srcSetValue.Should().NotContain(" 0w");
-        srcSetValue.Should().NotContain(" -100w");
 
-        // Should only have one entry
+        // Full string comparison - verify only valid entry remains
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w");
+
         string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(1);
     }
@@ -1034,16 +1049,8 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
 
-        // Should preserve existing parameters and merge with new ones
-        srcSetValue.Should().Contain("h=2001");
-        srcSetValue.Should().Contain("iar=0");
-        srcSetValue.Should().Contain("hash=abc123");
-        srcSetValue.Should().Contain("quality=75");
-
-        // New w parameter should override existing w=3000
-        srcSetValue.Should().Contain("w=320");
-        srcSetValue.Should().NotContain("w=3000");
-        srcSetValue.Should().Contain("320w");
+        // Full string comparison - verify parameters are preserved and merged
+        srcSetValue.Should().Be("https://edge.sitecorecloud.io/media/image.jpg?h=2001&iar=0&hash=abc123&w=320&quality=75 320w");
     }
 
     [Theory]
@@ -1071,10 +1078,8 @@ public class ImageTagHelperFixture
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
 
-        // Should transform /~/media/ to /~/jssmedia/
-        srcSetValue.Should().Contain("/~/jssmedia/images/test.jpg");
-        srcSetValue.Should().NotContain("/~/media/images/test.jpg");
-        srcSetValue.Should().Contain("320w");
+        // Full string comparison - verify URL transformation
+        srcSetValue.Should().Be("/~/jssmedia/images/test.jpg?w=320&quality=75 320w");
     }
 
     [Theory]
@@ -1101,10 +1106,10 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("320w");
-        srcSetValue.Should().Contain("480w");
 
-        // Should only have two entries
+        // Full string comparison - verify only valid entries remain
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=480&quality=80 480w");
+
         string[] entries = srcSetValue.Split(", ");
         entries.Should().HaveCount(2);
     }
@@ -1130,11 +1135,9 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("320w");
-        srcSetValue.Should().Contain("quality=75");
-        srcSetValue.Should().Contain("format=webp");
-        srcSetValue.Should().Contain("dpr=2");
-        srcSetValue.Should().Contain("fit=crop");
+
+        // Full string comparison - verify all parameters are included
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75&format=webp&dpr=2&fit=crop 320w");
     }
 
     [Theory]
@@ -1159,10 +1162,9 @@ public class ImageTagHelperFixture
         // Assert
         tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
         string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-        srcSetValue.Should().Contain("320w");
-        srcSetValue.Should().Contain("480w");
-        srcSetValue.Should().Contain("quality=75");
-        srcSetValue.Should().Contain("quality=80");
+
+        // Full string comparison - verify dictionary parameters
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=480&quality=80 480w");
     }
 
     [Theory]
@@ -1182,10 +1184,14 @@ public class ImageTagHelperFixture
         sut.Process(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Attributes.Should().Contain(a => a.Name == "srcset");
-        tagHelperOutput.Attributes.Should().Contain(a => a.Name == "sizes");
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "sizes");
 
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
         string sizesValue = tagHelperOutput.Attributes["sizes"].Value.ToString()!;
+
+        // Full string comparison
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=480 480w");
         sizesValue.Should().Be("(min-width: 768px) 480px, 320px");
     }
 
