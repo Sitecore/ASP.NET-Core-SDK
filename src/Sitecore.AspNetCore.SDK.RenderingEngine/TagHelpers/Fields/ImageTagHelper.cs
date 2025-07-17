@@ -254,6 +254,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             try
             {
+                // We need to use Dictionary<string, object>[] to ensure proper deserialization of JSON objects into dictionaries that our GetWidthDescriptor method can handle
                 Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
                 return parsed?.Cast<object>().ToArray();
             }
