@@ -180,7 +180,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         string? width = null;
 
-        // Handle Dictionary<string, object>
         if (parameters is Dictionary<string, object> dictionary)
         {
             // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
