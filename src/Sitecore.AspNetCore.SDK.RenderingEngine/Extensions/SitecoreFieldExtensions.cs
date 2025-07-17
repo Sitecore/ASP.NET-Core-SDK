@@ -130,14 +130,7 @@ public static partial class SitecoreFieldExtensions
             }
         }
 
-        // TODO Review hardcoded matching and replacement
-        Match match = MediaUrlPrefixRegex().Match(url);
-        if (match.Success)
-        {
-            url = url.Replace(match.Value, $"/{match.Groups[1]}/jssmedia/", StringComparison.InvariantCulture);
-        }
-
-        return url;
+        return ApplyJssMediaUrlPrefix(url);
     }
 
     /// <summary>
@@ -210,6 +203,16 @@ public static partial class SitecoreFieldExtensions
             }
         }
 
+        return ApplyJssMediaUrlPrefix(url);
+    }
+
+    /// <summary>
+    /// Applies JSS media URL prefix replacement to the given URL.
+    /// </summary>
+    /// <param name="url">The URL to transform.</param>
+    /// <returns>The URL with JSS media prefix applied if applicable.</returns>
+    private static string ApplyJssMediaUrlPrefix(string url)
+    {
         // TODO Review hardcoded matching and replacement
         Match match = MediaUrlPrefixRegex().Match(url);
         if (match.Success)
