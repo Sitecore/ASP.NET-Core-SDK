@@ -902,7 +902,7 @@ public class ImageTagHelperFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void Process_SrcSetWithInvalidJsonString_FallsBackGracefully(
+    public void Process_SrcSetWithInvalidJsonString_ThrowsInvalidOperationException(
         ImageTagHelper sut,
         TagHelperContext tagHelperContext,
         TagHelperOutput tagHelperOutput)
@@ -912,12 +912,12 @@ public class ImageTagHelperFixture
         sut.For = GetModelExpression(new ImageField(_image));
         sut.SrcSet = "invalid json string";
 
-        // Act
-        sut.Process(tagHelperContext, tagHelperOutput);
-
-        // Assert
-        // Should not throw and should not add srcset attribute
-        tagHelperOutput.Attributes.Should().NotContain(a => a.Name == "srcset");
+        // Act & Assert
+        // Should throw InvalidOperationException due to invalid JSON
+        Action act = () => sut.Process(tagHelperContext, tagHelperOutput);
+        act.Should().Throw<InvalidOperationException>()
+           .WithMessage("Failed to parse srcset JSON: invalid json string*")
+           .WithInnerException<System.Text.Json.JsonException>();
     }
 
     [Theory]

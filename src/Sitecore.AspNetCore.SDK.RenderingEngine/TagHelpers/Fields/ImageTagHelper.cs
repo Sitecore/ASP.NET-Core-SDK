@@ -257,10 +257,10 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
                 return parsed?.Cast<object>().ToArray();
             }
-            catch (System.Text.Json.JsonException)
+            catch (Exception ex)
             {
-                // If JSON parsing fails, return null to skip srcset generation
-                return null;
+                // JSON parsing failed - this is a programming error, invalid JSON was passed
+                throw new InvalidOperationException($"Failed to parse srcset JSON: {jsonString}", ex);
             }
         }
 
