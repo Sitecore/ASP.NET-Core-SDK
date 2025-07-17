@@ -278,7 +278,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         }
 
         // Single object - wrap in array
-        return new[] { srcSetValue };
+        return [srcSetValue];
     }
 
     private TagBuilder GenerateImage(ImageField imageField, TagHelperOutput output)
