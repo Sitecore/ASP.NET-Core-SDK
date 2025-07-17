@@ -114,7 +114,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             {
                 output.Attributes.Add(ScrAttribute, field.GetMediaLink(ImageParams));
 
-                // Add srcset if configured
                 if (SrcSet != null)
                 {
                     string srcSetValue = GenerateSrcSetAttribute(field);
@@ -124,7 +123,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                     }
                 }
 
-                // Add sizes if provided
                 if (!string.IsNullOrEmpty(Sizes))
                 {
                     output.Attributes.Add(SizesAttribute, Sizes);
@@ -249,7 +247,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         return width != null ? $"{width}w" : null;
     }
 
-    private static object[]? ParseSrcSet(object? srcSetValue)
+    private static object[]? ParseJsonSrcSet(object? srcSetValue)
     {
         if (srcSetValue == null)
         {
@@ -293,7 +291,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             tagBuilder.Attributes.Add(ScrAttribute, imageField.GetMediaLink(ImageParams));
 
-            // Add srcset if configured
             if (SrcSet != null)
             {
                 string srcSetValue = GenerateSrcSetAttribute(imageField);
@@ -303,7 +300,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 }
             }
 
-            // Add sizes if provided
             if (!string.IsNullOrEmpty(Sizes))
             {
                 tagBuilder.Attributes.Add(SizesAttribute, Sizes);
@@ -387,7 +383,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
             imageNode.SetAttributeValue(ScrAttribute, imageField.GetMediaLink(ImageParams));
 
-            // Add srcset for editable content
             if (SrcSet != null)
             {
                 string srcSetValue = GenerateSrcSetAttribute(imageField);
@@ -397,7 +392,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 }
             }
 
-            // Add sizes for editable content
             if (!string.IsNullOrEmpty(Sizes))
             {
                 imageNode.SetAttributeValue(SizesAttribute, Sizes);
@@ -409,7 +403,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
     private string GenerateSrcSetAttribute(ImageField imageField)
     {
-        object[]? parsedSrcSet = ParseSrcSet(SrcSet);
+        object[]? parsedSrcSet = ParseJsonSrcSet(SrcSet);
         if (parsedSrcSet == null || parsedSrcSet.Length == 0)
         {
             return string.Empty;
