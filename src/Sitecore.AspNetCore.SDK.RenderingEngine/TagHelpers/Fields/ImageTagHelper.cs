@@ -202,7 +202,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         }
         else
         {
-            // Handle anonymous objects via reflection
             PropertyInfo[] properties = parameters.GetType().GetProperties();
 
             // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
