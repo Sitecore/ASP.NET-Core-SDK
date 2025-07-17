@@ -418,14 +418,9 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         List<string> srcSetEntries = new();
 
-        foreach (object srcSetItem in parsedSrcSet)
+        // filter out null items directly
+        foreach (object srcSetItem in parsedSrcSet.Where(item => item != null))
         {
-            // Skip null items
-            if (srcSetItem == null)
-            {
-                continue;
-            }
-
             // Get width descriptor first to check if this entry should be included
             string? descriptor = GetWidthDescriptor(srcSetItem);
             if (descriptor == null)
