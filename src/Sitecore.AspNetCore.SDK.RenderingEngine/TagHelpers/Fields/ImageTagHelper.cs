@@ -171,6 +171,12 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         }
     }
 
+    private static string? TryParseParameter(object parameters, string paramName, PropertyInfo[] properties)
+    {
+        PropertyInfo? prop = properties.FirstOrDefault(p => p.Name.Equals(paramName, StringComparison.OrdinalIgnoreCase));
+        return prop?.GetValue(parameters)?.ToString();
+    }
+
     private static string? GetWidthDescriptor(object? parameters)
     {
         if (parameters == null)
@@ -205,35 +211,10 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             PropertyInfo[] properties = parameters.GetType().GetProperties();
 
             // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            PropertyInfo? wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
-            if (wProp != null)
-            {
-                width = wProp.GetValue(parameters)?.ToString();
-            }
-            else
-            {
-                PropertyInfo? mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
-                if (mwProp != null)
-                {
-                    width = mwProp.GetValue(parameters)?.ToString();
-                }
-                else
-                {
-                    PropertyInfo? widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
-                    if (widthProp != null)
-                    {
-                        width = widthProp.GetValue(parameters)?.ToString();
-                    }
-                    else
-                    {
-                        PropertyInfo? maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
-                        if (maxWidthProp != null)
-                        {
-                            width = maxWidthProp.GetValue(parameters)?.ToString();
-                        }
-                    }
-                }
-            }
+            width = TryParseParameter(parameters, "w", properties)
+                ?? TryParseParameter(parameters, "mw", properties)
+                ?? TryParseParameter(parameters, "width", properties)
+                ?? TryParseParameter(parameters, "maxWidth", properties);
         }
 
         // Validate width is positive
