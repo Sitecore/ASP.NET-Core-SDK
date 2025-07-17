@@ -34,114 +34,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string SizesAttribute = "sizes";
     private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
-    private static string? GetWidthDescriptor(object? parameters)
-    {
-        if (parameters == null)
-        {
-            return null;
-        }
-
-        string? width = null;
-
-        // Handle Dictionary<string, object>
-        if (parameters is Dictionary<string, object> dictionary)
-        {
-            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            if (dictionary.TryGetValue("w", out object? wValue))
-            {
-                width = wValue?.ToString();
-            }
-            else if (dictionary.TryGetValue("mw", out object? mwValue))
-            {
-                width = mwValue?.ToString();
-            }
-            else if (dictionary.TryGetValue("width", out object? widthObj))
-            {
-                width = widthObj?.ToString();
-            }
-            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthObj))
-            {
-                width = maxWidthObj?.ToString();
-            }
-        }
-        else
-        {
-            // Handle anonymous objects via reflection
-            PropertyInfo[] properties = parameters.GetType().GetProperties();
-
-            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            PropertyInfo? wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
-            if (wProp != null)
-            {
-                width = wProp.GetValue(parameters)?.ToString();
-            }
-            else
-            {
-                PropertyInfo? mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
-                if (mwProp != null)
-                {
-                    width = mwProp.GetValue(parameters)?.ToString();
-                }
-                else
-                {
-                    PropertyInfo? widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
-                    if (widthProp != null)
-                    {
-                        width = widthProp.GetValue(parameters)?.ToString();
-                    }
-                    else
-                    {
-                        PropertyInfo? maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
-                        if (maxWidthProp != null)
-                        {
-                            width = maxWidthProp.GetValue(parameters)?.ToString();
-                        }
-                    }
-                }
-            }
-        }
-
-        // Validate width is positive
-        if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
-        {
-            return null;
-        }
-
-        return width != null ? $"{width}w" : null;
-    }
-
-    private static object[]? ParseSrcSet(object? srcSetValue)
-    {
-        if (srcSetValue == null)
-        {
-            return null;
-        }
-
-        // If already an object array, use as-is
-        if (srcSetValue is object[] objectArray)
-        {
-            return objectArray;
-        }
-
-        // If it's a JSON string, parse it
-        if (srcSetValue is string jsonString)
-        {
-            try
-            {
-                Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
-                return parsed?.Cast<object>().ToArray();
-            }
-            catch (System.Text.Json.JsonException)
-            {
-                // If JSON parsing fails, return null to skip srcset generation
-                return null;
-            }
-        }
-
-        // Single object - wrap in array
-        return new[] { srcSetValue };
-    }
-
     /// <summary>
     /// Gets or sets the model value.
     /// </summary>
@@ -279,6 +171,114 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 }
             }
         }
+    }
+
+    private static string? GetWidthDescriptor(object? parameters)
+    {
+        if (parameters == null)
+        {
+            return null;
+        }
+
+        string? width = null;
+
+        // Handle Dictionary<string, object>
+        if (parameters is Dictionary<string, object> dictionary)
+        {
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+            if (dictionary.TryGetValue("w", out object? wValue))
+            {
+                width = wValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("mw", out object? mwValue))
+            {
+                width = mwValue?.ToString();
+            }
+            else if (dictionary.TryGetValue("width", out object? widthObj))
+            {
+                width = widthObj?.ToString();
+            }
+            else if (dictionary.TryGetValue("maxWidth", out object? maxWidthObj))
+            {
+                width = maxWidthObj?.ToString();
+            }
+        }
+        else
+        {
+            // Handle anonymous objects via reflection
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
+
+            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+            PropertyInfo? wProp = properties.FirstOrDefault(p => p.Name.Equals("w", StringComparison.OrdinalIgnoreCase));
+            if (wProp != null)
+            {
+                width = wProp.GetValue(parameters)?.ToString();
+            }
+            else
+            {
+                PropertyInfo? mwProp = properties.FirstOrDefault(p => p.Name.Equals("mw", StringComparison.OrdinalIgnoreCase));
+                if (mwProp != null)
+                {
+                    width = mwProp.GetValue(parameters)?.ToString();
+                }
+                else
+                {
+                    PropertyInfo? widthProp = properties.FirstOrDefault(p => p.Name.Equals("width", StringComparison.OrdinalIgnoreCase));
+                    if (widthProp != null)
+                    {
+                        width = widthProp.GetValue(parameters)?.ToString();
+                    }
+                    else
+                    {
+                        PropertyInfo? maxWidthProp = properties.FirstOrDefault(p => p.Name.Equals("maxWidth", StringComparison.OrdinalIgnoreCase));
+                        if (maxWidthProp != null)
+                        {
+                            width = maxWidthProp.GetValue(parameters)?.ToString();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Validate width is positive
+        if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
+        {
+            return null;
+        }
+
+        return width != null ? $"{width}w" : null;
+    }
+
+    private static object[]? ParseSrcSet(object? srcSetValue)
+    {
+        if (srcSetValue == null)
+        {
+            return null;
+        }
+
+        // If already an object array, use as-is
+        if (srcSetValue is object[] objectArray)
+        {
+            return objectArray;
+        }
+
+        // If it's a JSON string, parse it
+        if (srcSetValue is string jsonString)
+        {
+            try
+            {
+                Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
+                return parsed?.Cast<object>().ToArray();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // If JSON parsing fails, return null to skip srcset generation
+                return null;
+            }
+        }
+
+        // Single object - wrap in array
+        return new[] { srcSetValue };
     }
 
     private TagBuilder GenerateImage(ImageField imageField, TagHelperOutput output)
