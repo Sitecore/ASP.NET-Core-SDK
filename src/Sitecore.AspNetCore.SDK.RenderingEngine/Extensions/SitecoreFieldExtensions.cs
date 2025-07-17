@@ -156,8 +156,8 @@ public static partial class SitecoreFieldExtensions
 
         string url = urlStr;
 
-        // Parse existing query parameters
-        Dictionary<string, string> existingParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        // Parse existing query parameters and build merged parameters dictionary
+        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         if (url.Contains('?'))
         {
             string[] parts = url.Split('?', 2);
@@ -172,18 +172,9 @@ public static partial class SitecoreFieldExtensions
                 {
                     string key = HttpUtility.UrlDecode(keyValue[0]);
                     string value = HttpUtility.UrlDecode(keyValue[1]);
-                    existingParams[key] = value;
+                    mergedParams[key] = value;
                 }
             }
-        }
-
-        // Merge with new parameters (new parameters override existing ones)
-        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-
-        // Add existing parameters first
-        foreach (KeyValuePair<string, string> kvp in existingParams)
-        {
-            mergedParams[kvp.Key] = kvp.Value;
         }
 
         // Add new parameters (these will override existing ones)
