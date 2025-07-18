@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
@@ -234,8 +235,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             try
             {
                 // We need to use Dictionary<string, object>[] to ensure proper deserialization of JSON objects into dictionaries that our GetWidthDescriptor method can handle
-                Dictionary<string, object>[]? parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString);
-                return parsed?.Cast<object>().ToArray();
+                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString, JsonLayoutServiceSerializer.GetDefaultSerializerOptions());
             }
             catch (Exception ex)
             {
