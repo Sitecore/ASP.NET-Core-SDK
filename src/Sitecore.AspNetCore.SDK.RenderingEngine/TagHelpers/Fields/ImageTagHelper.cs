@@ -211,14 +211,13 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         {
             PropertyInfo[] properties = parameters.GetType().GetProperties();
 
-            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+            // Priority: w > mw > width > maxWidth
             width = TryParseParameter(parameters, "w", properties)
                 ?? TryParseParameter(parameters, "mw", properties)
                 ?? TryParseParameter(parameters, "width", properties)
                 ?? TryParseParameter(parameters, "maxWidth", properties);
         }
 
-        // Validate width is positive
         if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
         {
             return null;
@@ -229,7 +228,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
     private static object[]? ParseJsonSrcSet(object srcSetValue)
     {
-        // If it's a JSON string, parse it
         if (srcSetValue is string jsonString)
         {
             try
@@ -244,7 +242,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             }
         }
 
-        // Single object - wrap in array
         return [srcSetValue];
     }
 
@@ -379,14 +376,12 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         object[]? parsedSrcSet;
 
-        // If already an object array, use as-is
         if (SrcSet is object[] objectArray)
         {
             parsedSrcSet = objectArray;
         }
         else
         {
-            // Parse JSON string or wrap single object
             parsedSrcSet = ParseJsonSrcSet(SrcSet);
         }
 
