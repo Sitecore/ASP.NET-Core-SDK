@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text.Json;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -233,7 +234,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             try
             {
                 // We need to use Dictionary<string, object>[] to ensure proper deserialization of JSON objects into dictionaries that our GetWidthDescriptor method can handle
-                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString, JsonLayoutServiceSerializer.GetDefaultSerializerOptions());
+                return JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString, JsonLayoutServiceSerializer.GetDefaultSerializerOptions());
             }
             catch (Exception ex)
             {
