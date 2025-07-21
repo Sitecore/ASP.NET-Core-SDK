@@ -56,17 +56,17 @@ public static partial class SitecoreFieldExtensions
     /// <summary>
     /// Merges base parameters with override parameters.
     /// </summary>
-    /// <param name="baseParams">Base parameters.</param>
-    /// <param name="overrideParams">Override parameters that take precedence.</param>
+    /// <param name="imageParams">Base image parameters.</param>
+    /// <param name="srcSetParams">SrcSet specific parameters that take precedence.</param>
     /// <returns>Merged parameters as dictionary.</returns>
-    private static Dictionary<string, object?> MergeParameters(object? baseParams, object? overrideParams)
+    private static Dictionary<string, object?> MergeParameters(object? imageParams, object? srcSetParams)
     {
         Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
         // Add base parameters first
-        if (baseParams != null)
+        if (imageParams != null)
         {
-            if (baseParams is Dictionary<string, object> baseDict)
+            if (imageParams is Dictionary<string, object> baseDict)
             {
                 foreach (KeyValuePair<string, object> kvp in baseDict)
                 {
@@ -75,18 +75,18 @@ public static partial class SitecoreFieldExtensions
             }
             else
             {
-                PropertyInfo[] baseProps = baseParams.GetType().GetProperties();
+                PropertyInfo[] baseProps = imageParams.GetType().GetProperties();
                 foreach (PropertyInfo prop in baseProps)
                 {
-                    result[prop.Name] = prop.GetValue(baseParams);
+                    result[prop.Name] = prop.GetValue(imageParams);
                 }
             }
         }
 
         // Override with srcSet parameters
-        if (overrideParams != null)
+        if (srcSetParams != null)
         {
-            if (overrideParams is Dictionary<string, object> overrideDict)
+            if (srcSetParams is Dictionary<string, object> overrideDict)
             {
                 foreach (KeyValuePair<string, object> kvp in overrideDict)
                 {
@@ -95,10 +95,10 @@ public static partial class SitecoreFieldExtensions
             }
             else
             {
-                PropertyInfo[] overrideProps = overrideParams.GetType().GetProperties();
+                PropertyInfo[] overrideProps = srcSetParams.GetType().GetProperties();
                 foreach (PropertyInfo prop in overrideProps)
                 {
-                    result[prop.Name] = prop.GetValue(overrideParams);
+                    result[prop.Name] = prop.GetValue(srcSetParams);
                 }
             }
         }
