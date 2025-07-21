@@ -160,17 +160,7 @@ public static partial class SitecoreFieldExtensions
             url = parts[0];
             string queryString = parts[1];
 
-            string[] paramPairs = queryString.Split('&');
-            foreach (string paramPair in paramPairs)
-            {
-                string[] keyValue = paramPair.Split('=', 2);
-                if (keyValue.Length == 2)
-                {
-                    string key = HttpUtility.UrlDecode(keyValue[0]);
-                    string value = HttpUtility.UrlDecode(keyValue[1]);
-                    mergedParams[key] = value;
-                }
-            }
+            ParseUrlParams(queryString, mergedParams);
         }
 
         // Add new parameters (these will override existing ones)
@@ -186,6 +176,26 @@ public static partial class SitecoreFieldExtensions
         }
 
         return ApplyJssMediaUrlPrefix(url);
+    }
+
+    /// <summary>
+    /// Parses URL query string parameters and adds them to the provided dictionary.
+    /// </summary>
+    /// <param name="queryString">The query string to parse.</param>
+    /// <param name="parameters">The dictionary to add parsed parameters to.</param>
+    private static void ParseUrlParams(string queryString, Dictionary<string, object?> parameters)
+    {
+        string[] paramPairs = queryString.Split('&');
+        foreach (string paramPair in paramPairs)
+        {
+            string[] keyValue = paramPair.Split('=', 2);
+            if (keyValue.Length == 2)
+            {
+                string key = HttpUtility.UrlDecode(keyValue[0]);
+                string value = HttpUtility.UrlDecode(keyValue[1]);
+                parameters[key] = value;
+            }
+        }
     }
 
     /// <summary>
