@@ -64,46 +64,49 @@ public static partial class SitecoreFieldExtensions
         Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
         // Add base parameters first
-        if (imageParams != null)
-        {
-            if (imageParams is Dictionary<string, object> baseDict)
-            {
-                foreach (KeyValuePair<string, object> kvp in baseDict)
-                {
-                    result[kvp.Key] = kvp.Value;
-                }
-            }
-            else
-            {
-                PropertyInfo[] baseProps = imageParams.GetType().GetProperties();
-                foreach (PropertyInfo prop in baseProps)
-                {
-                    result[prop.Name] = prop.GetValue(imageParams);
-                }
-            }
-        }
+        AddParametersToResult(result, imageParams);
 
         // Override with srcSet parameters
-        if (srcSetParams != null)
+        AddParametersToResult(result, srcSetParams);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Adds parameters from an object to the result dictionary.
+    /// </summary>
+    /// <param name="result">The result dictionary to add parameters to.</param>
+    /// <param name="parameters">The parameters object (can be Dictionary or any object with properties).</param>
+    /// <param name="skipNullValues">Whether to skip null values when adding parameters.</param>
+    private static void AddParametersToResult(Dictionary<string, object?> result, object? parameters, bool skipNullValues = false)
+    {
+        if (parameters == null)
         {
-            if (srcSetParams is Dictionary<string, object> overrideDict)
+            return;
+        }
+
+        if (parameters is Dictionary<string, object> paramDict)
+        {
+            foreach (KeyValuePair<string, object> kvp in paramDict)
             {
-                foreach (KeyValuePair<string, object> kvp in overrideDict)
+                if (!skipNullValues || kvp.Value != null)
                 {
                     result[kvp.Key] = kvp.Value;
                 }
             }
-            else
+        }
+        else
+        {
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
+            foreach (PropertyInfo prop in properties)
             {
-                PropertyInfo[] overrideProps = srcSetParams.GetType().GetProperties();
-                foreach (PropertyInfo prop in overrideProps)
+                object? value = prop.GetValue(parameters);
+                if (!skipNullValues || value != null)
                 {
-                    result[prop.Name] = prop.GetValue(srcSetParams);
+                    result[prop.Name] = value;
                 }
             }
         }
-
-        return result;
     }
 
     /// <summary>
@@ -171,28 +174,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Add new parameters (these will override existing ones)
-        if (parameters != null)
-        {
-            if (parameters is Dictionary<string, object> paramDict)
-            {
-                foreach (KeyValuePair<string, object> kvp in paramDict)
-                {
-                    mergedParams[kvp.Key] = kvp.Value;
-                }
-            }
-            else
-            {
-                PropertyInfo[] properties = parameters.GetType().GetProperties();
-                foreach (PropertyInfo prop in properties)
-                {
-                    object? value = prop.GetValue(parameters);
-                    if (value != null)
-                    {
-                        mergedParams[prop.Name] = value;
-                    }
-                }
-            }
-        }
+        AddParametersToResult(mergedParams, parameters, skipNullValues: true);
 
         // Add query parameters
         foreach (KeyValuePair<string, object?> kvp in mergedParams)
