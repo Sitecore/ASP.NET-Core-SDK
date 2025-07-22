@@ -150,11 +150,9 @@ public static partial class SitecoreFieldExtensions
             return urlStr;
         }
 
-        string url = urlStr;
-
         // Parse existing query parameters and build merged parameters dictionary
         Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-        url = ParseUrlParams(url, mergedParams);
+        string url = ParseUrlParams(urlStr, mergedParams);
 
         // Add new parameters (these will override existing ones)
         AddParametersToResult(mergedParams, parameters, skipNullValues: true);
