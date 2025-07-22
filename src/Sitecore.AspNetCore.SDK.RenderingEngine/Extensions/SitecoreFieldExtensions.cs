@@ -154,14 +154,7 @@ public static partial class SitecoreFieldExtensions
 
         // Parse existing query parameters and build merged parameters dictionary
         Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-        if (url.Contains('?'))
-        {
-            string[] parts = url.Split('?', 2);
-            url = parts[0];
-            string queryString = parts[1];
-
-            ParseUrlParams(queryString, mergedParams);
-        }
+        url = ParseUrlParams(url, mergedParams);
 
         // Add new parameters (these will override existing ones)
         AddParametersToResult(mergedParams, parameters, skipNullValues: true);
@@ -181,21 +174,33 @@ public static partial class SitecoreFieldExtensions
     /// <summary>
     /// Parses URL query string parameters and adds them to the provided dictionary.
     /// </summary>
-    /// <param name="queryString">The query string to parse.</param>
+    /// <param name="url">The full URL with potential query parameters.</param>
     /// <param name="parameters">The dictionary to add parsed parameters to.</param>
-    private static void ParseUrlParams(string queryString, Dictionary<string, object?> parameters)
+    /// <returns>The URL without query parameters.</returns>
+    private static string ParseUrlParams(string url, Dictionary<string, object?> parameters)
     {
-        string[] paramPairs = queryString.Split('&');
-        foreach (string paramPair in paramPairs)
+        if (url.Contains('?'))
         {
-            string[] keyValue = paramPair.Split('=', 2);
-            if (keyValue.Length == 2)
+            string[] parts = url.Split('?', 2);
+            string cleanUrl = parts[0];
+            string queryString = parts[1];
+
+            string[] paramPairs = queryString.Split('&');
+            foreach (string paramPair in paramPairs)
             {
-                string key = HttpUtility.UrlDecode(keyValue[0]);
-                string value = HttpUtility.UrlDecode(keyValue[1]);
-                parameters[key] = value;
+                string[] keyValue = paramPair.Split('=', 2);
+                if (keyValue.Length == 2)
+                {
+                    string key = HttpUtility.UrlDecode(keyValue[0]);
+                    string value = HttpUtility.UrlDecode(keyValue[1]);
+                    parameters[key] = value;
+                }
             }
+
+            return cleanUrl;
         }
+
+        return url;
     }
 
     /// <summary>
