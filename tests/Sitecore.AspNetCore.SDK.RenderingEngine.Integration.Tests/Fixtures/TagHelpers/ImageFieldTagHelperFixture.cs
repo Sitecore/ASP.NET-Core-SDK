@@ -95,7 +95,7 @@ public class ImageFieldTagHelperFixture : IDisposable
 
         // Assert
         // check that there is proper number of 'img' tags generated.
-        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(2);
+        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(3);
     }
 
     [Fact]
@@ -140,12 +140,13 @@ public class ImageFieldTagHelperFixture : IDisposable
         HtmlDocument doc = new();
         doc.LoadHtml(response);
         HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
-        HtmlNode? lastImage = sectionNode.ChildNodes.Last(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase));
+        HtmlNode? secondImage = sectionNode.Descendants("img").ElementAtOrDefault(1);
 
         // Assert
         // check that image url contains mw and mh parameters
-        lastImage.Attributes.Should().Contain(a => a.Name == "src");
-        lastImage.Attributes["src"].Value.Should().Contain("mw=100&amp;mh=50");
+        secondImage.Should().NotBeNull();
+        secondImage.Attributes.Should().Contain(a => a.Name == "src");
+        secondImage.Attributes["src"].Value.Should().Contain("mw=100&amp;mh=50");
     }
 
     [Fact]
@@ -174,6 +175,58 @@ public class ImageFieldTagHelperFixture : IDisposable
         sectionNode.InnerHtml.Should().Contain("class=\"image1\"");
         sectionNode.InnerHtml.Should().Contain("alt=\"customAlt\"");
         sectionNode.InnerHtml.Should().Contain("src=\"/sitecore/shell/-/jssmedia/styleguide/data/media/img/sc_logo.png?mw=100&mh=50\"");
+    }
+
+    [Fact]
+    public async Task ImgTagHelper_GeneratesProperSrcSetAttribute()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
+        });
+
+        HttpClient client = _server.CreateClient();
+
+        // Act
+        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
+        HtmlDocument doc = new();
+        doc.LoadHtml(response);
+        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
+        HtmlNode? imgNode = sectionNode.Descendants("img").ElementAt(2);
+
+        // Assert
+        imgNode.Should().NotBeNull();
+        imgNode.Attributes.Should().Contain(a => a.Name == "srcset");
+        imgNode.Attributes["srcset"].Value.Should().Contain("400w");
+        imgNode.Attributes["srcset"].Value.Should().Contain("200w");
+    }
+
+    [Fact]
+    public async Task ImgTagHelper_SrcSetAttributeContainsCorrectUrls()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
+        });
+
+        HttpClient client = _server.CreateClient();
+
+        // Act
+        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
+        HtmlDocument doc = new();
+        doc.LoadHtml(response);
+        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
+        HtmlNode? imgNode = sectionNode.Descendants("img").ElementAt(2);
+
+        // Assert
+        imgNode.Should().NotBeNull();
+        var srcSet = imgNode.Attributes["srcset"].Value;
+        srcSet.Should().Contain("mw=400 400w");
+        srcSet.Should().Contain("mw=200 200w");
     }
 
     public void Dispose()

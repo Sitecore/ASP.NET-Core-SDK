@@ -2988,6 +2988,8 @@ public static class CannedResponses
                                 ["FirstImage"] = new ImageField(new Image { Alt = "sample", Src = "sample.png" }),
                                 ["SecondImage"] = new ImageField(new Image
                                     { Alt = "second", Src = "site/second.png" }),
+                                ["ThirdImage"] = new ImageField(new Image
+                                    { Alt = "third", Src = "site/third.png" }),
                                 ["Heading"] = new TextField(TestConstants.TestFieldValue),
                             }
                         },
@@ -3894,6 +3896,8 @@ public static class CannedResponses
                                 ["FirstImage"] = new ImageField(new Image { Alt = "sample", Src = "sample.png" }),
                                 ["SecondImage"] = new ImageField(new Image
                                     { Alt = "second", Src = "site/second.png" }),
+                                ["ThirdImage"] = new ImageField(new Image
+                                    { Alt = "third", Src = "site/third.png" }),
                                 ["Heading"] = new TextField(TestConstants.TestFieldValue),
                             }
                         },
