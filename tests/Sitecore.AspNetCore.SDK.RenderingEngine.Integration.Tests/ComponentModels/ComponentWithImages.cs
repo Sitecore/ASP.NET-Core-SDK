@@ -9,4 +9,9 @@ public class ComponentWithImages
     public ImageField? SecondImage { get; set; }
 
     public TextField? Heading { get; set; }
+
+    public ImageField? ThirdImage { get; set; }
+
+    public ImageField? FourthImage { get; set; }
+
 }

@@ -95,7 +95,7 @@ public class ImageFieldTagHelperFixture : IDisposable
 
         // Assert
         // check that there is proper number of 'img' tags generated.
-        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(2);
+        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(4);
     }
 
     [Fact]
@@ -140,12 +140,13 @@ public class ImageFieldTagHelperFixture : IDisposable
         HtmlDocument doc = new();
         doc.LoadHtml(response);
         HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
-        HtmlNode? lastImage = sectionNode.ChildNodes.Last(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase));
+        HtmlNode? secondImage = sectionNode.Descendants("img").ElementAtOrDefault(1);
 
         // Assert
         // check that image url contains mw and mh parameters
-        lastImage.Attributes.Should().Contain(a => a.Name == "src");
-        lastImage.Attributes["src"].Value.Should().Contain("mw=100&amp;mh=50");
+        secondImage.Should().NotBeNull();
+        secondImage?.Attributes.Should().Contain(a => a.Name == "src");
+        secondImage?.Attributes["src"].Value.Should().Contain("mw=100&amp;mh=50");
     }
 
     [Fact]
@@ -174,6 +175,44 @@ public class ImageFieldTagHelperFixture : IDisposable
         sectionNode.InnerHtml.Should().Contain("class=\"image1\"");
         sectionNode.InnerHtml.Should().Contain("alt=\"customAlt\"");
         sectionNode.InnerHtml.Should().Contain("src=\"/sitecore/shell/-/jssmedia/styleguide/data/media/img/sc_logo.png?mw=100&mh=50\"");
+    }
+
+    [Fact]
+    public async Task ImgTagHelper_GeneratesProperSrcSetAttributeWithCorrectUrlsAndSizes()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
+        });
+
+        HttpClient client = _server.CreateClient();
+
+        // Act
+        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
+        HtmlDocument doc = new HtmlDocument();
+        doc.LoadHtml(response);
+        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
+
+        // Assert
+        // Third image for <sc-img /> (index 2)
+        HtmlNode? thirdImg = sectionNode.Descendants("img").ElementAt(2);
+        thirdImg.Should().NotBeNull();
+        thirdImg.Attributes.Should().Contain(a => a.Name == "srcset");
+        thirdImg.Attributes.Should().Contain(a => a.Name == "sizes");
+        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=400 400w");
+        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=200 200w");
+        thirdImg.Attributes["sizes"].Value.Should().Be("(min-width: 400px) 400px, 200px");
+
+        // Fourth image for <img /> (index 3)
+        HtmlNode? fourthImg = sectionNode.Descendants("img").ElementAt(3);
+        fourthImg.Should().NotBeNull();
+        fourthImg.Attributes.Should().Contain(a => a.Name == "srcset");
+        fourthImg.Attributes.Should().Contain(a => a.Name == "sizes");
+        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=800 800w");
+        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=400 400w");
+        fourthImg.Attributes["sizes"].Value.Should().Be("(min-width: 800px) 800px, 400px");
     }
 
     public void Dispose()
