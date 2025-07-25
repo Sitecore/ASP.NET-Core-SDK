@@ -5,4 +5,5 @@
     <div asp-for="Heading"></div>
     <img asp-for="SecondImage" height="50" width="94" image-params="new { mw = 100, mh = 50 }" data-sample="other-attributes-pass-through" />
     <sc-img asp-for="ThirdImage" src-set='new object[] { new { mw = 400 }, new { mw = 200 } }' sizes="(min-width: 400px) 400px, 200px" />    
+    <img asp-for="FourthImage" src-set='new object[] { new { mw = 800 }, new { mw = 400 } }' sizes="(min-width: 800px) 800px, 400px" />
 </section>

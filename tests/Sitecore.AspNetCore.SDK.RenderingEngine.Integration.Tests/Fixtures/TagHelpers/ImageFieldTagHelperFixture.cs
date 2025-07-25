@@ -95,7 +95,7 @@ public class ImageFieldTagHelperFixture : IDisposable
 
         // Assert
         // check that there is proper number of 'img' tags generated.
-        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(3);
+        sectionNode.ChildNodes.Count(n => n.Name.Equals("img", StringComparison.OrdinalIgnoreCase)).Should().Be(4);
     }
 
     [Fact]
@@ -191,16 +191,26 @@ public class ImageFieldTagHelperFixture : IDisposable
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
-        HtmlDocument doc = new();
+        HtmlDocument doc = new HtmlDocument();
         doc.LoadHtml(response);
         HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
-        HtmlNode? imgNode = sectionNode.Descendants("img").ElementAt(2);
 
         // Assert
-        imgNode.Should().NotBeNull();
-        imgNode.Attributes.Should().Contain(a => a.Name == "srcset");
-        imgNode.Attributes["srcset"].Value.Should().Contain("400w");
-        imgNode.Attributes["srcset"].Value.Should().Contain("200w");
+        // Third image (index 2)
+        HtmlNode? thirdImg = sectionNode.Descendants("img").ElementAt(2);
+        thirdImg.Should().NotBeNull();
+        thirdImg.Attributes.Should().Contain(a => a.Name == "srcset");
+        string thirdSrcSet = thirdImg.Attributes["srcset"].Value;
+        thirdSrcSet.Should().Contain("site/third.png?mw=400 400w");
+        thirdSrcSet.Should().Contain("site/third.png?mw=200 200w");
+
+        // Fourth image (index 3)
+        HtmlNode? fourthImg = sectionNode.Descendants("img").ElementAt(3);
+        fourthImg.Should().NotBeNull();
+        fourthImg.Attributes.Should().Contain(a => a.Name == "srcset");
+        string fourthSrcSet = fourthImg.Attributes["srcset"].Value;
+        fourthSrcSet.Should().Contain("site/fourth.png?mw=800 800w");
+        fourthSrcSet.Should().Contain("site/fourth.png?mw=400 400w");
     }
 
     [Fact]
@@ -217,16 +227,24 @@ public class ImageFieldTagHelperFixture : IDisposable
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
-        HtmlDocument doc = new();
+        HtmlDocument doc = new HtmlDocument();
         doc.LoadHtml(response);
         HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
-        HtmlNode? imgNode = sectionNode.Descendants("img").ElementAt(2);
 
         // Assert
-        imgNode.Should().NotBeNull();
-        var srcSet = imgNode.Attributes["srcset"].Value;
-        srcSet.Should().Contain("mw=400 400w");
-        srcSet.Should().Contain("mw=200 200w");
+        // Third image (index 2)
+        HtmlNode? thirdImg = sectionNode.Descendants("img").ElementAt(2);
+        thirdImg.Should().NotBeNull();
+        string thirdSrcSet = thirdImg.Attributes["srcset"].Value;
+        thirdSrcSet.Should().Contain("site/third.png?mw=400 400w");
+        thirdSrcSet.Should().Contain("site/third.png?mw=200 200w");
+
+        // Fourth image (index 3)
+        HtmlNode? fourthImg = sectionNode.Descendants("img").ElementAt(3);
+        fourthImg.Should().NotBeNull();
+        string fourthSrcSet = fourthImg.Attributes["srcset"].Value;
+        fourthSrcSet.Should().Contain("site/fourth.png?mw=800 800w");
+        fourthSrcSet.Should().Contain("site/fourth.png?mw=400 400w");
     }
 
     public void Dispose()
