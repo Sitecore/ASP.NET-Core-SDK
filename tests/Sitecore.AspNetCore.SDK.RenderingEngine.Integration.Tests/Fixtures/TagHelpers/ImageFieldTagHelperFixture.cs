@@ -178,7 +178,7 @@ public class ImageFieldTagHelperFixture : IDisposable
     }
 
     [Fact]
-    public async Task ImgTagHelper_GeneratesProperSrcSetAttribute()
+    public async Task ImgTagHelper_GeneratesProperSrcSetAttributeWithCorrectUrlsAndSizes()
     {
         // Arrange
         _mockClientHandler.Responses.Push(new HttpResponseMessage
@@ -210,40 +210,6 @@ public class ImageFieldTagHelperFixture : IDisposable
         fourthImg.Should().NotBeNull();
         fourthImg.Attributes.Should().Contain(a => a.Name == "srcset");
         fourthImg.Attributes.Should().Contain(a => a.Name == "sizes");
-        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=800 800w");
-        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=400 400w");
-        fourthImg.Attributes["sizes"].Value.Should().Be("(min-width: 800px) 800px, 400px");
-    }
-
-    [Fact]
-    public async Task ImgTagHelper_SrcSetAttributeContainsCorrectUrlsAndSizes()
-    {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
-        });
-
-        HttpClient client = _server.CreateClient();
-
-        // Act
-        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
-        HtmlDocument doc = new HtmlDocument();
-        doc.LoadHtml(response);
-        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-images"));
-
-        // Assert
-        // Third image for <sc-img /> (index 2)
-        HtmlNode? thirdImg = sectionNode.Descendants("img").ElementAt(2);
-        thirdImg.Should().NotBeNull();
-        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=400 400w");
-        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=200 200w");
-        thirdImg.Attributes["sizes"].Value.Should().Be("(min-width: 400px) 400px, 200px");
-
-        // Fourth image for <img /> (index 3)
-        HtmlNode? fourthImg = sectionNode.Descendants("img").ElementAt(3);
-        fourthImg.Should().NotBeNull();
         fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=800 800w");
         fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=400 400w");
         fourthImg.Attributes["sizes"].Value.Should().Be("(min-width: 800px) 800px, 400px");
