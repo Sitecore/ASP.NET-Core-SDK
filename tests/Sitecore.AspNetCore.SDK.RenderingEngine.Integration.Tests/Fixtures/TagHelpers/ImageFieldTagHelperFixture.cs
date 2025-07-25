@@ -201,12 +201,18 @@ public class ImageFieldTagHelperFixture : IDisposable
         thirdImg.Should().NotBeNull();
         thirdImg.Attributes.Should().Contain(a => a.Name == "srcset");
         thirdImg.Attributes.Should().Contain(a => a.Name == "sizes");
+        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=400 400w");
+        thirdImg.Attributes["srcset"].Value.Should().Contain("site/third.png?mw=200 200w");
+        thirdImg.Attributes["sizes"].Value.Should().Be("(min-width: 400px) 400px, 200px");
 
         // Fourth image for <img /> (index 3)
         HtmlNode? fourthImg = sectionNode.Descendants("img").ElementAt(3);
         fourthImg.Should().NotBeNull();
         fourthImg.Attributes.Should().Contain(a => a.Name == "srcset");
         fourthImg.Attributes.Should().Contain(a => a.Name == "sizes");
+        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=800 800w");
+        fourthImg.Attributes["srcset"].Value.Should().Contain("site/fourth.png?mw=400 400w");
+        fourthImg.Attributes["sizes"].Value.Should().Be("(min-width: 800px) 800px, 400px");
     }
 
     [Fact]
