@@ -60,7 +60,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
     /// <summary>
     /// Gets or sets the srcset configurations for responsive images.
-    /// Supports: object[] (anonymous objects), Dictionary arrays, or JSON string.
+    /// Supports: object[] (anonymous objects) or Dictionary arrays.
     /// Each item should contain width parameters like { mw = 300 }, { w = 100 }.
     /// </summary>
     public object? SrcSet { get; set; }
@@ -227,25 +227,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         return width != null ? $"{width}w" : null;
     }
 
-    private static object[]? ParseJsonSrcSet(object srcSetValue)
-    {
-        if (srcSetValue is string jsonString)
-        {
-            try
-            {
-                // We need to use Dictionary<string, object>[] to ensure proper deserialization of JSON objects into dictionaries that our GetWidthDescriptor method can handle
-                return JsonSerializer.Deserialize<Dictionary<string, object>[]>(jsonString, JsonLayoutServiceSerializer.GetDefaultSerializerOptions());
-            }
-            catch (Exception ex)
-            {
-                // JSON parsing failed - this is a programming error, invalid JSON was passed
-                throw new InvalidOperationException($"Failed to parse srcset JSON: {jsonString}", ex);
-            }
-        }
-
-        return [srcSetValue];
-    }
-
     private TagBuilder GenerateImage(ImageField imageField, TagHelperOutput output)
     {
         Image image = imageField.Value;
@@ -375,18 +356,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             return string.Empty;
         }
 
-        object[]? parsedSrcSet;
-
-        if (SrcSet is object[] objectArray)
-        {
-            parsedSrcSet = objectArray;
-        }
-        else
-        {
-            parsedSrcSet = ParseJsonSrcSet(SrcSet);
-        }
-
-        if (parsedSrcSet == null || parsedSrcSet.Length == 0)
+        if (SrcSet is not object[] parsedSrcSet || parsedSrcSet.Length == 0)
         {
             return string.Empty;
         }

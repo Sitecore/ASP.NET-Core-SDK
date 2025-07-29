@@ -863,29 +863,6 @@ public class ImageTagHelperFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public void Process_SrcSetWithJsonString_GeneratesSrcSetAttribute(
-        ImageTagHelper sut,
-        TagHelperContext tagHelperContext,
-        TagHelperOutput tagHelperOutput)
-    {
-        // Arrange
-        tagHelperOutput.TagName = "img";
-        sut.For = GetModelExpression(new ImageField(_image));
-        sut.SrcSet = "[{\"mw\": 500}, {\"mw\": 250}]";
-
-        // Act
-        sut.Process(tagHelperContext, tagHelperOutput);
-
-        // Assert
-        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
-        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
-
-        // Full string comparison
-        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=500 500w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=250 250w");
-    }
-
-    [Theory]
-    [AutoNSubstituteData]
     public void Process_SrcSetWithMixedParameterTypes_GeneratesSrcSetAttribute(
         ImageTagHelper sut,
         TagHelperContext tagHelperContext,
@@ -913,25 +890,6 @@ public class ImageTagHelperFixture
 
         // Full string comparison
         srcsetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=800 800w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;mw=400 400w");
-    }
-
-    [Theory]
-    [AutoNSubstituteData]
-    public void Process_SrcSetWithInvalidJsonString_ThrowsInvalidOperationException(
-        ImageTagHelper sut,
-        TagHelperContext tagHelperContext,
-        TagHelperOutput tagHelperOutput)
-    {
-        // Arrange
-        tagHelperOutput.TagName = "img";
-        sut.For = GetModelExpression(new ImageField(_image));
-        sut.SrcSet = "invalid json string";
-
-        // Act & Assert
-        Action act = () => sut.Process(tagHelperContext, tagHelperOutput);
-        act.Should().Throw<InvalidOperationException>()
-           .WithMessage("Failed to parse srcset JSON: invalid json string*")
-           .WithInnerException<System.Text.Json.JsonException>();
     }
 
     [Theory]
