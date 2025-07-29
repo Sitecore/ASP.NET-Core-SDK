@@ -191,21 +191,21 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         if (parameters is Dictionary<string, object> dictionary)
         {
             // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            if (dictionary.ContainsKey("w"))
+            if (dictionary.TryGetValue("w", out var wValue))
             {
-                width = dictionary["w"]?.ToString();
+                width = wValue.ToString();
             }
-            else if (dictionary.ContainsKey("mw"))
+            else if (dictionary.TryGetValue("mw", out var mwValue))
             {
-                width = dictionary["mw"]?.ToString();
+                width = mwValue.ToString();
             }
-            else if (dictionary.ContainsKey("width"))
+            else if (dictionary.TryGetValue("width", out var widthValue))
             {
-                width = dictionary["width"]?.ToString();
+                width = widthValue.ToString();
             }
-            else if (dictionary.ContainsKey("maxWidth"))
+            else if (dictionary.TryGetValue("maxWidth", out var maxWidthValue))
             {
-                width = dictionary["maxWidth"]?.ToString();
+                width = maxWidthValue.ToString();
             }
         }
         else
@@ -219,7 +219,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
                 ?? TryParseParameter(parameters, "maxWidth", properties);
         }
 
-        if (width != null && int.TryParse(width, out int widthValue) && widthValue <= 0)
+        if (width != null && int.TryParse(width, out int widthValueInt) && widthValueInt <= 0)
         {
             return null;
         }
