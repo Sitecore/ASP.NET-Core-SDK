@@ -97,13 +97,12 @@ public static partial class SitecoreFieldExtensions
         }
         else
         {
-            PropertyInfo[] properties = parameters.GetType().GetProperties();
-            foreach (PropertyInfo prop in properties)
+            RouteValueDictionary routeValues = new RouteValueDictionary(parameters);
+            foreach (KeyValuePair<string, object?> kvp in routeValues)
             {
-                object? value = prop.GetValue(parameters);
-                if (!skipNullValues || value != null)
+                if (!skipNullValues || kvp.Value != null)
                 {
-                    result[prop.Name] = value;
+                    result[kvp.Key] = kvp.Value;
                 }
             }
         }
