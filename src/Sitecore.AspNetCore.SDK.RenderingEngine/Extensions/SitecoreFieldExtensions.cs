@@ -176,28 +176,27 @@ public static partial class SitecoreFieldExtensions
     /// <returns>The URL without query parameters.</returns>
     private static string ParseUrlParams(string url, Dictionary<string, object?> parameters)
     {
-        if (url.Contains('?'))
+        if (string.IsNullOrEmpty(url))
         {
-            string[] parts = url.Split('?', 2);
-            string cleanUrl = parts[0];
-            string queryString = parts[1];
-
-            string[] paramPairs = queryString.Split('&');
-            foreach (string paramPair in paramPairs)
-            {
-                string[] keyValue = paramPair.Split('=', 2);
-                if (keyValue.Length == 2)
-                {
-                    string key = HttpUtility.UrlDecode(keyValue[0]);
-                    string value = HttpUtility.UrlDecode(keyValue[1]);
-                    parameters[key] = value;
-                }
-            }
-
-            return cleanUrl;
+            return url;
         }
 
-        return url;
+        int queryIndex = url.IndexOf('?');
+        if (queryIndex < 0)
+        {
+            return url;
+        }
+
+        string cleanUrl = url.Substring(0, queryIndex);
+        string queryString = url.Substring(queryIndex);
+
+        Dictionary<string, Microsoft.Extensions.Primitives.StringValues> parsedQuery = QueryHelpers.ParseQuery(queryString);
+        foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> kvp in parsedQuery)
+        {
+            parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
+        }
+
+        return cleanUrl;
     }
 
     /// <summary>
