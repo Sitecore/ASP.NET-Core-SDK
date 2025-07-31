@@ -1,13 +1,10 @@
-﻿using System.Reflection;
-using System.Text.Json;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Properties;
-using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 
@@ -173,12 +170,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         }
     }
 
-    private static string? TryParseParameter(object parameters, string paramName, PropertyInfo[] properties)
-    {
-        PropertyInfo? prop = properties.FirstOrDefault(p => p.Name.Equals(paramName, StringComparison.OrdinalIgnoreCase));
-        return prop?.GetValue(parameters)?.ToString();
-    }
-
     private static string? GetWidthDescriptor(object? parameters)
     {
         if (parameters == null)
@@ -186,37 +177,25 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             return null;
         }
 
+        IDictionary<string, object> dictionary = HtmlHelper.AnonymousObjectToHtmlAttributes(parameters);
+
+        // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
         string? width = null;
-
-        if (parameters is Dictionary<string, object> dictionary)
+        if (dictionary.TryGetValue("w", out var wValue))
         {
-            // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
-            if (dictionary.TryGetValue("w", out var wValue))
-            {
-                width = wValue.ToString();
-            }
-            else if (dictionary.TryGetValue("mw", out var mwValue))
-            {
-                width = mwValue.ToString();
-            }
-            else if (dictionary.TryGetValue("width", out var widthValue))
-            {
-                width = widthValue.ToString();
-            }
-            else if (dictionary.TryGetValue("maxWidth", out var maxWidthValue))
-            {
-                width = maxWidthValue.ToString();
-            }
+            width = wValue.ToString();
         }
-        else
+        else if (dictionary.TryGetValue("mw", out var mwValue))
         {
-            PropertyInfo[] properties = parameters.GetType().GetProperties();
-
-            // Priority: w > mw > width > maxWidth
-            width = TryParseParameter(parameters, "w", properties)
-                ?? TryParseParameter(parameters, "mw", properties)
-                ?? TryParseParameter(parameters, "width", properties)
-                ?? TryParseParameter(parameters, "maxWidth", properties);
+            width = mwValue.ToString();
+        }
+        else if (dictionary.TryGetValue("width", out var widthValue))
+        {
+            width = widthValue.ToString();
+        }
+        else if (dictionary.TryGetValue("maxWidth", out var maxWidthValue))
+        {
+            width = maxWidthValue.ToString();
         }
 
         if (width != null && int.TryParse(width, out int widthValueInt) && widthValueInt <= 0)
@@ -363,8 +342,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         List<string> srcSetEntries = new();
 
-        // filter out null items directly
-        foreach (object srcSetItem in parsedSrcSet.Where(item => item != null))
+        foreach (object srcSetItem in parsedSrcSet)
         {
             // Get width descriptor first to check if this entry should be included
             string? descriptor = GetWidthDescriptor(srcSetItem);
