@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -212,7 +213,7 @@ public static partial class SitecoreFieldExtensions
         if (!string.IsNullOrEmpty(query))
         {
             var parsedQuery = QueryHelpers.ParseQuery(query);
-            foreach (var kvp in parsedQuery)
+            foreach (KeyValuePair<string, StringValues> kvp in parsedQuery)
             {
                 parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
             }
