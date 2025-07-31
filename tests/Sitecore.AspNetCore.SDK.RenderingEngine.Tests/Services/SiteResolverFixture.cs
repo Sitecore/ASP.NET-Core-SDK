@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿using AwesomeAssertions;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Middleware.Models;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Services;

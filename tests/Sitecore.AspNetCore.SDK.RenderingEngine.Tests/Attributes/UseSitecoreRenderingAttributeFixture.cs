@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿using AwesomeAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Attributes;
 using Xunit;

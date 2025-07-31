@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Idioms;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;

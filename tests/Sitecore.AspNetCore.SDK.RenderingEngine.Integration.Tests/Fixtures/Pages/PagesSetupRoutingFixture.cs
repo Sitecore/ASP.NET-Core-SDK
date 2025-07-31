@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using FluentAssertions;
+using AwesomeAssertions;
 using Sitecore.AspNetCore.SDK.TestData;
 using Xunit;
 

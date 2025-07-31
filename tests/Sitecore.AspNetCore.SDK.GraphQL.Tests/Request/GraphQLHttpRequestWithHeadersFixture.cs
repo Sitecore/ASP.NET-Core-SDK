@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
-using FluentAssertions;
+using AwesomeAssertions;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using NSubstitute;

@@ -1,7 +1,7 @@
 ﻿using AutoFixture;
 using AutoFixture.Idioms;
 using AutoFixture.Xunit2;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NSubstitute;
