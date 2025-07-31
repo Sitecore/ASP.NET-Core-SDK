@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Web;
+﻿using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
@@ -85,9 +83,9 @@ public static partial class SitecoreFieldExtensions
             return;
         }
 
-        if (parameters is Dictionary<string, object> paramDict)
+        if (parameters is Dictionary<string, object?> paramDict)
         {
-            foreach (KeyValuePair<string, object> kvp in paramDict)
+            foreach (KeyValuePair<string, object?> kvp in paramDict)
             {
                 if (!skipNullValues || kvp.Value != null)
                 {
@@ -151,7 +149,13 @@ public static partial class SitecoreFieldExtensions
 
         // Parse existing query parameters and build merged parameters dictionary
         Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-        string url = ParseUrlParams(urlStr, mergedParams);
+        Uri? uri = null;
+        if (!string.IsNullOrEmpty(urlStr))
+        {
+            Uri.TryCreate(urlStr, UriKind.RelativeOrAbsolute, out uri);
+        }
+
+        string url = ParseUrlParams(uri, mergedParams);
 
         // Add new parameters (these will override existing ones)
         AddParametersToResult(mergedParams, parameters, skipNullValues: true);
@@ -171,32 +175,50 @@ public static partial class SitecoreFieldExtensions
     /// <summary>
     /// Parses URL query string parameters and adds them to the provided dictionary.
     /// </summary>
-    /// <param name="url">The full URL with potential query parameters.</param>
+    /// <param name="uri">The Uri with potential query parameters.</param>
     /// <param name="parameters">The dictionary to add parsed parameters to.</param>
     /// <returns>The URL without query parameters.</returns>
-    private static string ParseUrlParams(string url, Dictionary<string, object?> parameters)
+    private static string ParseUrlParams(Uri? uri, Dictionary<string, object?> parameters)
     {
-        if (string.IsNullOrEmpty(url))
+        if (uri == null)
         {
-            return url;
+            return string.Empty;
         }
 
-        int queryIndex = url.IndexOf('?');
-        if (queryIndex < 0)
+        string urlWithoutQuery;
+        string? query = null;
+
+        if (uri.IsAbsoluteUri)
         {
-            return url;
+            urlWithoutQuery = uri.GetLeftPart(UriPartial.Path);
+            query = uri.Query;
+        }
+        else
+        {
+            // For relative URIs, manually split on '?'
+            var original = uri.OriginalString;
+            int idx = original.IndexOf('?');
+            if (idx >= 0)
+            {
+                urlWithoutQuery = original.Substring(0, idx);
+                query = original.Substring(idx);
+            }
+            else
+            {
+                urlWithoutQuery = original;
+            }
         }
 
-        string cleanUrl = url.Substring(0, queryIndex);
-        string queryString = url.Substring(queryIndex);
-
-        Dictionary<string, Microsoft.Extensions.Primitives.StringValues> parsedQuery = QueryHelpers.ParseQuery(queryString);
-        foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> kvp in parsedQuery)
+        if (!string.IsNullOrEmpty(query))
         {
-            parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
+            var parsedQuery = QueryHelpers.ParseQuery(query);
+            foreach (var kvp in parsedQuery)
+            {
+                parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
+            }
         }
 
-        return cleanUrl;
+        return urlWithoutQuery;
     }
 
     /// <summary>
