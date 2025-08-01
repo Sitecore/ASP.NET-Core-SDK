@@ -186,40 +186,21 @@ public static partial class SitecoreFieldExtensions
             return string.Empty;
         }
 
-        string urlWithoutQuery;
-        string? query = null;
+        string original = uri.OriginalString;
+        int queryIndex = original.IndexOf('?');
 
-        if (uri.IsAbsoluteUri)
+        if (queryIndex >= 0)
         {
-            urlWithoutQuery = uri.GetLeftPart(UriPartial.Path);
-            query = uri.Query;
-        }
-        else
-        {
-            // For relative URIs, manually split on '?'
-            var original = uri.OriginalString;
-            int idx = original.IndexOf('?');
-            if (idx >= 0)
-            {
-                urlWithoutQuery = original.Substring(0, idx);
-                query = original.Substring(idx);
-            }
-            else
-            {
-                urlWithoutQuery = original;
-            }
-        }
-
-        if (!string.IsNullOrEmpty(query))
-        {
+            string query = original.Substring(queryIndex);
             var parsedQuery = QueryHelpers.ParseQuery(query);
-            foreach (KeyValuePair<string, StringValues> kvp in parsedQuery)
+            foreach (var kvp in parsedQuery)
             {
                 parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
             }
+            return original.Substring(0, queryIndex);
         }
 
-        return urlWithoutQuery;
+        return original;
     }
 
     /// <summary>
