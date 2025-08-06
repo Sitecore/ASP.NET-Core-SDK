@@ -67,7 +67,7 @@ public class DateTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         CultureInfo culture = !string.IsNullOrWhiteSpace(Culture) ? CultureInfo.CreateSpecificCulture(Culture) : CultureInfo.CurrentCulture;
 
-        string formattedDate = !string.IsNullOrWhiteSpace(DateFormat) ? field.Value.ToString(DateFormat, culture) : field.Value.ToString(culture);
+        string formattedDate = !string.IsNullOrWhiteSpace(DateFormat) ? field.Value.ToString(DateFormat, !string.IsNullOrWhiteSpace(Culture) ? culture : CultureInfo.InvariantCulture) : field.Value.ToString(culture);
 
         HtmlString html = outputEditableMarkup ? new HtmlString(field.EditableMarkup) : new HtmlString(formattedDate);
 
