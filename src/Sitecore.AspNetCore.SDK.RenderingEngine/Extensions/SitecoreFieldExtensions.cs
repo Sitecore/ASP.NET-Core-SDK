@@ -1,7 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Specialized;
+using System.Text.RegularExpressions;
+using System.Web;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Fields;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -186,21 +187,40 @@ public static partial class SitecoreFieldExtensions
             return string.Empty;
         }
 
-        string original = uri.OriginalString;
-        int queryIndex = original.IndexOf('?');
-
-        if (queryIndex >= 0)
+        if (uri.IsAbsoluteUri)
         {
-            string query = original.Substring(queryIndex);
-            var parsedQuery = QueryHelpers.ParseQuery(query);
-            foreach (var kvp in parsedQuery)
+            string url = $"{uri.Scheme}://{uri.Host}{uri.AbsolutePath}";
+            NameValueCollection queryParams = HttpUtility.ParseQueryString(uri.Query);
+            foreach (string? param in queryParams.AllKeys)
             {
-                parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
+                if (!string.IsNullOrEmpty(param))
+                {
+                    parameters[param] = queryParams[param];
+                }
             }
-            return original.Substring(0, queryIndex);
-        }
 
-        return original;
+            return url;
+        }
+        else
+        {
+            // For relative URIs, accessing Uri.Query throws InvalidOperationException, so we use string manipulation
+            string original = uri.OriginalString;
+            int queryIndex = original.IndexOf('?');
+
+            if (queryIndex >= 0)
+            {
+                string query = original.Substring(queryIndex);
+                var parsedQuery = QueryHelpers.ParseQuery(query);
+                foreach (var kvp in parsedQuery)
+                {
+                    parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
+                }
+
+                return original.Substring(0, queryIndex);
+            }
+
+            return original;
+        }
     }
 
     /// <summary>
