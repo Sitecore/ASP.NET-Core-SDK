@@ -82,7 +82,7 @@ public class AllFieldTagHelpersFixture : IDisposable
         sectionNode.ChildNodes.First(n => n.Name.Equals("div", StringComparison.OrdinalIgnoreCase) && n.Id.Equals("div5", StringComparison.OrdinalIgnoreCase)).InnerHtml
             .Should().Be(TestConstants.AllFieldsImageValue);
         sectionNode.ChildNodes.First(n => n.Name.Equals("div", StringComparison.OrdinalIgnoreCase) && n.Id.Equals("div6", StringComparison.OrdinalIgnoreCase)).InnerHtml
-            .Should().Be(TestConstants.DateFieldValue);
+            .Should().Be(TestConstants.DateTimeValue.ToString("MM/dd/yyyy", CultureInfo.CurrentCulture));
         sectionNode.ChildNodes.First(n => n.Name.Equals("div", StringComparison.OrdinalIgnoreCase) && n.Id.Equals("div7", StringComparison.OrdinalIgnoreCase)).InnerHtml
             .Should().Be(TestConstants.MediaLibraryItemImageFieldValue);
         sectionNode.ChildNodes.First(n => n.Name.Equals("div", StringComparison.OrdinalIgnoreCase) && n.Id.Equals("div8", StringComparison.OrdinalIgnoreCase)).InnerHtml
