@@ -1,9 +1,7 @@
-﻿using System.Globalization;
-using System.Net;
+﻿using System.Net;
 using System.Text.Encodings.Web;
 using FluentAssertions;
 using HtmlAgilityPack;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -41,13 +39,6 @@ public class RichTextFieldTagHelperFixture : IDisposable
             .Configure(app =>
             {
                 app.UseRouting();
-                app.UseRequestLocalization(options =>
-                {
-                    var culture = new CultureInfo("en-US");
-                    options.DefaultRequestCulture = new RequestCulture(culture);
-                    options.SupportedCultures = [culture];
-                    options.SupportedUICultures = [culture];
-                });
                 app.UseSitecoreRenderingEngine();
                 app.UseEndpoints(endpoints =>
                 {

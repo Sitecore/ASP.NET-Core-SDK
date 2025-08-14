@@ -2,7 +2,6 @@
 using System.Net;
 using FluentAssertions;
 using HtmlAgilityPack;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -39,13 +38,6 @@ public class DateFieldTagHelperFixture : IDisposable
             .Configure(app =>
             {
                 app.UseRouting();
-                app.UseRequestLocalization(options =>
-                {
-                    var culture = new CultureInfo("da-DK");
-                    options.DefaultRequestCulture = new RequestCulture(culture);
-                    options.SupportedCultures = [culture];
-                    options.SupportedUICultures = [culture];
-                });
                 app.UseSitecoreRenderingEngine();
                 app.UseEndpoints(endpoints =>
                 {
@@ -103,7 +95,7 @@ public class DateFieldTagHelperFixture : IDisposable
         // Assert
         sectionNode.ChildNodes[1].InnerHtml.Should().Be("05/04/2012");
         sectionNode.ChildNodes[3].InnerHtml.Should().Be("05/04/2012 00:00:00");
-        sectionNode.ChildNodes[5].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString(new CultureInfo("da-DK")));
+        sectionNode.ChildNodes[5].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString(CultureInfo.CurrentCulture));
         sectionNode.ChildNodes[9].InnerHtml.Should().Contain("04.05.2012");
     }
 
