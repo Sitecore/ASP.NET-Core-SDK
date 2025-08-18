@@ -123,22 +123,14 @@ public class DateTagHelperFixture
     }
 
     [Theory]
-    [InlineData("en-US")]
-    [InlineData("da-DK")]
-    [InlineData("uk-UA")]
-    public void Process_ScDateTagWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName)
+    [InlineAutoNSubstituteData("en-US")]
+    [InlineAutoNSubstituteData("da-DK")]
+    [InlineAutoNSubstituteData("uk-UA")]
+    public void Process_ScDateTagWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName, DateTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
     {
         // Arrange
         CultureInfo testCulture = new CultureInfo(cultureName);
         const string dateFormat = "MM/dd/yyyy H:mm";
-
-        DateTagHelper sut = new DateTagHelper(new EditableChromeRenderer());
-        TagHelperContext tagHelperContext = new TagHelperContext([], new Dictionary<object, object>(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        TagHelperOutput tagHelperOutput = new TagHelperOutput(string.Empty, [], (_, _) =>
-        {
-            DefaultTagHelperContent tagHelperContent = new();
-            return Task.FromResult<TagHelperContent>(tagHelperContent);
-        });
 
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
         sut.DateFormat = dateFormat;
@@ -269,22 +261,14 @@ public class DateTagHelperFixture
     }
 
     [Theory]
-    [InlineData("en-US")]
-    [InlineData("da-DK")]
-    [InlineData("uk-UA")]
-    public void Process_ScDateTagWithAspDataAttributeWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName)
+    [InlineAutoNSubstituteData("en-US")]
+    [InlineAutoNSubstituteData("da-DK")]
+    [InlineAutoNSubstituteData("uk-UA")]
+    public void Process_ScDateTagWithAspDataAttributeWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName, DateTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
     {
         // Arrange
         CultureInfo testCulture = new CultureInfo(cultureName);
         string dateFormat = "MM/dd/yyyy H:mm";
-
-        DateTagHelper sut = new DateTagHelper(new EditableChromeRenderer());
-        TagHelperContext tagHelperContext = new TagHelperContext([], new Dictionary<object, object>(), Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-        TagHelperOutput tagHelperOutput = new TagHelperOutput(string.Empty, [], (_, _) =>
-        {
-            DefaultTagHelperContent tagHelperContent = new();
-            return Task.FromResult<TagHelperContent>(tagHelperContent);
-        });
 
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
         sut.DateFormat = dateFormat;
