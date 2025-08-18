@@ -123,23 +123,26 @@ public class DateTagHelperFixture
     }
 
     [Theory]
-    [AutoNSubstituteData]
-    public void Process_ScDateTagWithCustomFormat_GeneratesCustomDateFormatOutput(
-        DateTagHelper sut,
-        TagHelperContext tagHelperContext,
-        TagHelperOutput tagHelperOutput)
+    [InlineAutoNSubstituteData("en-US")]
+    [InlineAutoNSubstituteData("da-DK")]
+    [InlineAutoNSubstituteData("uk-UA")]
+    public void Process_ScDateTagWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName, DateTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
     {
         // Arrange
+        CultureInfo testCulture = new CultureInfo(cultureName);
         const string dateFormat = "MM/dd/yyyy H:mm";
+
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
         sut.DateFormat = dateFormat;
+        sut.Culture = cultureName;
         sut.For = GetModelExpression(new DateField(_date));
 
         // Act
         sut.Process(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Content.GetContent().Should().Be(_date.ToString(dateFormat, CultureInfo.InvariantCulture));
+        string expected = _date.ToString(dateFormat, testCulture);
+        tagHelperOutput.Content.GetContent().Should().Be(expected);
     }
 
     [Theory]
@@ -258,23 +261,26 @@ public class DateTagHelperFixture
     }
 
     [Theory]
-    [AutoNSubstituteData]
-    public void Process_ScDateTagWithAspDataAttributeWithCustomFormat_GeneratesCustomDateFormatOutput(
-        DateTagHelper sut,
-        TagHelperContext tagHelperContext,
-        TagHelperOutput tagHelperOutput)
+    [InlineAutoNSubstituteData("en-US")]
+    [InlineAutoNSubstituteData("da-DK")]
+    [InlineAutoNSubstituteData("uk-UA")]
+    public void Process_ScDateTagWithAspDataAttributeWithCustomFormat_GeneratesCustomDateFormatOutput(string cultureName, DateTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
     {
         // Arrange
+        CultureInfo testCulture = new CultureInfo(cultureName);
         string dateFormat = "MM/dd/yyyy H:mm";
+
         tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.DateHtmlTag;
         sut.DateFormat = dateFormat;
+        sut.Culture = cultureName;
         sut.DateModel = new DateField(_date);
 
         // Act
         sut.Process(tagHelperContext, tagHelperOutput);
 
         // Assert
-        tagHelperOutput.Content.GetContent().Should().Be(_date.ToString(dateFormat, CultureInfo.InvariantCulture));
+        string expected = _date.ToString(dateFormat, testCulture);
+        tagHelperOutput.Content.GetContent().Should().Be(expected);
     }
 
     [Theory]
