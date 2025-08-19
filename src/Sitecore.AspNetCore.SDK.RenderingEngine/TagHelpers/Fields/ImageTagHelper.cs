@@ -181,19 +181,19 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
         // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
         string? width = null;
-        if (dictionary.TryGetValue("w", out var wValue))
+        if (dictionary.TryGetValue("w", out object? wValue))
         {
             width = wValue.ToString();
         }
-        else if (dictionary.TryGetValue("mw", out var mwValue))
+        else if (dictionary.TryGetValue("mw", out object? mwValue))
         {
             width = mwValue.ToString();
         }
-        else if (dictionary.TryGetValue("width", out var widthValue))
+        else if (dictionary.TryGetValue("width", out object? widthValue))
         {
             width = widthValue.ToString();
         }
-        else if (dictionary.TryGetValue("maxWidth", out var maxWidthValue))
+        else if (dictionary.TryGetValue("maxWidth", out object? maxWidthValue))
         {
             width = maxWidthValue.ToString();
         }
