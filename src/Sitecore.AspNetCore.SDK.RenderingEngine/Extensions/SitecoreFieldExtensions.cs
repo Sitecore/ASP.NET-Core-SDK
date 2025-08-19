@@ -62,7 +62,7 @@ public static partial class SitecoreFieldExtensions
     /// <returns>Merged parameters as dictionary.</returns>
     private static Dictionary<string, object?> MergeParameters(object? imageParams, object? srcSetParams)
     {
-        Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
 
         // Add base parameters first
         AddParametersToResult(result, imageParams);
@@ -98,7 +98,7 @@ public static partial class SitecoreFieldExtensions
         }
         else
         {
-            RouteValueDictionary routeValues = new RouteValueDictionary(parameters);
+            RouteValueDictionary routeValues = new(parameters);
             foreach (KeyValuePair<string, object?> kvp in routeValues)
             {
                 if (!skipNullValues || kvp.Value != null)
@@ -151,7 +151,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Parse existing query parameters and build merged parameters dictionary
-        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> mergedParams = new(StringComparer.OrdinalIgnoreCase);
         Uri? uri = null;
         if (!string.IsNullOrEmpty(urlStr))
         {
