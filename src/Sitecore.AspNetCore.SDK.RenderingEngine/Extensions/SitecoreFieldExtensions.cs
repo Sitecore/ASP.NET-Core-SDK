@@ -23,12 +23,13 @@ public static partial class SitecoreFieldExtensions
         ArgumentNullException.ThrowIfNull(imageField);
         string? urlStr = imageField.Value.Src;
 
-        if (urlStr == null)
+        string? result = null;
+        if (urlStr != null)
         {
-            return null;
+            result = GetSitecoreMediaUri(urlStr, imageParams);
         }
 
-        return GetSitecoreMediaUri(urlStr, imageParams);
+        return result;
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ public static partial class SitecoreFieldExtensions
     /// <returns>Merged parameters as dictionary.</returns>
     private static Dictionary<string, object?> MergeParameters(object? imageParams, object? srcSetParams)
     {
-        Dictionary<string, object?> result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
 
         // Add base parameters first
         AddParametersToResult(result, imageParams);
@@ -80,31 +81,25 @@ public static partial class SitecoreFieldExtensions
     /// <param name="skipNullValues">Whether to skip null values when adding parameters.</param>
     private static void AddParametersToResult(Dictionary<string, object?> result, object? parameters, bool skipNullValues = false)
     {
-        if (parameters == null)
+        switch (parameters)
         {
-            return;
-        }
+            case null:
+                break;
+            case Dictionary<string, object?> paramDict:
+                foreach (KeyValuePair<string, object?> kvp in paramDict.Where(kvp => !skipNullValues || kvp.Value != null))
+                {
+                    result[kvp.Key] = kvp.Value;
+                }
 
-        if (parameters is Dictionary<string, object?> paramDict)
-        {
-            foreach (KeyValuePair<string, object?> kvp in paramDict)
-            {
-                if (!skipNullValues || kvp.Value != null)
+                break;
+            default:
+                RouteValueDictionary routeValues = new(parameters);
+                foreach (KeyValuePair<string, object?> kvp in routeValues.Where(kvp => !skipNullValues || kvp.Value != null))
                 {
                     result[kvp.Key] = kvp.Value;
                 }
-            }
-        }
-        else
-        {
-            RouteValueDictionary routeValues = new RouteValueDictionary(parameters);
-            foreach (KeyValuePair<string, object?> kvp in routeValues)
-            {
-                if (!skipNullValues || kvp.Value != null)
-                {
-                    result[kvp.Key] = kvp.Value;
-                }
-            }
+
+                break;
         }
     }
 
@@ -150,7 +145,7 @@ public static partial class SitecoreFieldExtensions
         }
 
         // Parse existing query parameters and build merged parameters dictionary
-        Dictionary<string, object?> mergedParams = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> mergedParams = new(StringComparer.OrdinalIgnoreCase);
         Uri? uri = null;
         if (!string.IsNullOrEmpty(urlStr))
         {
@@ -201,26 +196,24 @@ public static partial class SitecoreFieldExtensions
 
             return url;
         }
-        else
+
+        // For relative URIs, accessing Uri.Query throws InvalidOperationException, so we use string manipulation
+        string original = uri.OriginalString;
+        int queryIndex = original.IndexOf('?');
+
+        if (queryIndex >= 0)
         {
-            // For relative URIs, accessing Uri.Query throws InvalidOperationException, so we use string manipulation
-            string original = uri.OriginalString;
-            int queryIndex = original.IndexOf('?');
-
-            if (queryIndex >= 0)
+            string query = original[queryIndex..];
+            Dictionary<string, Microsoft.Extensions.Primitives.StringValues> parsedQuery = QueryHelpers.ParseQuery(query);
+            foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> kvp in parsedQuery)
             {
-                string query = original.Substring(queryIndex);
-                var parsedQuery = QueryHelpers.ParseQuery(query);
-                foreach (var kvp in parsedQuery)
-                {
-                    parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
-                }
-
-                return original.Substring(0, queryIndex);
+                parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
             }
 
-            return original;
+            return original[..queryIndex];
         }
+
+        return original;
     }
 
     /// <summary>

@@ -757,7 +757,7 @@ public class ImageTagHelperFixture
         // Assert
         string content = tagHelperOutput.Content.GetContent();
 
-        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
         srcsetMatch.Success.Should().BeTrue("srcset attribute should be present in the HTML");
 
         string srcsetValue = srcsetMatch.Groups[1].Value;
@@ -766,7 +766,7 @@ public class ImageTagHelperFixture
         srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=400 400w");
         srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=200 200w");
 
-        var entries = srcsetValue.Split(", ");
+        string[] entries = srcsetValue.Split(", ");
         entries.Should().HaveCount(2);
     }
 
@@ -848,11 +848,11 @@ public class ImageTagHelperFixture
         string content = tagHelperOutput.Content.GetContent();
 
         // Extract srcset and sizes using regex for full string comparison
-        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
         srcsetMatch.Success.Should().BeTrue();
         string srcsetValue = srcsetMatch.Groups[1].Value;
 
-        var sizesMatch = System.Text.RegularExpressions.Regex.Match(content, "sizes=\"([^\"]*)\"");
+        System.Text.RegularExpressions.Match sizesMatch = System.Text.RegularExpressions.Regex.Match(content, "sizes=\"([^\"]*)\"");
         sizesMatch.Success.Should().BeTrue();
         string sizesValue = sizesMatch.Groups[1].Value;
 
@@ -884,7 +884,7 @@ public class ImageTagHelperFixture
         string content = tagHelperOutput.Content.GetContent();
 
         // Extract srcset using regex for full string comparison
-        var srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
         srcsetMatch.Success.Should().BeTrue();
         string srcsetValue = srcsetMatch.Groups[1].Value;
 
