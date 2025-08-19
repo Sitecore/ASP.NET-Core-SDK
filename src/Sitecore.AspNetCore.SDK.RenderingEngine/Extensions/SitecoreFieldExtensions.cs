@@ -90,6 +90,7 @@ public static partial class SitecoreFieldExtensions
                 {
                     result[kvp.Key] = kvp.Value;
                 }
+
                 break;
             default:
                 RouteValueDictionary routeValues = new(parameters);
@@ -97,6 +98,7 @@ public static partial class SitecoreFieldExtensions
                 {
                     result[kvp.Key] = kvp.Value;
                 }
+
                 break;
         }
     }
