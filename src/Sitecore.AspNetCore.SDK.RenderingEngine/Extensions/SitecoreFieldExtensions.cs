@@ -81,31 +81,23 @@ public static partial class SitecoreFieldExtensions
     /// <param name="skipNullValues">Whether to skip null values when adding parameters.</param>
     private static void AddParametersToResult(Dictionary<string, object?> result, object? parameters, bool skipNullValues = false)
     {
-        if (parameters == null)
+        switch (parameters)
         {
-            return;
-        }
-
-        if (parameters is Dictionary<string, object?> paramDict)
-        {
-            foreach (KeyValuePair<string, object?> kvp in paramDict)
-            {
-                if (!skipNullValues || kvp.Value != null)
+            case null:
+                break;
+            case Dictionary<string, object?> paramDict:
+                foreach (KeyValuePair<string, object?> kvp in paramDict.Where(kvp => !skipNullValues || kvp.Value != null))
                 {
                     result[kvp.Key] = kvp.Value;
                 }
-            }
-        }
-        else
-        {
-            RouteValueDictionary routeValues = new(parameters);
-            foreach (KeyValuePair<string, object?> kvp in routeValues)
-            {
-                if (!skipNullValues || kvp.Value != null)
+                break;
+            default:
+                RouteValueDictionary routeValues = new(parameters);
+                foreach (KeyValuePair<string, object?> kvp in routeValues.Where(kvp => !skipNullValues || kvp.Value != null))
                 {
                     result[kvp.Key] = kvp.Value;
                 }
-            }
+                break;
         }
     }
 
