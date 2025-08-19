@@ -330,11 +330,6 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
 
     private string GenerateSrcSetAttribute(ImageField imageField)
     {
-        if (SrcSet == null)
-        {
-            return string.Empty;
-        }
-
         if (SrcSet is not object[] parsedSrcSet || parsedSrcSet.Length == 0)
         {
             return string.Empty;
