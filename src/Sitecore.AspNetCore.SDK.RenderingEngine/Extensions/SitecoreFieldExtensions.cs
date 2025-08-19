@@ -203,7 +203,7 @@ public static partial class SitecoreFieldExtensions
 
         if (queryIndex >= 0)
         {
-            string query = original.Substring(queryIndex);
+            string query = original[queryIndex..];
             Dictionary<string, Microsoft.Extensions.Primitives.StringValues> parsedQuery = QueryHelpers.ParseQuery(query);
             foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> kvp in parsedQuery)
             {
