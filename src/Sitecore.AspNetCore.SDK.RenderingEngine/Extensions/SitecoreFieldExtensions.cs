@@ -196,26 +196,24 @@ public static partial class SitecoreFieldExtensions
 
             return url;
         }
-        else
+
+        // For relative URIs, accessing Uri.Query throws InvalidOperationException, so we use string manipulation
+        string original = uri.OriginalString;
+        int queryIndex = original.IndexOf('?');
+
+        if (queryIndex >= 0)
         {
-            // For relative URIs, accessing Uri.Query throws InvalidOperationException, so we use string manipulation
-            string original = uri.OriginalString;
-            int queryIndex = original.IndexOf('?');
-
-            if (queryIndex >= 0)
+            string query = original.Substring(queryIndex);
+            Dictionary<string, Microsoft.Extensions.Primitives.StringValues> parsedQuery = QueryHelpers.ParseQuery(query);
+            foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> kvp in parsedQuery)
             {
-                string query = original.Substring(queryIndex);
-                var parsedQuery = QueryHelpers.ParseQuery(query);
-                foreach (var kvp in parsedQuery)
-                {
-                    parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
-                }
-
-                return original.Substring(0, queryIndex);
+                parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
             }
 
-            return original;
+            return original.Substring(0, queryIndex);
         }
+
+        return original;
     }
 
     /// <summary>
