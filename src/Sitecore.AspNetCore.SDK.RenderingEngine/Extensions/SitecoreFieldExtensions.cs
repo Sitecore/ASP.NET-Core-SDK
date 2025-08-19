@@ -210,7 +210,7 @@ public static partial class SitecoreFieldExtensions
                 parameters[kvp.Key] = kvp.Value.Count > 0 ? kvp.Value[0] : null;
             }
 
-            return original.Substring(0, queryIndex);
+            return original[..queryIndex];
         }
 
         return original;
