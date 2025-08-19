@@ -23,12 +23,13 @@ public static partial class SitecoreFieldExtensions
         ArgumentNullException.ThrowIfNull(imageField);
         string? urlStr = imageField.Value.Src;
 
-        if (urlStr == null)
+        string? result = null;
+        if (urlStr != null)
         {
-            return null;
+            result = GetSitecoreMediaUri(urlStr, imageParams);
         }
 
-        return GetSitecoreMediaUri(urlStr, imageParams);
+        return result;
     }
 
     /// <summary>
