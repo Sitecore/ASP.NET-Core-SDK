@@ -335,7 +335,7 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             return string.Empty;
         }
 
-        List<string> srcSetEntries = new();
+        List<string> srcSetEntries = [];
 
         foreach (object srcSetItem in parsedSrcSet)
         {
