@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Idioms;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;

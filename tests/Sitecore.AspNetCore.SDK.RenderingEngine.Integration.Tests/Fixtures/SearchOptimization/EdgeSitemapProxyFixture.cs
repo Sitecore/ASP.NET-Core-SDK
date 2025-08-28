@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using FluentAssertions;
+using AwesomeAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.AspNetCore.TestHost;

@@ -1,5 +1,5 @@
 ﻿using AutoFixture.Xunit2;
-using FluentAssertions;
+using AwesomeAssertions;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using Microsoft.Extensions.DependencyInjection;

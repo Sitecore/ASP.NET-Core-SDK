@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Builder;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;

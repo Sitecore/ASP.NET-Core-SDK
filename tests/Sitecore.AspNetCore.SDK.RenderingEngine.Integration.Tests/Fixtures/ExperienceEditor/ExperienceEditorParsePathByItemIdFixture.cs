@@ -1,6 +1,6 @@
 ﻿using System.Dynamic;
 using System.Text;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.TestHost;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.ExperienceEditor.Configuration;

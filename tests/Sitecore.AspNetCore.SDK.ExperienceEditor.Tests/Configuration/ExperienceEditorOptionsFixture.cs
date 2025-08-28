@@ -1,5 +1,5 @@
 ﻿using AutoFixture.Xunit2;
-using FluentAssertions;
+using AwesomeAssertions;
 using Sitecore.AspNetCore.SDK.ExperienceEditor.Configuration;
 using Xunit;
 

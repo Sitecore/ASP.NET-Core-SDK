@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Net;
-using FluentAssertions;
+using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;

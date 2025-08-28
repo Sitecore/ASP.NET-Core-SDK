@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using FluentAssertions;
+using AwesomeAssertions;
 using Newtonsoft.Json.Linq;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Integration.Tests.MockModels;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;

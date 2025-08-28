@@ -1,5 +1,5 @@
 ﻿using AutoFixture;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;

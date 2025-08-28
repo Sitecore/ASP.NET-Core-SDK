@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoFixture;
-using FluentAssertions;
+using AwesomeAssertions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Converter;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization.Fields;

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json.Nodes;
-using FluentAssertions;
+using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;

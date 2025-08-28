@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Idioms;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Rendering;

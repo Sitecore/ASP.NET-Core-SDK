@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿using AwesomeAssertions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
 using Xunit;
 

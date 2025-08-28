@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using AutoFixture;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Rendering;
 using Xunit;

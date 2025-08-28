@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using AutoFixture.Xunit2;
-using FluentAssertions;
+using AwesomeAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;

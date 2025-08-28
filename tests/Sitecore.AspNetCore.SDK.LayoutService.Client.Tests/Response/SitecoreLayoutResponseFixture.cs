@@ -1,5 +1,5 @@
 ﻿using AutoFixture.Idioms;
-using FluentAssertions;
+using AwesomeAssertions;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
