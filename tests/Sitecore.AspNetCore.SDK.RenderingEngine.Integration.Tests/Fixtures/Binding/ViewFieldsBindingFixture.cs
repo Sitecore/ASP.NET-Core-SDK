@@ -26,7 +26,7 @@ public class ViewFieldsBindingFixture(TestWebApplicationFactory<TestWebApplicati
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildViewFieldsBindingWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -56,7 +56,7 @@ public class ViewFieldsBindingFixture(TestWebApplicationFactory<TestWebApplicati
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildViewFieldsBindingWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

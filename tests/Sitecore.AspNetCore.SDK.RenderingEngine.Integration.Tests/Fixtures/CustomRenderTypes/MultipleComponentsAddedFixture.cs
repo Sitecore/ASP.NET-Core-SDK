@@ -27,7 +27,7 @@ public class MultipleComponentsAddedFixture(TestWebApplicationFactory<TestWebApp
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildMultipleComponentsAddedWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -56,7 +56,7 @@ public class MultipleComponentsAddedFixture(TestWebApplicationFactory<TestWebApp
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildMultipleComponentsAddedWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

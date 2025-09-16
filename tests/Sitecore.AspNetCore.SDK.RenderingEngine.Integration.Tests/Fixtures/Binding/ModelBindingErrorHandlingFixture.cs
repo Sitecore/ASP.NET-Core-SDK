@@ -26,7 +26,7 @@ public class ModelBindingErrorHandlingFixture(TestWebApplicationFactory<TestWebA
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithMissingData))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildModelBindingErrorHandlingWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -65,7 +65,7 @@ public class ModelBindingErrorHandlingFixture(TestWebApplicationFactory<TestWebA
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildModelBindingErrorHandlingWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

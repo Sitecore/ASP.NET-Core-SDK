@@ -27,7 +27,7 @@ public class LoggingComponentRendererFixture(TestWebApplicationFactory<TestWebAp
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildLoggingComponentRendererWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -48,7 +48,7 @@ public class LoggingComponentRendererFixture(TestWebApplicationFactory<TestWebAp
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildLoggingComponentRendererWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

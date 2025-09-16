@@ -28,7 +28,7 @@ public class CustomResolverBindingFixture(TestWebApplicationFactory<TestWebAppli
             Content = new StringContent(json)
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildCustomResolverBindingWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -52,7 +52,7 @@ public class CustomResolverBindingFixture(TestWebApplicationFactory<TestWebAppli
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildCustomResolverBindingWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

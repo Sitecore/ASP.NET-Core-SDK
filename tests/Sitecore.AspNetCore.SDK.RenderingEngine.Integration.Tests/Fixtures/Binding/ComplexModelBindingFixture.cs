@@ -26,7 +26,7 @@ public class ComplexModelBindingFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildComplexModelBindingWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -76,7 +76,7 @@ public class ComplexModelBindingFixture(TestWebApplicationFactory<TestWebApplica
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildComplexModelBindingWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>

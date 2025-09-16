@@ -42,7 +42,7 @@ public class CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebA
             Content = new StringContent(jObject!.ToJsonString(Serializer.GetOptions()))
         });
 
-        HttpClient client = BuildBindingWebApplicationFactory().CreateClient();
+        HttpClient client = BuildCustomModelContextBindingWebApplicationFactory().CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -82,7 +82,7 @@ public class CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebA
         GC.SuppressFinalize(this);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildBindingWebApplicationFactory()
+    private WebApplicationFactory<TestWebApplicationProgram> BuildCustomModelContextBindingWebApplicationFactory()
     {
         return factory
             .WithWebHostBuilder(builder =>
