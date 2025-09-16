@@ -2,7 +2,7 @@
 using System.Net;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -11,57 +11,32 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Localization;
 
-public class LocalizationFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class LocalizationFixture : IDisposable
 {
-    private readonly MockHttpMessageHandler _mockClientHandler = new();
+    private readonly TestServer _server;
+    private readonly MockHttpMessageHandler _mockClientHandler;
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
-    [Fact]
-    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
+    public LocalizationFixture()
     {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
-        });
-
-        HttpClient client = BuildLocalizationWebApplicationFactory().CreateClient();
-
-        // Act
-        await client.GetStringAsync(new Uri("/ru-RU/UsingGlobalMiddleware", UriKind.Relative));
-
-        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=ru-RU");
-    }
-
-    public void Dispose()
-    {
-        _mockClientHandler.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildLocalizationWebApplicationFactory()
-    {
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
+        TestServerBuilder testHostBuilder = new();
+        _mockClientHandler = new MockHttpMessageHandler();
+        testHostBuilder
+            .ConfigureServices(builder =>
             {
-                services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-                services
+                builder.AddLocalization(options => options.ResourcesPath = "Resources");
+                builder
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-
-                services.AddSitecoreRenderingEngine(options =>
+                builder.AddSitecoreRenderingEngine(options =>
                 {
                     options
                         .AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
                         .AddDefaultComponentRenderer();
                 });
-            });
-
-            builder.Configure(app =>
+            })
+            .Configure(app =>
             {
                 app.UseRouting();
                 app.UseRequestLocalization(options =>
@@ -81,6 +56,32 @@ public class LocalizationFixture(TestWebApplicationFactory<TestWebApplicationPro
                     endpoints.MapDefaultControllerRoute();
                 });
             });
+
+        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+    }
+
+    [Fact]
+    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
+
+        HttpClient client = _server.CreateClient();
+
+        // Act
+        await client.GetStringAsync(new Uri("/ru-RU/UsingGlobalMiddleware", UriKind.Relative));
+
+        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=ru-RU");
+    }
+
+    public void Dispose()
+    {
+        _mockClientHandler.Dispose();
+        _server.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

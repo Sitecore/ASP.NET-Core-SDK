@@ -4,7 +4,7 @@ using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -13,10 +13,58 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Localization;
 
-public class AdvanceLocalizationFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class AdvanceLocalizationFixture : IDisposable
 {
-    private readonly MockHttpMessageHandler _mockClientHandler = new();
+    private readonly TestServer _server;
+    private readonly MockHttpMessageHandler _mockClientHandler;
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+
+    public AdvanceLocalizationFixture()
+    {
+        TestServerBuilder testHostBuilder = new();
+        _mockClientHandler = new MockHttpMessageHandler();
+        testHostBuilder
+            .ConfigureServices(builder =>
+            {
+                builder.AddLocalization(options => options.ResourcesPath = "Resources");
+                builder.AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                builder.AddSitecoreRenderingEngine(options =>
+                {
+                    options.AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
+                        .AddDefaultComponentRenderer();
+                });
+                builder.AddMvc()
+                    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
+            })
+            .Configure(app =>
+            {
+                app.UseRouting();
+                app.UseRequestLocalization(options =>
+                {
+                    List<CultureInfo> supportedCultures = [new("en"), new("da")];
+                    options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
+                    options.SupportedCultures = supportedCultures;
+                    options.SupportedUICultures = supportedCultures;
+                    options.UseSitecoreRequestLocalization();
+                });
+                app.UseSitecoreRenderingEngine();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    // ReSharper disable once RouteTemplates.RouteParameterConstraintNotResolved - Custom constraint
+                    endpoints.MapControllerRoute(
+                        name: "default",
+                        pattern: "content/{culture:culture}/{**sitecoreRoute}",
+                        defaults: new { controller = "Home", action = "Index" });
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+
+        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+    }
 
     [Fact]
     public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
@@ -28,7 +76,7 @@ public class AdvanceLocalizationFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildAdvanceLocalizationWebApplicationFactory().CreateClient();
+        HttpClient client = _server.CreateClient();
 
         // Act
         await client.GetStringAsync(new Uri("content/da/UsingGlobalMiddleware", UriKind.Relative));
@@ -46,7 +94,7 @@ public class AdvanceLocalizationFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildAdvanceLocalizationWebApplicationFactory().CreateClient();
+        HttpClient client = _server.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -70,7 +118,7 @@ public class AdvanceLocalizationFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildAdvanceLocalizationWebApplicationFactory().CreateClient();
+        HttpClient client = _server.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("content/da", UriKind.Relative));
@@ -87,55 +135,7 @@ public class AdvanceLocalizationFixture(TestWebApplicationFactory<TestWebApplica
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _server.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildAdvanceLocalizationWebApplicationFactory()
-    {
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-                services
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                services.AddSitecoreRenderingEngine(options =>
-                {
-                    options.AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
-                        .AddDefaultComponentRenderer();
-                });
-
-                services.AddMvc()
-                    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
-            });
-
-            builder.Configure(app =>
-            {
-                app.UseRouting();
-                app.UseRequestLocalization(options =>
-                {
-                    List<CultureInfo> supportedCultures = new() { new("en"), new("da") };
-                    options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
-                    options.SupportedCultures = supportedCultures;
-                    options.SupportedUICultures = supportedCultures;
-                    options.UseSitecoreRequestLocalization();
-                });
-                app.UseSitecoreRenderingEngine();
-
-                app.UseEndpoints(endpoints =>
-                {
-                    // ReSharper disable once RouteTemplates.RouteParameterConstraintNotResolved - Custom constraint
-                    endpoints.MapControllerRoute(
-                        name: "default",
-                        pattern: "content/{culture:culture}/{**sitecoreRoute}",
-                        defaults: new { controller = "Home", action = "Index" });
-                    endpoints.MapDefaultControllerRoute();
-                });
-            });
-        });
     }
 }
