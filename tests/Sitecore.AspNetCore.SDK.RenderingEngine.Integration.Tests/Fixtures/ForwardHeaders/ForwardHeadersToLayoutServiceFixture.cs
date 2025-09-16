@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -11,66 +11,11 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.ForwardHeaders;
 
-public class ForwardHeadersToLayoutServiceFixture : IDisposable
+public class ForwardHeadersToLayoutServiceFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private const string TestHeaderRhResponse = "testHeaderResponseFromRenderingHost";
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
-
-    public ForwardHeadersToLayoutServiceFixture()
-    {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder.Configure<ForwardedHeadersOptions>(options =>
-                {
-                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                                               ForwardedHeaders.XForwardedProto;
-                });
-
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler)
-                    {
-                        BaseAddress = _layoutServiceUri
-                    })
-                    .AsDefaultHandler();
-
-                builder.AddSitecoreRenderingEngine(options =>
-                {
-                    options
-                        .AddDefaultComponentRenderer();
-                }).ForwardHeaders(options =>
-                {
-                    options.HeadersWhitelist.Add("HEADERTOCOPY");
-                    options.HeadersWhitelist.Add("Cookie");
-                    options.RequestHeadersFilters.Add(
-                        (_, result) =>
-                        {
-                            result.AppendValue("testNonWhitelistedHeader", "testNonWhitelistedHeaderValue");
-                            result.AppendValue("headerToModify", "newModifiedHeaderValue");
-                            result.AppendValue("cookie", "NewAddedCookie=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax");
-                        });
-
-                    options.ResponseHeadersFilters.Add(
-                        (_, result) =>
-                        {
-                            result.AppendValue(TestHeaderRhResponse, "testHeaderResponseValueFromRenderingHost");
-                        });
-                });
-            })
-            .Configure(app =>
-            {
-                app.UseForwardedHeaders();
-                app.UseSitecoreRenderingEngine();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
-    }
 
     [Fact]
     public async Task SitecoreLayoutServiceRequest_FiltersHeaders()
@@ -82,7 +27,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder)),
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("connection", string.Empty);
         request.Headers.Add("keep-alive", "sometestvalueshere");
@@ -118,7 +63,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         request.Headers.Add("COOKIE", "testValue");
 
@@ -140,7 +85,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         request.Headers.Add("testNonWhitelistedHeader", "testNonWhitelistedHeaderValue");
 
@@ -161,7 +106,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("connection", string.Empty);
 
@@ -187,7 +132,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
         _mockClientHandler.Responses.Push(responseMsg);
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("headerToModify", "oldHeaderValue");
         request.Headers.Add("HEADERTOCOPY", "sometestvalueshere");
@@ -215,7 +160,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
         _mockClientHandler.Responses.Push(responseMsg);
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildForwardHeadersToLayoutServiceWebApplicationFactory().CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("Cookie", ["ASP.NET_SessionId=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax", "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"]);
 
@@ -231,9 +176,59 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildForwardHeadersToLayoutServiceWebApplicationFactory()
+    {
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                                               ForwardedHeaders.XForwardedProto;
+                });
+
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler)
+                    {
+                        BaseAddress = _layoutServiceUri
+                    })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options.AddDefaultComponentRenderer();
+                }).ForwardHeaders(options =>
+                {
+                    options.HeadersWhitelist.Add("HEADERTOCOPY");
+                    options.HeadersWhitelist.Add("Cookie");
+                    options.RequestHeadersFilters.Add(
+                        (_, result) =>
+                        {
+                            result.AppendValue("testNonWhitelistedHeader", "testNonWhitelistedHeaderValue");
+                            result.AppendValue("headerToModify", "newModifiedHeaderValue");
+                            result.AppendValue("cookie", "NewAddedCookie=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax");
+                        });
+
+                    options.ResponseHeadersFilters.Add(
+                        (_, result) =>
+                        {
+                            result.AppendValue(TestHeaderRhResponse, "testHeaderResponseValueFromRenderingHost");
+                        });
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseForwardedHeaders();
+                app.UseSitecoreRenderingEngine();
+            });
+        });
     }
 
     private static HttpRequestMessage BrowserWhitelistedHeaders()
