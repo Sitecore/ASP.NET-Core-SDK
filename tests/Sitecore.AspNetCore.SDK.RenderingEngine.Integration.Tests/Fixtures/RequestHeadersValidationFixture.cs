@@ -1,5 +1,6 @@
-﻿using AwesomeAssertions;
-using Microsoft.AspNetCore.TestHost;
+﻿using System.Net;
+using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
@@ -10,17 +11,17 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 
-public class RequestHeadersValidationFixture : IDisposable
+public class RequestHeadersValidationFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private MockHttpMessageHandler _clientHandler = new();
-    private TestServer _server = null!;
+    private WebApplicationFactory<TestWebApplicationProgram> _appFactory = null!;
 
     [Fact]
     public async Task Request_WithNonValidatedHeaders_HeadersAreProperlyValidated()
     {
         // Arrange
-        ConfigureServices(["User-Agent"]);
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        _appFactory = BuildRequestHeadersWebApplicationFactory(new[] { "User-Agent" });
+        ISitecoreLayoutClient layoutClient = _appFactory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -41,8 +42,8 @@ public class RequestHeadersValidationFixture : IDisposable
     public async Task Request_WithoutNonValidatedHeaders_ErrorThrown()
     {
         // Arrange
-        ConfigureServices([]);
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        _appFactory = BuildRequestHeadersWebApplicationFactory(Array.Empty<string>());
+        ISitecoreLayoutClient layoutClient = _appFactory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -58,24 +59,23 @@ public class RequestHeadersValidationFixture : IDisposable
     public void Dispose()
     {
         _clientHandler.Dispose();
-        _server.Dispose();
+        _appFactory?.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    private void ConfigureServices(string[] nonValidatedHeaders)
+    private WebApplicationFactory<TestWebApplicationProgram> BuildRequestHeadersWebApplicationFactory(string[] nonValidatedHeaders)
     {
-        TestServerBuilder testHostBuilder = new();
         _clientHandler = new MockHttpMessageHandler();
         Dictionary<string, string[]> headers = new()
         {
             { "User-Agent", ["site;core"] }
         };
 
-        testHostBuilder
-            .ConfigureServices(builder =>
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                ISitecoreLayoutClientBuilder lsc = builder
-                    .AddSitecoreLayoutService();
+                ISitecoreLayoutClientBuilder lsc = services.AddSitecoreLayoutService();
 
                 lsc.AddHttpHandler("mock", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") }, nonValidatedHeaders)
                     .WithRequestOptions(request =>
@@ -85,14 +85,13 @@ public class RequestHeadersValidationFixture : IDisposable
                     })
                     .AsDefaultHandler();
 
-                builder
-                    .AddSitecoreRenderingEngine();
-            })
-            .Configure(app =>
+                services.AddSitecoreRenderingEngine();
+            });
+
+            builder.Configure(app =>
             {
                 app.UseSitecoreRenderingEngine();
             });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        });
     }
 }
