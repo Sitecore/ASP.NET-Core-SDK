@@ -2,7 +2,7 @@
 using AwesomeAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
@@ -13,66 +13,17 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.SearchOptimization;
 
-public class EdgeSitemapProxyFixture : IDisposable
+public class EdgeSitemapProxyFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly ISitemapService _mockSitemapService = Substitute.For<ISitemapService>();
     private readonly Uri _edgeSitemapUrl = new("https://xmcloud-test.com/sitemap.xml");
-
-    public EdgeSitemapProxyFixture()
-    {
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK
-        });
-
-        TestServerBuilder testHostBuilder = new();
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder.AddSingleton(_mockSitemapService);
-                builder.AddSingleton<IHttpClientFactory>(_ =>
-                {
-                    return new CustomHttpClientFactory(
-                        () =>
-                            new HttpClient(_mockClientHandler));
-                });
-
-                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
-                mockedGraphQLClient.SendQueryAsync<SiteInfoResultModel>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoResultModel>
-                {
-                    Data = new SiteInfoResultModel
-                    {
-                        Site = new Site
-                        {
-                            SiteInfo = new SiteInfo
-                            {
-                                Sitemap =
-                                [
-                                    _edgeSitemapUrl.ToString()
-                                ]
-                            }
-                        }
-                    }
-                });
-
-                builder.AddSingleton(mockedGraphQLClient);
-                builder.AddEdgeSitemap();
-            })
-            .Configure(app =>
-            {
-                app.UseSitemap();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
-    }
 
     [Fact]
     public async Task EdgeSitemap_MustBeProxied()
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = BuildEdgeSitemapWebApplicationFactory().CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/sitemap.xml", UriKind.Relative));
         _mockSitemapService.GetSitemapUrl(Arg.Any<string>(), Arg.Any<string>())
             .Returns(_edgeSitemapUrl.AbsoluteUri);
@@ -89,8 +40,54 @@ public class EdgeSitemapProxyFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildEdgeSitemapWebApplicationFactory()
+    {
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK
+        });
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton(_mockSitemapService);
+
+                services.AddSingleton<IHttpClientFactory>(_ =>
+                {
+                    return new CustomHttpClientFactory(
+                        () => new HttpClient(_mockClientHandler));
+                });
+
+                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
+                mockedGraphQLClient
+                    .SendQueryAsync<SiteInfoResultModel>(Arg.Any<GraphQLRequest>())
+                    .Returns(new GraphQLResponse<SiteInfoResultModel>
+                    {
+                        Data = new SiteInfoResultModel
+                        {
+                            Site = new Site
+                            {
+                                SiteInfo = new SiteInfo
+                                {
+                                    Sitemap = new[] { _edgeSitemapUrl.ToString() }
+                                }
+                            }
+                        }
+                    });
+
+                services.AddSingleton(mockedGraphQLClient);
+                services.AddEdgeSitemap();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseSitemap();
+            });
+        });
     }
 }
