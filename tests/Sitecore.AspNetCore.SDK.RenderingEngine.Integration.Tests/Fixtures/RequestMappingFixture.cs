@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -21,7 +23,7 @@ public class RequestMappingFixture : IDisposable
 
     private const string QueryStringTestActionMethod = "QueryStringTest";
 
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     private readonly MockHttpMessageHandler _mockClientHandler;
 
@@ -29,51 +31,8 @@ public class RequestMappingFixture : IDisposable
 
     public RequestMappingFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .MapFromRequest((layoutRequest, httpMessage) =>
-                    {
-                        if (layoutRequest.TryGetValue("Authorization", out object? auth))
-                        {
-                            httpMessage.Headers.Add("Authorization", auth!.ToString());
-                        }
-
-                        if (layoutRequest.TryGetValue("AspNetCookie", out object? aspnet))
-                        {
-                            httpMessage.Headers.Add("Cookie", aspnet!.ToString());
-                        }
-
-                        httpMessage.RequestUri = layoutRequest.BuildDefaultSitecoreLayoutRequestUri(httpMessage.RequestUri!, ["param1", "param2"]);
-                    })
-                    .AsDefaultHandler();
-
-                builder.AddSitecoreRenderingEngine(options =>
-                    options.MapToRequest((httpRequest, layoutRequest) =>
-                    {
-                        layoutRequest.Path(httpRequest.Path);
-                        foreach (KeyValuePair<string, StringValues> q in httpRequest.Query)
-                        {
-                            layoutRequest.Add(q.Key, q.Value.ToString());
-                        }
-
-                        layoutRequest.Add("testnullvalue", null);
-
-                        // simulate there is an authorization cookie in the HTTP request
-                        httpRequest.Headers.Append("Authorization", TestAuthHeader);
-                        layoutRequest.Add("Authorization", httpRequest.Headers.Authorization);
-
-                        layoutRequest.Add("AspNetCookie", TestCookie);
-                    }));
-            })
-            .Configure(_ => { });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildRequestMappingWebApplicationFactory();
     }
 
     [Fact]
@@ -87,7 +46,7 @@ public class RequestMappingFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetAsync(MiddlewareController + "/" + QueryStringTestActionMethod + "?" + testQueryString);
@@ -108,7 +67,7 @@ public class RequestMappingFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetAsync(MiddlewareController + "/" + QueryStringTestActionMethod + "?" + testQueryString);
@@ -129,7 +88,7 @@ public class RequestMappingFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetAsync(MiddlewareController + "/" + QueryStringTestActionMethod + "?" + testQueryString);
@@ -145,7 +104,7 @@ public class RequestMappingFixture : IDisposable
         // Arrange
         _mockClientHandler.Responses.Push(new HttpResponseMessage { StatusCode = HttpStatusCode.OK });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetAsync(MiddlewareController + "/" + QueryStringTestActionMethod)
@@ -162,7 +121,7 @@ public class RequestMappingFixture : IDisposable
         // Arrange
         _mockClientHandler.Responses.Push(new HttpResponseMessage { StatusCode = HttpStatusCode.OK });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetAsync(MiddlewareController + "/" + QueryStringTestActionMethod)
@@ -175,8 +134,62 @@ public class RequestMappingFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildRequestMappingWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .MapFromRequest((layoutRequest, httpMessage) =>
+                    {
+                        if (layoutRequest.TryGetValue("Authorization", out object? auth))
+                        {
+                            httpMessage.Headers.Add("Authorization", auth!.ToString());
+                        }
+
+                        if (layoutRequest.TryGetValue("AspNetCookie", out object? aspnet))
+                        {
+                            httpMessage.Headers.Add("Cookie", aspnet!.ToString());
+                        }
+
+                        httpMessage.RequestUri = layoutRequest.BuildDefaultSitecoreLayoutRequestUri(httpMessage.RequestUri!, new[] { "param1", "param2" });
+                    })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                    options.MapToRequest((httpRequest, layoutRequest) =>
+                    {
+                        layoutRequest.Path(httpRequest.Path);
+                        foreach (KeyValuePair<string, StringValues> q in httpRequest.Query)
+                        {
+                            layoutRequest.Add(q.Key, q.Value.ToString());
+                        }
+
+                        layoutRequest.Add("testnullvalue", null);
+
+                        // simulate there is an authorization cookie in the HTTP request
+                        httpRequest.Headers.Append("Authorization", TestAuthHeader);
+                        layoutRequest.Add("Authorization", httpRequest.Headers.Authorization);
+
+                        layoutRequest.Add("AspNetCookie", TestCookie);
+                    }));
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
     }
 }
