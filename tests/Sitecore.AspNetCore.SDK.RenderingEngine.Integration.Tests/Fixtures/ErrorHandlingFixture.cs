@@ -2,7 +2,7 @@
 using AutoFixture;
 using AwesomeAssertions;
 using HtmlAgilityPack;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Sitecore.AspNetCore.SDK.AutoFixture.Attributes;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Exceptions;
@@ -22,77 +22,95 @@ public class ErrorHandlingFixture
 
     public static Action<IFixture> ValidHttpClient => f =>
     {
-        TestServerBuilder testHostBuilder = new();
-        MockHttpMessageHandler mockClientHandler = new();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        MockHttpMessageHandler mockClientHandler = new MockHttpMessageHandler();
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>()
+            .WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
-                    .AddSitecoreLayoutService()
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services.AddSitecoreLayoutService()
                     .AddHttpHandler("valid", _ => new HttpClient(mockClientHandler) { BaseAddress = new Uri("http://layout.service") })
                     .AsDefaultHandler();
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
+
+                services.AddSitecoreRenderingEngine();
             });
 
-        TestServer server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
 
         f.Inject(mockClientHandler);
-        f.Inject(server);
+        f.Inject(factory);
     };
 
     public static Action<IFixture> InvalidHttpClient => f =>
     {
-        TestServerBuilder testHostBuilder = new();
-        MockHttpMessageHandler mockClientHandler = new();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        MockHttpMessageHandler mockClientHandler = new MockHttpMessageHandler();
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>()
+            .WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
-                    .AddSitecoreLayoutService()
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services.AddSitecoreLayoutService()
                     .AddHttpHandler("invalid", _ => new HttpClient { BaseAddress = new Uri("http://invalid.url") })
                     .AsDefaultHandler();
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
+
+                services.AddSitecoreRenderingEngine();
             });
 
-        TestServer server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
 
         f.Inject(mockClientHandler);
-        f.Inject(server);
+        f.Inject(factory);
     };
 
     public static Action<IFixture> InvalidHttpMessageConfiguration => f =>
     {
-        TestServerBuilder testHostBuilder = new();
-        MockHttpMessageHandler mockClientHandler = new();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        MockHttpMessageHandler mockClientHandler = new MockHttpMessageHandler();
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>()
+            .WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
-                    .AddSitecoreLayoutService()
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services.AddSitecoreLayoutService()
                     .AddHttpHandler("valid", _ => new HttpClient(mockClientHandler) { BaseAddress = new Uri("http://layout.service") })
                     .MapFromRequest((layoutRequest, httpMessage) => httpMessage.Headers.Add("test", layoutRequest["invalidkey"]!.ToString()))
                     .AsDefaultHandler();
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
+
+                services.AddSitecoreRenderingEngine();
             });
 
-        TestServer server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
 
         f.Inject(mockClientHandler);
-        f.Inject(server);
+        f.Inject(factory);
     };
 
     [Theory]
     [AutoNSubstituteData(nameof(InvalidHttpMessageConfiguration))]
-    public async Task HttpMessageConfigurationError_Returns_SitecoreLayoutServiceMessageConfigurationException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpMessageConfigurationError_Returns_SitecoreLayoutServiceMessageConfigurationException(TestWebApplicationFactory<TestWebApplicationProgram> factory, MockHttpMessageHandler clientHandler)
     {
         // Arrange
         clientHandler.Responses.Push(new HttpResponseMessage
@@ -100,7 +118,33 @@ public class ErrorHandlingFixture
             StatusCode = HttpStatusCode.OK
         });
 
-        ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        WebApplicationFactory<TestWebApplicationProgram> configuredFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services.AddLogging();
+                services.AddSitecoreLayoutService()
+                    .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                    .MapFromRequest((layoutRequest, httpMessage) => httpMessage.Headers.Add("test", layoutRequest["invalidkey"]!.ToString()))
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
+
+        // Ensure host is started so services are available
+        configuredFactory.CreateClient();
+
+        ISitecoreLayoutClient layoutClient = configuredFactory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -114,12 +158,18 @@ public class ErrorHandlingFixture
         response.Errors.Should().ContainSingle(e => e.GetType() == typeof(SitecoreLayoutServiceMessageConfigurationException));
     }
 
-    [Theory]
-    [AutoNSubstituteData(nameof(InvalidHttpClient))]
-    public async Task HttpRequestTimeoutError_Returns_CouldNotContactSitecoreLayoutServiceClientException(TestServer server)
+    [Fact]
+    public async Task HttpRequestTimeoutError_Returns_CouldNotContactSitecoreLayoutServiceClientException()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        // Build a local service provider with the layout client registered so tests are independent
+        IServiceCollection services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSitecoreLayoutService()
+            .AddHttpHandler("invalid", _ => new HttpClient { BaseAddress = new Uri("http://invalid.url") })
+            .AsDefaultHandler();
+        IServiceProvider provider = services.BuildServiceProvider();
+        ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -135,7 +185,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponse50xErrors_Return_InvalidResponseSitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponse50xErrors_Return_InvalidResponseSitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         HttpStatusCode[] responseStatuses =
@@ -160,7 +210,14 @@ public class ErrorHandlingFixture
                 StatusCode = responseStatus
             });
 
-            ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+            // Build a local service provider with the layout client registered so tests are independent
+            IServiceCollection services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSitecoreLayoutService()
+                .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                .AsDefaultHandler();
+            IServiceProvider provider = services.BuildServiceProvider();
+            ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
             SitecoreLayoutRequest request = new SitecoreLayoutRequest()
                 .Path("test");
@@ -185,7 +242,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponse40xErrors_Return_InvalidRequestSitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponse40xErrors_Return_InvalidRequestSitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         HttpStatusCode[] responseStatuses =
@@ -225,7 +282,14 @@ public class ErrorHandlingFixture
                 StatusCode = responseStatus
             });
 
-            ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+            // Build a local service provider with the layout client registered so tests are independent
+            IServiceCollection services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSitecoreLayoutService()
+                .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                .AsDefaultHandler();
+            IServiceProvider provider = services.BuildServiceProvider();
+            ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
             SitecoreLayoutRequest request = new SitecoreLayoutRequest()
                 .Path("test");
@@ -247,7 +311,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponse404Error_Returns_ContentAndItemNotFoundSitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponse404Error_Returns_ContentAndItemNotFoundSitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         const HttpStatusCode responseStatus = HttpStatusCode.NotFound;
@@ -258,7 +322,14 @@ public class ErrorHandlingFixture
             Content = new StringContent("""{ "sitecore": { "sitecoredata": { "context": { "site": { "name": "404test" }}}}}""")
         });
 
-        ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        // Build a local service provider with the layout client registered so tests are independent
+        IServiceCollection services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSitecoreLayoutService()
+            .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+            .AsDefaultHandler();
+        IServiceProvider provider = services.BuildServiceProvider();
+        ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -281,7 +352,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponseDeserializationError_Returns_InvalidResponseSitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponseDeserializationError_Returns_InvalidResponseSitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         HttpStatusCode responseStatus = HttpStatusCode.NotFound;
@@ -292,7 +363,14 @@ public class ErrorHandlingFixture
             Content = new StringContent("invalid json")
         });
 
-        ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        // Build a local service provider with the layout client registered so tests are independent
+        IServiceCollection services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSitecoreLayoutService()
+            .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+            .AsDefaultHandler();
+        IServiceProvider provider = services.BuildServiceProvider();
+        ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -308,7 +386,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponse10xErrors_Return_SitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponse10xErrors_Return_SitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         HttpStatusCode[] responseStatuses =
@@ -326,7 +404,14 @@ public class ErrorHandlingFixture
                 StatusCode = responseStatus
             });
 
-            ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+            // Build a local service provider with the layout client registered so tests are independent
+            IServiceCollection services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSitecoreLayoutService()
+                .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                .AsDefaultHandler();
+            IServiceProvider provider = services.BuildServiceProvider();
+            ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
             SitecoreLayoutRequest request = new SitecoreLayoutRequest()
                 .Path("test");
@@ -348,7 +433,7 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task HttpResponse30xErrors_Return_SitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task HttpResponse30xErrors_Return_SitecoreLayoutServiceClientException(MockHttpMessageHandler clientHandler)
     {
         // Arrange
         HttpStatusCode[] responseStatuses =
@@ -376,7 +461,14 @@ public class ErrorHandlingFixture
                 StatusCode = responseStatus
             });
 
-            ISitecoreLayoutClient layoutClient = server.Services.GetRequiredService<ISitecoreLayoutClient>();
+            // Build a local service provider with the layout client registered so tests are independent
+            IServiceCollection services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSitecoreLayoutService()
+                .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                .AsDefaultHandler();
+            IServiceProvider provider = services.BuildServiceProvider();
+            ISitecoreLayoutClient layoutClient = provider.GetRequiredService<ISitecoreLayoutClient>();
 
             SitecoreLayoutRequest request = new SitecoreLayoutRequest()
                 .Path("test");
@@ -398,14 +490,36 @@ public class ErrorHandlingFixture
 
     [Theory]
     [AutoNSubstituteData(nameof(ValidHttpClient))]
-    public async Task ErrorView_Returns_InvalidResponseSitecoreLayoutServiceClientException(TestServer server, MockHttpMessageHandler clientHandler)
+    public async Task ErrorView_Returns_InvalidResponseSitecoreLayoutServiceClientException(TestWebApplicationFactory<TestWebApplicationProgram> factory, MockHttpMessageHandler clientHandler)
     {
         clientHandler.Responses.Push(new HttpResponseMessage
         {
             StatusCode = HttpStatusCode.BadRequest
         });
 
-        HttpClient client = server.CreateClient();
+        WebApplicationFactory<TestWebApplicationProgram> configuredFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services.AddLogging();
+                services.AddSitecoreLayoutService()
+                    .AddHttpHandler("valid", _ => new HttpClient(clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
+
+        HttpClient client = configuredFactory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync("Error");
