@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -15,31 +16,40 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Loc
 
 public class AdvanceLocalizationFixture : IDisposable
 {
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
     private readonly MockHttpMessageHandler _mockClientHandler;
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
     public AdvanceLocalizationFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = BuildAdvanceLocalizationWebApplicationFactory();
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildAdvanceLocalizationWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
             {
-                builder.AddLocalization(options => options.ResourcesPath = "Resources");
-                builder.AddSitecoreLayoutService()
+                services.AddLocalization(options => options.ResourcesPath = "Resources");
+                services.AddRouting();
+                services.AddControllersWithViews().AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
+
+                services.AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
 
-                builder.AddSitecoreRenderingEngine(options =>
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options.AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
                         .AddDefaultComponentRenderer();
                 });
-                builder.AddMvc()
-                    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseRequestLocalization(options =>
@@ -62,8 +72,7 @@ public class AdvanceLocalizationFixture : IDisposable
                     endpoints.MapDefaultControllerRoute();
                 });
             });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        });
     }
 
     [Fact]
@@ -76,7 +85,7 @@ public class AdvanceLocalizationFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         await client.GetStringAsync(new Uri("content/da/UsingGlobalMiddleware", UriKind.Relative));
@@ -94,7 +103,7 @@ public class AdvanceLocalizationFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -118,7 +127,7 @@ public class AdvanceLocalizationFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("content/da", UriKind.Relative));
@@ -135,7 +144,7 @@ public class AdvanceLocalizationFixture : IDisposable
     public void Dispose()
     {
         _mockClientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }
