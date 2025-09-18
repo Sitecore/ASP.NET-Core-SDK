@@ -2,11 +2,12 @@
 using System.Net;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
-using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
 using Sitecore.AspNetCore.SDK.TestData;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
@@ -16,38 +17,38 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 [ExcludeFromCodeCoverage]
 public class RenderingEngineBenchmarks : IDisposable
 {
-    private TestServer? _server;
+    private WebApplicationFactory<TestWebApplicationProgram>? _factory;
     private HttpClient? _client;
     private MockHttpMessageHandler? _mockClientHandler;
 
     [GlobalSetup]
     public void Setup()
-    {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = new Uri("http://layout.service") })
-                    .AsDefaultHandler();
+        {
+            _mockClientHandler = new MockHttpMessageHandler();
 
-                builder.AddSitecoreRenderingEngine(options =>
+            _factory = new WebApplicationFactory<TestWebApplicationProgram>()
+                .WithWebHostBuilder(builder =>
                 {
-                    options.AddDefaultComponentRenderer();
+                    builder.ConfigureServices(services =>
+                    {
+                        services.AddRouting();
+                        services.AddSitecoreLayoutService();
+                        services.AddHttpClient("mock").ConfigurePrimaryHttpMessageHandler(() => _mockClientHandler!);
+                        services.AddSitecoreRenderingEngine(options =>
+                        {
+                            options.AddDefaultComponentRenderer();
+                        });
+                    });
+
+                    builder.Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseSitecoreRenderingEngine();
+                    });
                 });
-            })
-            .Configure(app =>
-            {
-                app.UseRouting();
-                app.UseSitecoreRenderingEngine();
-            });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
-
-        _client = _server.CreateClient();
-    }
+            _client = _factory.CreateClient();
+        }
 
     [Benchmark(Baseline = true)]
     public async Task RegularHomePageRequest()
@@ -71,8 +72,8 @@ public class RenderingEngineBenchmarks : IDisposable
 
     public void Dispose()
     {
-        _server?.Dispose();
         _client?.Dispose();
+        _factory?.Dispose();
         _mockClientHandler?.Dispose();
         GC.SuppressFinalize(this);
     }
