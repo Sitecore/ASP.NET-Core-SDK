@@ -180,6 +180,16 @@ public class ForwardHeadersToLayoutServiceFixture(TestWebApplicationFactory<Test
         GC.SuppressFinalize(this);
     }
 
+    private static HttpRequestMessage BrowserWhitelistedHeaders()
+    {
+        HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
+
+        // whitelisted Headers
+        request.Headers.Add("x-forwarded-proto", "https");
+
+        return request;
+    }
+
     private WebApplicationFactory<TestWebApplicationProgram> BuildForwardHeadersToLayoutServiceWebApplicationFactory()
     {
         return factory.WithWebHostBuilder(builder =>
@@ -229,15 +239,5 @@ public class ForwardHeadersToLayoutServiceFixture(TestWebApplicationFactory<Test
                 app.UseSitecoreRenderingEngine();
             });
         });
-    }
-
-    private static HttpRequestMessage BrowserWhitelistedHeaders()
-    {
-        HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
-
-        // whitelisted Headers
-        request.Headers.Add("x-forwarded-proto", "https");
-
-        return request;
     }
 }
