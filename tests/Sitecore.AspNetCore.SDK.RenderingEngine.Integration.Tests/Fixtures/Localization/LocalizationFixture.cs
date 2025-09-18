@@ -24,6 +24,31 @@ public class LocalizationFixture : IDisposable
         _factory = BuildLocalizationWebApplicationFactory();
     }
 
+    [Fact]
+    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
+        });
+
+        HttpClient client = _factory.CreateClient();
+
+        // Act
+        await client.GetStringAsync(new Uri("/ru-RU/UsingGlobalMiddleware", UriKind.Relative));
+
+        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=ru-RU");
+    }
+
+    public void Dispose()
+    {
+        _mockClientHandler.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
     private WebApplicationFactory<TestWebApplicationProgram> BuildLocalizationWebApplicationFactory()
     {
         WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
@@ -70,30 +95,5 @@ public class LocalizationFixture : IDisposable
                 });
             });
         });
-    }
-
-    [Fact]
-    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
-    {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
-        });
-
-        HttpClient client = _factory.CreateClient();
-
-        // Act
-        await client.GetStringAsync(new Uri("/ru-RU/UsingGlobalMiddleware", UriKind.Relative));
-
-        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=ru-RU");
-    }
-
-    public void Dispose()
-    {
-        _mockClientHandler.Dispose();
-        _factory.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

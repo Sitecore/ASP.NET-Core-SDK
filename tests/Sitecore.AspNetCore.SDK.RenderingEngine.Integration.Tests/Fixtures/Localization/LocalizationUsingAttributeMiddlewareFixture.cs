@@ -25,52 +25,6 @@ public class LocalizationUsingAttributeMiddlewareFixture : IDisposable
     _factory = BuildLocalizationUsingAttributeWebApplicationFactory();
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildLocalizationUsingAttributeWebApplicationFactory()
-    {
-        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
-
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureTestServices(services =>
-            {
-                services.AddLocalization(options => options.ResourcesPath = "Resources");
-                services.AddRouting();
-                services.AddControllersWithViews();
-
-                services
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                services.AddSitecoreRenderingEngine(options =>
-                {
-                    options
-                        .AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
-                        .AddDefaultComponentRenderer();
-                });
-            });
-
-            builder.Configure(app =>
-            {
-                app.UseRouting();
-                app.UseRequestLocalization(options =>
-                {
-                    List<CultureInfo> supportedCultures = [new("en"), new("uk-UA"), new("da-DK")];
-
-                    options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
-                    options.SupportedCultures = supportedCultures;
-                    options.SupportedUICultures = supportedCultures;
-                    options.UseSitecoreRequestLocalization();
-                });
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapSitecoreLocalizedRoute("Localized", "UseLocalizeWithAttribute", "UsingAttribute");
-                    endpoints.MapDefaultControllerRoute();
-                });
-            });
-        });
-    }
-
     [Theory]
     [InlineData("br", "en")]
     [InlineData("en", "en")]
@@ -157,5 +111,51 @@ public class LocalizationUsingAttributeMiddlewareFixture : IDisposable
         _mockClientHandler.Dispose();
         _factory.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildLocalizationUsingAttributeWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddLocalization(options => options.ResourcesPath = "Resources");
+                services.AddRouting();
+                services.AddControllersWithViews();
+
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options
+                        .AddModelBoundView<ComponentModels.Component4>("Component-4", "Component4")
+                        .AddDefaultComponentRenderer();
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseRequestLocalization(options =>
+                {
+                    List<CultureInfo> supportedCultures = [new("en"), new("uk-UA"), new("da-DK")];
+
+                    options.DefaultRequestCulture = new RequestCulture(culture: "en", uiCulture: "en");
+                    options.SupportedCultures = supportedCultures;
+                    options.SupportedUICultures = supportedCultures;
+                    options.UseSitecoreRequestLocalization();
+                });
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapSitecoreLocalizedRoute("Localized", "UseLocalizeWithAttribute", "UsingAttribute");
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
     }
 }

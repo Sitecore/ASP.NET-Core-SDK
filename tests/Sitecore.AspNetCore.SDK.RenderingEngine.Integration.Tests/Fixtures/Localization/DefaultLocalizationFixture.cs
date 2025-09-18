@@ -23,6 +23,31 @@ public class DefaultLocalizationFixture : IDisposable
         _factory = BuildDefaultLocalizationWebApplicationFactory();
     }
 
+    [Fact]
+    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
+        });
+
+        HttpClient client = _factory.CreateClient();
+
+        // Act
+        await client.GetStringAsync(new Uri("/da/UsingGlobalMiddleware", UriKind.Relative));
+
+        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=da");
+    }
+
+    public void Dispose()
+    {
+        _mockClientHandler.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
     private WebApplicationFactory<TestWebApplicationProgram> BuildDefaultLocalizationWebApplicationFactory()
     {
         WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
@@ -63,30 +88,5 @@ public class DefaultLocalizationFixture : IDisposable
                 });
             });
         });
-    }
-
-    [Fact]
-    public async Task LocalizationRouteProvider_SetsCorrectRequestsLanguage()
-    {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
-        });
-
-        HttpClient client = _factory.CreateClient();
-
-        // Act
-        await client.GetStringAsync(new Uri("/da/UsingGlobalMiddleware", UriKind.Relative));
-
-        _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should().Contain("sc_lang=da");
-    }
-
-    public void Dispose()
-    {
-        _mockClientHandler.Dispose();
-        _factory.Dispose();
-        GC.SuppressFinalize(this);
     }
 }
