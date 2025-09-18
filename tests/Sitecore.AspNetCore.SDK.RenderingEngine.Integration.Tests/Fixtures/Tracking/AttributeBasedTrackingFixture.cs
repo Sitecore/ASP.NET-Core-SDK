@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -24,7 +25,7 @@ public class AttributeBasedTrackingFixture : IDisposable
         "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"
     ];
 
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     private readonly MockHttpMessageHandler _mockClientHandler;
 
@@ -34,35 +35,8 @@ public class AttributeBasedTrackingFixture : IDisposable
 
     public AttributeBasedTrackingFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler)
-                    {
-                        BaseAddress = _layoutServiceUri
-                    })
-                    .AsDefaultHandler();
-
-                builder.AddSitecoreRenderingEngine(options =>
-                    {
-                        options
-                            .AddDefaultComponentRenderer();
-                    })
-                    .WithTracking();
-
-                builder.AddSitecoreVisitorIdentification(o => o.SitecoreInstanceUri = _cmInstanceUri);
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreVisitorIdentification();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildAttributeBasedTrackingWebApplicationFactory();
     }
 
     [Fact]
@@ -80,7 +54,7 @@ public class AttributeBasedTrackingFixture : IDisposable
             }
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         HttpResponseMessage response = await client.GetAsync(new Uri("/AttributeBased", UriKind.Relative));
@@ -100,7 +74,7 @@ public class AttributeBasedTrackingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithVisitorIdentificationLayoutPlaceholder)),
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/AttributeBased", UriKind.Relative));
         request.Headers.Add("Cookie", ["ASP.NET_SessionId=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax", "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"]);
 
@@ -124,7 +98,7 @@ public class AttributeBasedTrackingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithVisitorIdentificationLayoutPlaceholder)),
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/AttributeBased", UriKind.Relative));
 
         // Act
@@ -138,8 +112,49 @@ public class AttributeBasedTrackingFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildAttributeBasedTrackingWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddRouting();
+                services.AddControllersWithViews();
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler)
+                    {
+                        BaseAddress = _layoutServiceUri
+                    })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                    {
+                        options
+                            .AddDefaultComponentRenderer();
+                    })
+                    .WithTracking();
+
+                services.AddSitecoreVisitorIdentification(o => o.SitecoreInstanceUri = _cmInstanceUri);
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreVisitorIdentification();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
     }
 }
