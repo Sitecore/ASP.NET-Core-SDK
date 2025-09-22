@@ -46,7 +46,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
         // Arrange
         ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
-        SitecoreLayoutRequest request = new SitecoreLayoutRequest();
+        SitecoreLayoutRequest request = [];
 
         // Act
         SitecoreLayoutResponse response = await layoutClient.Request(request);
@@ -81,7 +81,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
         // Arrange
         ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
-        SitecoreLayoutRequest request = new SitecoreLayoutRequest();
+        SitecoreLayoutRequest request = [];
 
         // Act
         SitecoreLayoutResponse response = await layoutClient.Request(request);

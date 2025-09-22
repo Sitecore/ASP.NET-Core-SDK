@@ -162,7 +162,7 @@ public class RequestMappingFixture : IDisposable
                             httpMessage.Headers.Add("Cookie", aspnet!.ToString());
                         }
 
-                        httpMessage.RequestUri = layoutRequest.BuildDefaultSitecoreLayoutRequestUri(httpMessage.RequestUri!, new[] { "param1", "param2" });
+                        httpMessage.RequestUri = layoutRequest.BuildDefaultSitecoreLayoutRequestUri(httpMessage.RequestUri!, ["param1", "param2"]);
                     })
                     .AsDefaultHandler();
 
