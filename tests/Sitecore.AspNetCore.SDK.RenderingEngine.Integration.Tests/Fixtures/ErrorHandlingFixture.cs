@@ -142,7 +142,7 @@ public class ErrorHandlingFixture
         });
 
         // Ensure host is started so services are available
-        configuredFactory.CreateClient();
+        _ = configuredFactory.Server;
 
         ISitecoreLayoutClient layoutClient = configuredFactory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
