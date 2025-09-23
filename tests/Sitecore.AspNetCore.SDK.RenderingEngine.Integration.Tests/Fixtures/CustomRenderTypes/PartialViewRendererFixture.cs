@@ -11,10 +11,44 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.CustomRenderTypes;
 
-public class PartialViewRendererFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class PartialViewRendererFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public PartialViewRendererFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options
+                        .AddPartialView(name => name.Equals("Component-6", StringComparison.OrdinalIgnoreCase), "_PartialView")
+                        .AddDefaultComponentRenderer();
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
+
+        TestServer startedServer = _factory.Server;
+    }
 
     [Fact]
     public async Task CustomRenderTypes_PartialViewRendersCorrectly()
@@ -26,7 +60,7 @@ public class PartialViewRendererFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildPartialViewWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -43,38 +77,7 @@ public class PartialViewRendererFixture(TestWebApplicationFactory<TestWebApplica
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildPartialViewWebApplicationFactory()
-    {
-        return factory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    services
-                        .AddSitecoreLayoutService()
-                        .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                        .AsDefaultHandler();
-
-                    services.AddSitecoreRenderingEngine(options =>
-                    {
-                        options
-                            .AddPartialView(name => name.Equals("Component-6", StringComparison.OrdinalIgnoreCase), "_PartialView")
-                            .AddDefaultComponentRenderer();
-                    });
-                });
-
-                builder.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseSitecoreRenderingEngine();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapDefaultControllerRoute();
-                    });
-                });
-            });
     }
 }

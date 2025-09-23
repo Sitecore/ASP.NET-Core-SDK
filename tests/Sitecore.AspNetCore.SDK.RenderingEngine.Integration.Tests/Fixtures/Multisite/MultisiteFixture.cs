@@ -15,11 +15,76 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Multisite;
 
-public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class MultisiteFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private const string DefaultSiteName = "defaultSiteName";
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
+                mockedGraphQLClient
+                    .SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>())
+                    .Returns(new GraphQLResponse<SiteInfoCollectionResult>
+                    {
+                        Data = new SiteInfoCollectionResult
+                        {
+                            Site = new Site
+                            {
+                                SiteInfoCollection = new[]
+                                {
+                                    new SiteInfo { HostName = "host1", Name = "siteForHost1" },
+                                    new SiteInfo { HostName = "host2", Name = "siteForHost2" },
+                                    new SiteInfo { HostName = "foo.bar", Name = "fooSite" },
+                                    new SiteInfo { HostName = "*.test.com", Name = "wildcardSite" },
+                                    new SiteInfo { HostName = "concrete.test.com", Name = "concrete" },
+                                    new SiteInfo { HostName = "multiHostname1.test.com | multiHostname2.test.com ", Name = "multiHostNameTestSite" }
+                                }
+                            }
+                        }
+                    });
+
+                services
+                    .AddSitecoreLayoutService().WithDefaultRequestOptions(request =>
+                    {
+                        request
+                            .SiteName(DefaultSiteName);
+                        if (!request.ContainsKey(RequestKeys.Language))
+                        {
+                            request.Language("en");
+                        }
+                    })
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options.AddDefaultPartialView("_ComponentNotFound");
+                });
+
+                services.AddSingleton(mockedGraphQLClient);
+                services.AddMultisite();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseMultisite();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapFallbackToController("Index", "Multisite");
+                });
+            });
+        });
+    }
 
     [Theory]
     [InlineData("host1", "siteForHost1")]
@@ -33,7 +98,7 @@ public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgra
     public async Task Multisite_Should_Resolve_SiteName_ByHostName(string hostname, string expectedSiteName)
     {
         // Arrange
-        HttpClient client = BuildMultisiteWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         client.BaseAddress = new Uri($"http://{hostname}");
 
         // Act
@@ -49,7 +114,7 @@ public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgra
     public async Task Multisite_Should_Resolve_SiteName_ByQueryParam()
     {
         // Arrange
-        HttpClient client = BuildMultisiteWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         const string expectedSiteName = "siteNameFromQueryString";
 
         // Act
@@ -66,7 +131,7 @@ public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgra
     public async Task Multisite_Should_FallBacks_To_DefaultSite_If_Site_Is_NotResolved(string hostname)
     {
         // Arrange
-        HttpClient client = BuildMultisiteWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         client.BaseAddress = new Uri($"http://{hostname}");
 
         // Act
@@ -83,7 +148,7 @@ public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgra
     public async Task Multisite_Should_FallBacks_To_DefaultSite_If_Site_Is_NotResolved_OnSecondRequest(string hostnameFirstRequest, string hostnameSecondRequest, string resolvedFirsSite)
     {
         // Arrange
-        HttpClient client = BuildMultisiteWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         HttpRequestMessage msg = new()
         {
@@ -109,74 +174,7 @@ public class MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgra
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildMultisiteWebApplicationFactory()
-    {
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK
-        });
-
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services
-                    .AddSitecoreLayoutService().WithDefaultRequestOptions(request =>
-                    {
-                        request
-                            .SiteName(DefaultSiteName);
-                        if (!request.ContainsKey(RequestKeys.Language))
-                        {
-                            request.Language("en");
-                        }
-                    })
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
-                mockedGraphQLClient
-                    .SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>())
-                    .Returns(new GraphQLResponse<SiteInfoCollectionResult>
-                    {
-                        Data = new SiteInfoCollectionResult
-                        {
-                            Site = new Site
-                            {
-                                SiteInfoCollection = new[]
-                                {
-                                    new SiteInfo { HostName = "host1", Name = "siteForHost1" },
-                                    new SiteInfo { HostName = "host2", Name = "siteForHost2" },
-                                    new SiteInfo { HostName = "foo.bar", Name = "fooSite" },
-                                    new SiteInfo { HostName = "*.test.com", Name = "wildcardSite" },
-                                    new SiteInfo { HostName = "concrete.test.com", Name = "concrete" },
-                                    new SiteInfo { HostName = "multiHostname1.test.com | multiHostname2.test.com ", Name = "multiHostNameTestSite" }
-                                }
-                            }
-                        }
-                    });
-
-                services.AddSitecoreRenderingEngine(options =>
-                {
-                    options.AddDefaultPartialView("_ComponentNotFound");
-                });
-
-                services.AddSingleton(mockedGraphQLClient);
-                services.AddMultisite();
-            });
-
-            builder.Configure(app =>
-            {
-                app.UseRouting();
-                app.UseMultisite();
-                app.UseSitecoreRenderingEngine();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapFallbackToController("Index", "Multisite");
-                });
-            });
-        });
     }
 }

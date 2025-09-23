@@ -2,6 +2,7 @@
 using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -10,10 +11,46 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class FileFieldTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options
+                        .AddModelBoundView<ComponentModels.ComponentWithFiles>("Component-With-Files", "ComponentWithFiles")
+                        .AddDefaultComponentRenderer();
+                });
+
+                services.AddControllersWithViews();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
+
+        TestServer startedServer = _factory.Server;
+    }
 
     [Fact]
     public async Task FileTagHelper_RendersAttributeFromModel()
@@ -25,7 +62,7 @@ public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildFileFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -75,7 +112,7 @@ public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildFileFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -136,7 +173,7 @@ public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildFileFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -185,7 +222,7 @@ public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildFileFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -208,37 +245,7 @@ public class FileFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildFileFieldTagHelperWebApplicationFactory()
-    {
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                services.AddSitecoreRenderingEngine(options =>
-                {
-                    options
-                        .AddModelBoundView<ComponentModels.ComponentWithFiles>("Component-With-Files", "ComponentWithFiles")
-                        .AddDefaultComponentRenderer();
-                });
-            });
-
-            builder.Configure(app =>
-            {
-                app.UseRouting();
-                app.UseSitecoreRenderingEngine();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapDefaultControllerRoute();
-                });
-            });
-        });
     }
 }

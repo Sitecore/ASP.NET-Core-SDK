@@ -3,6 +3,7 @@ using System.Net;
 using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -11,71 +12,15 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class DateFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class DateFieldTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    [Fact]
-    public async Task DateTagHelper_DoesNotResetOtherTagHelperOutput()
+    public DateFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
-        });
-
-        HttpClient client = BuildDateFieldTagHelperWebApplicationFactory().CreateClient();
-
-        // Act
-        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
-
-        HtmlDocument doc = new();
-        doc.LoadHtml(response);
-        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-dates"));
-        HtmlNode? text = sectionNode.ChildNodes[7];
-
-        // Assert
-        // check scenario that DateTagHelper does not reset values of nested helpers.
-        text.InnerHtml.Should().Contain(TestConstants.TestFieldValue);
-    }
-
-    [Fact]
-    public async Task DateTagHelper_GeneratesProperDate()
-    {
-        // Arrange
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK,
-            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
-        });
-
-        HttpClient client = BuildDateFieldTagHelperWebApplicationFactory().CreateClient();
-
-        // Act
-        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
-
-        HtmlDocument doc = new();
-        doc.LoadHtml(response);
-        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-dates"));
-
-        // Assert
-        sectionNode.ChildNodes[1].InnerHtml.Should().Be("05/04/2012");
-        sectionNode.ChildNodes[3].InnerHtml.Should().Be("05/04/2012 00:00:00");
-        sectionNode.ChildNodes[5].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString(CultureInfo.CurrentCulture));
-        sectionNode.ChildNodes[9].InnerHtml.Should().Contain("04.05.2012");
-    }
-
-    public void Dispose()
-    {
-        _mockClientHandler.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildDateFieldTagHelperWebApplicationFactory()
-    {
-        return factory.WithWebHostBuilder(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -102,5 +47,65 @@ public class DateFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicat
                 });
             });
         });
+
+        TestServer startedServer = _factory.Server;
+    }
+
+    [Fact]
+    public async Task DateTagHelper_DoesNotResetOtherTagHelperOutput()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
+        });
+
+        HttpClient client = _factory.CreateClient();
+
+        // Act
+        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
+
+        HtmlDocument doc = new();
+        doc.LoadHtml(response);
+        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-dates"));
+        HtmlNode? text = sectionNode.ChildNodes[7];
+
+        // Assert
+        // check scenario that DateTagHelper does not reset values of nested helpers.
+        text.InnerHtml.Should().Contain(TestConstants.TestFieldValue);
+    }
+
+    [Fact]
+    public async Task DateTagHelper_GeneratesProperDate()
+    {
+        // Arrange
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK,
+            Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
+        });
+
+        HttpClient client = _factory.CreateClient();
+
+        // Act
+        string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
+
+        HtmlDocument doc = new();
+        doc.LoadHtml(response);
+        HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-dates"));
+
+        // Assert
+        sectionNode.ChildNodes[1].InnerHtml.Should().Be("05/04/2012");
+        sectionNode.ChildNodes[3].InnerHtml.Should().Be("05/04/2012 00:00:00");
+        sectionNode.ChildNodes[5].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString(CultureInfo.CurrentCulture));
+        sectionNode.ChildNodes[9].InnerHtml.Should().Contain("04.05.2012");
+    }
+
+    public void Dispose()
+    {
+        _mockClientHandler.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

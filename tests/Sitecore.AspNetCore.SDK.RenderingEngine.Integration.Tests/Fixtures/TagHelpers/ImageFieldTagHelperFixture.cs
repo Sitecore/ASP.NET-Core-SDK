@@ -2,6 +2,7 @@
 using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -12,10 +13,48 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class ImageFieldTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options
+                        .AddModelBoundView<ComponentModels.ComponentWithImages>("Component-With-Images", "ComponentWithImages")
+                        .AddViewComponent("Component-1", "Component1")
+                        .AddModelBoundView<ComponentModels.Component2>("Component-2", "Component2")
+                        .AddDefaultComponentRenderer();
+                });
+
+                services.AddControllersWithViews();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
+
+        TestServer startedServer = _factory.Server;
+    }
 
     [Fact]
     public async Task ImgTagHelper_GeneratedProperImageWithCustomAttributes()
@@ -27,7 +66,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = BuildImageFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -51,7 +90,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = BuildImageFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -75,7 +114,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = BuildImageFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -99,7 +138,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = BuildImageFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -125,7 +164,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
             Content = new StringContent(Serializer.Serialize(CannedResponses.EditablePage))
         });
 
-        HttpClient client = BuildImageFieldTagHelperWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -146,39 +185,7 @@ public class ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplica
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildImageFieldTagHelperWebApplicationFactory()
-    {
-        return factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                services.AddSitecoreRenderingEngine(options =>
-                {
-                    options
-                        .AddModelBoundView<ComponentModels.ComponentWithImages>("Component-With-Images", "ComponentWithImages")
-                        .AddViewComponent("Component-1", "Component1")
-                        .AddModelBoundView<ComponentModels.Component2>("Component-2", "Component2")
-                        .AddDefaultComponentRenderer();
-                });
-            });
-
-            builder.Configure(app =>
-            {
-                app.UseRouting();
-                app.UseSitecoreRenderingEngine();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapDefaultControllerRoute();
-                });
-            });
-        });
     }
 }

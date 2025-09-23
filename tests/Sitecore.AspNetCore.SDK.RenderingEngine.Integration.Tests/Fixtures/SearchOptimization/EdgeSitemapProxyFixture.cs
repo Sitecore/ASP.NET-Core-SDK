@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
@@ -13,45 +14,16 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.SearchOptimization;
 
-public class EdgeSitemapProxyFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class EdgeSitemapProxyFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly ISitemapService _mockSitemapService = Substitute.For<ISitemapService>();
     private readonly Uri _edgeSitemapUrl = new("https://xmcloud-test.com/sitemap.xml");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    [Fact]
-    public async Task EdgeSitemap_MustBeProxied()
+    public EdgeSitemapProxyFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        // Arrange
-        HttpClient client = BuildEdgeSitemapWebApplicationFactory().CreateClient();
-        HttpRequestMessage request = new(HttpMethod.Get, new Uri("/sitemap.xml", UriKind.Relative));
-        _mockSitemapService.GetSitemapUrl(Arg.Any<string>(), Arg.Any<string>())
-            .Returns(_edgeSitemapUrl.AbsoluteUri);
-
-        // Act
-        await client.SendAsync(request);
-
-        // Asserts
-        _mockClientHandler.Requests.Should().ContainSingle();
-        _mockClientHandler.Requests[0].RequestUri!.Host.Should().Be(_edgeSitemapUrl.Host);
-        _mockClientHandler.Requests[0].RequestUri!.Scheme.Should().Be(_edgeSitemapUrl.Scheme);
-        _mockClientHandler.Requests[0].RequestUri!.PathAndQuery.Should().Be("/sitemap.xml");
-    }
-
-    public void Dispose()
-    {
-        _mockClientHandler.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildEdgeSitemapWebApplicationFactory()
-    {
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
-        {
-            StatusCode = HttpStatusCode.OK
-        });
-
-        return factory.WithWebHostBuilder(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -89,5 +61,39 @@ public class EdgeSitemapProxyFixture(TestWebApplicationFactory<TestWebApplicatio
                 app.UseSitemap();
             });
         });
+
+        TestServer startedServer = _factory.Server;
+    }
+
+    [Fact]
+    public async Task EdgeSitemap_MustBeProxied()
+    {
+        // Arrange - push per-test response
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK
+        });
+
+        _mockSitemapService.GetSitemapUrl(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(_edgeSitemapUrl.AbsoluteUri);
+
+        HttpClient client = _factory.CreateClient();
+        HttpRequestMessage request = new(HttpMethod.Get, new Uri("/sitemap.xml", UriKind.Relative));
+
+        // Act
+        await client.SendAsync(request);
+
+        // Asserts
+        _mockClientHandler.Requests.Should().ContainSingle();
+        _mockClientHandler.Requests[0].RequestUri!.Host.Should().Be(_edgeSitemapUrl.Host);
+        _mockClientHandler.Requests[0].RequestUri!.Scheme.Should().Be(_edgeSitemapUrl.Scheme);
+        _mockClientHandler.Requests[0].RequestUri!.PathAndQuery.Should().Be("/sitemap.xml");
+    }
+
+    public void Dispose()
+    {
+        _mockClientHandler.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
