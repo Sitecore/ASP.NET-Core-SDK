@@ -84,6 +84,14 @@ public class MultisiteFixture : IClassFixture<TestWebApplicationFactory<TestWebA
                 });
             });
         });
+
+        // provide a default per-fixture response so startup/concurrent requests don't consume per-test responses
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK
+        });
+
+        _ = _factory.Server;
     }
 
     [Theory]

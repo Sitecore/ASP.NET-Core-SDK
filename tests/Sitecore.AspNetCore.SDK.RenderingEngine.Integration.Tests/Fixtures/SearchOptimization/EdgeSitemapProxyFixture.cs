@@ -62,6 +62,12 @@ public class EdgeSitemapProxyFixture : IClassFixture<TestWebApplicationFactory<T
             });
         });
 
+        // provide a default per-fixture response so concurrent/startup requests don't consume the per-test response
+        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        {
+            StatusCode = HttpStatusCode.OK
+        });
+
         TestServer startedServer = _factory.Server;
     }
 
