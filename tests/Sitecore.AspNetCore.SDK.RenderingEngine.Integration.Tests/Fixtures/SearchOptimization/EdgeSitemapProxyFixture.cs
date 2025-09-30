@@ -68,6 +68,7 @@ public class EdgeSitemapProxyFixture : IClassFixture<TestWebApplicationFactory<T
             StatusCode = HttpStatusCode.OK
         });
 
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
         TestServer startedServer = _factory.Server;
     }
 

@@ -50,6 +50,7 @@ public class NumberFieldTagHelperFixture : IClassFixture<TestWebApplicationFacto
         });
 
         // ensure host started so services are available and analyzers are happy
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
         TestServer startedServer = _factory.Server;
     }
 
