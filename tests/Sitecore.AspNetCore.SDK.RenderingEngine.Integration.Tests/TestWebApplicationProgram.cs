@@ -12,7 +12,7 @@ builder.Services.AddGraphQLClient(configuration =>
 });
 
 WebApplication app = builder.Build();
-app.Run();
+app.Start();
 
 /// <summary>
 /// Partial class allowing this TestProgram to be created by a WebApplicationFactory for integration testing.
