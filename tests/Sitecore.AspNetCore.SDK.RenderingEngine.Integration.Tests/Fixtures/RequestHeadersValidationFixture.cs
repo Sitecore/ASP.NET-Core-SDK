@@ -11,16 +11,22 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 
-public class RequestHeadersValidationFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class RequestHeadersValidationFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
+    private readonly TestWebApplicationFactory<TestWebApplicationProgram> _factory;
     private MockHttpMessageHandler _clientHandler = new();
     private WebApplicationFactory<TestWebApplicationProgram> _appFactory = null!;
+
+    public RequestHeadersValidationFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory;
+    }
 
     [Fact]
     public async Task Request_WithNonValidatedHeaders_HeadersAreProperlyValidated()
     {
         // Arrange
-        _appFactory = BuildRequestHeadersWebApplicationFactory(new[] { "User-Agent" });
+        _appFactory = BuildRequestHeadersWebApplicationFactory(["User-Agent"]);
         ISitecoreLayoutClient layoutClient = _appFactory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
@@ -71,7 +77,7 @@ public class RequestHeadersValidationFixture(TestWebApplicationFactory<TestWebAp
             { "User-Agent", ["site;core"] }
         };
 
-        return factory.WithWebHostBuilder(builder =>
+        return _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
