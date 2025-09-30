@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.TestData;
 
@@ -32,8 +33,12 @@ public class RenderingEngineBenchmarks : IDisposable
                     builder.ConfigureServices(services =>
                     {
                         services.AddRouting();
-                        services.AddSitecoreLayoutService();
-                        services.AddHttpClient("mock").ConfigurePrimaryHttpMessageHandler(() => _mockClientHandler!);
+
+                        ISitecoreLayoutClientBuilder layoutBuilder = services.AddSitecoreLayoutService();
+                        layoutBuilder
+                            .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler!) { BaseAddress = new Uri("http://layout.service") })
+                            .AsDefaultHandler();
+
                         services.AddSitecoreRenderingEngine(options =>
                         {
                             options.AddDefaultComponentRenderer();
