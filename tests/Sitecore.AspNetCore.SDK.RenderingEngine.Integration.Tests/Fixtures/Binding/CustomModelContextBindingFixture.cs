@@ -13,10 +13,43 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Binding;
 
-public class CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class CustomModelContextBindingFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options
+                        .AddModelBoundView<ComponentModels.CustomModelContextComponent>(name => name.Equals("Custom-Model-Context-Component", StringComparison.OrdinalIgnoreCase), "CustomModelContextComponent")
+                        .AddDefaultComponentRenderer();
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
+
+        TestServer startedServer = _factory.Server;
+    }
 
     [Fact]
     public async Task SitecoreLayoutModelBinders_BindDataCorrectly()
@@ -42,7 +75,7 @@ public class CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebA
             Content = new StringContent(jObject!.ToJsonString(Serializer.GetOptions()))
         });
 
-        HttpClient client = BuildCustomModelContextBindingWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -79,37 +112,7 @@ public class CustomModelContextBindingFixture(TestWebApplicationFactory<TestWebA
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildCustomModelContextBindingWebApplicationFactory()
-    {
-        return factory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    services
-                        .AddSitecoreLayoutService()
-                        .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                        .AsDefaultHandler();
-                    services.AddSitecoreRenderingEngine(options =>
-                    {
-                        options
-                            .AddModelBoundView<ComponentModels.CustomModelContextComponent>(name => name.Equals("Custom-Model-Context-Component", StringComparison.OrdinalIgnoreCase), "CustomModelContextComponent")
-                            .AddDefaultComponentRenderer();
-                    });
-                });
-
-                builder.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseSitecoreRenderingEngine();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapDefaultControllerRoute();
-                    });
-                });
-            });
     }
 }

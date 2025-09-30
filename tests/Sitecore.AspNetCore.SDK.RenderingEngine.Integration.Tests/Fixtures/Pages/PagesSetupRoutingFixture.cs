@@ -11,13 +11,58 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Pages;
 
-public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>
+public class PagesSetupRoutingFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSitecoreLayoutService()
+                    .AddSitecorePagesHandler()
+                    .AddGraphQLWithContextHandler("default", TestConstants.ContextId, siteName: TestConstants.SiteName)
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                    {
+                        options.AddDefaultPartialView("_ComponentNotFound");
+                    })
+                    .WithSitecorePages(TestConstants.ContextId, options => { options.EditingSecret = TestConstants.JssEditingSecret; });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseMiddleware<PagesRenderMiddleware>();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllerRoute(
+                        name: "default",
+                        pattern: "{controller=Pages}/{action=Index}");
+
+                    endpoints.MapControllerRoute(
+                        "pages-config",
+                        TestConstants.ConfigRoute,
+                        new { controller = "PagesSetup", action = "Config" });
+
+                    endpoints.MapControllerRoute(
+                        "pages-render",
+                        TestConstants.RenderRoute,
+                        new { controller = "PagesSetup", action = "Render" });
+                });
+            });
+        });
+        TestServer startedServer = _factory.Server;
+    }
+
     [Fact]
     public async Task ConfigRoute_MissingSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret=";
 
         // Act
@@ -32,7 +77,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task ConfigRoute_InvalidSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret=invalid_secret_value";
 
         // Act
@@ -47,7 +92,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task ConfigRoute_InvalidRequestOrigin_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret={TestConstants.JssEditingSecret}";
         client.DefaultRequestHeaders.Add("Origin", "http://invalid_origin_domain.com");
 
@@ -63,7 +108,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task ConfigRoute_ValidCall_ReturnsCorrectObject()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.ConfigRoute}?secret={TestConstants.JssEditingSecret}";
         client.DefaultRequestHeaders.Add("Origin", "https://pages.sitecorecloud.io");
 
@@ -84,7 +129,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task RenderRoute_MissingSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.RenderRoute}?secret=";
 
         // Act
@@ -99,7 +144,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task RenderRoute_InvalidSecret_ReturnsBadRequest()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string url = $"{TestConstants.RenderRoute}?secret=invalid_secret_value";
 
         // Act
@@ -114,7 +159,7 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
     public async Task RenderRoute_ValidCall_ReturnsCorrectResponse()
     {
         // Arrange
-        HttpClient client = BuildPagesWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         Guid itemId = Guid.NewGuid();
         string language = "en";
         string layoutKind = "final";
@@ -133,46 +178,9 @@ public class PagesSetupRoutingFixture(TestWebApplicationFactory<TestWebApplicati
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
     }
 
-    private WebApplicationFactory<TestWebApplicationProgram> BuildPagesWebApplicationFactory()
+    public void Dispose()
     {
-        return factory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    services.AddSitecoreLayoutService()
-                        .AddSitecorePagesHandler()
-                        .AddGraphQLWithContextHandler("default", TestConstants.ContextId, siteName: TestConstants.SiteName)
-                        .AsDefaultHandler();
-
-                    services.AddSitecoreRenderingEngine(options =>
-                        {
-                            options.AddDefaultPartialView("_ComponentNotFound");
-                        })
-                        .WithSitecorePages(TestConstants.ContextId, options => { options.EditingSecret = TestConstants.JssEditingSecret; });
-                });
-
-                builder.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseMiddleware<PagesRenderMiddleware>();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapControllerRoute(
-                            name: "default",
-                            pattern: "{controller=Pages}/{action=Index}");
-
-                        endpoints.MapControllerRoute(
-                            "pages-config",
-                            TestConstants.ConfigRoute,
-                            new { controller = "PagesSetup", action = "Config" });
-
-                        endpoints.MapControllerRoute(
-                            "pages-render",
-                            TestConstants.RenderRoute,
-                            new { controller = "PagesSetup", action = "Render" });
-                    });
-                });
-            });
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

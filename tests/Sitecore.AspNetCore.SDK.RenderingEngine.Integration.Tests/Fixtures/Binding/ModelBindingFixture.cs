@@ -11,10 +11,34 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Binding;
 
-public class ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory) : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
+public class ModelBindingFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+                services.AddSitecoreRenderingEngine();
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
+    }
 
     [Fact]
     public async Task SitecoreRouteModelBinding_ReturnsCorrectData()
@@ -25,7 +49,7 @@ public class ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationPro
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildModelBindingWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreRoute");
 
         // assert that the SitecoreRouteProperty attribute binding worked
@@ -47,7 +71,7 @@ public class ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationPro
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildModelBindingWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreContext");
 
         // assert that the SitecoreContextProperty attribute binding worked
@@ -67,7 +91,7 @@ public class ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationPro
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = BuildModelBindingWebApplicationFactory().CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreResponse");
 
         // assert that the SitecoreLayoutResponse attribute binding worked
@@ -77,29 +101,7 @@ public class ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationPro
     public void Dispose()
     {
         _mockClientHandler.Dispose();
+        _factory?.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private WebApplicationFactory<TestWebApplicationProgram> BuildModelBindingWebApplicationFactory()
-    {
-        return factory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    services
-                        .AddSitecoreLayoutService()
-                        .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                        .AsDefaultHandler();
-                    services.AddSitecoreRenderingEngine();
-                });
-
-                builder.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseSitecoreRenderingEngine();
-                    app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
-                });
-            });
     }
 }
