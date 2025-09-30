@@ -64,27 +64,7 @@ public class ExperienceEditorCustomRoutingFixture : IDisposable
         {
             builder.ConfigureTestServices(services =>
             {
-                ISitecoreLayoutClient layoutClientSub = Substitute.For<ISitecoreLayoutClient>();
-                SitecoreLayoutRequest sampleRequest = [];
-                SitecoreLayoutResponse sampleResponse = new(sampleRequest)
-                {
-                    Content = new SitecoreLayoutResponseContent
-                    {
-                        Sitecore = new SitecoreData
-                        {
-                            Route = new Route
-                            {
-                                DatabaseName = "master"
-                            }
-                        },
-                        ContextRawData = string.Empty
-                    }
-                };
-
-                layoutClientSub.Request(Arg.Any<SitecoreLayoutRequest>())
-                    .Returns(Task.FromResult(sampleResponse));
-
-                services.AddSingleton(layoutClientSub);
+                services.AddSingleton(Substitute.For<ISitecoreLayoutClient>());
                 services.AddRouting();
                 services.AddSitecoreLayoutService();
                 services.AddControllersWithViews();
