@@ -49,7 +49,7 @@ public class MultipleComponentsAddedFixture : IClassFixture<TestWebApplicationFa
         });
 
         // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
-        TestServer startedServer = _factory.Server;
+        _ = _factory.Server;
     }
 
     [Fact]
