@@ -46,7 +46,7 @@ public class EdgeSitemapProxyFixture : IClassFixture<TestWebApplicationFactory<T
                             {
                                 SiteInfo = new SiteInfo
                                 {
-                                    Sitemap = new[] { _edgeSitemapUrl.ToString() }
+                                    Sitemap = [_edgeSitemapUrl.ToString()]
                                 }
                             }
                         }
