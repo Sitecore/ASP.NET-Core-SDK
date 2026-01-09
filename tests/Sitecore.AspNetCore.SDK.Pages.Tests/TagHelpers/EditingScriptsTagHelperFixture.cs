@@ -54,7 +54,7 @@ public class EditingScriptsTagHelperFixture
 
     [Theory]
     [AutoNSubstituteData]
-    public async Task ProcessAsync_NoSitecoreContenxt_ExceptionIsThrown(EditingScriptsTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
+    public async Task ProcessAsync_NoSitecoreContext_EmptyResult(EditingScriptsTagHelper sut, TagHelperContext tagHelperContext, TagHelperOutput tagHelperOutput)
     {
         // Arrange
         ViewContext viewContext = new()
@@ -66,10 +66,10 @@ public class EditingScriptsTagHelperFixture
         sut.ViewContext = viewContext;
 
         // Act
-        Func<Task> act = async () => await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
+        await sut.ProcessAsync(tagHelperContext, tagHelperOutput);
 
         // Assert
-        await act.Should().ThrowAsync<NullReferenceException>();
+        tagHelperOutput.Content.GetContent().Should().BeEmpty();
     }
 
     [Theory]
