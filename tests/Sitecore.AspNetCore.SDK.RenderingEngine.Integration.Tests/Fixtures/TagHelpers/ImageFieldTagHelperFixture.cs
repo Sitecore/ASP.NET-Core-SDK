@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using AwesomeAssertions;
 using HtmlAgilityPack;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -11,24 +13,24 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class ImageFieldTagHelperFixture : IDisposable
+public class ImageFieldTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    public ImageFieldTagHelperFixture()
+    public ImageFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine(options =>
+
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options
                         .AddModelBoundView<ComponentModels.ComponentWithImages>("Component-With-Images", "ComponentWithImages")
@@ -36,8 +38,11 @@ public class ImageFieldTagHelperFixture : IDisposable
                         .AddModelBoundView<ComponentModels.Component2>("Component-2", "Component2")
                         .AddDefaultComponentRenderer();
                 });
-            })
-            .Configure(app =>
+
+                services.AddControllersWithViews();
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseSitecoreRenderingEngine();
@@ -46,8 +51,10 @@ public class ImageFieldTagHelperFixture : IDisposable
                     endpoints.MapDefaultControllerRoute();
                 });
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
+        _ = _factory.Server;
     }
 
     [Fact]
@@ -60,7 +67,7 @@ public class ImageFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -84,7 +91,7 @@ public class ImageFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -108,7 +115,7 @@ public class ImageFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -132,7 +139,7 @@ public class ImageFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -159,7 +166,7 @@ public class ImageFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.EditablePage))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -218,7 +225,7 @@ public class ImageFieldTagHelperFixture : IDisposable
     public void Dispose()
     {
         _mockClientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

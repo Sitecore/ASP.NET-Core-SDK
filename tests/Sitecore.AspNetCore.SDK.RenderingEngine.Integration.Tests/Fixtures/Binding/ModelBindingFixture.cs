@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -10,31 +11,33 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Binding;
 
-public class ModelBindingFixture : IDisposable
+public class ModelBindingFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
-    public ModelBindingFixture()
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public ModelBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
             {
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine();
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
+                services.AddSitecoreRenderingEngine();
             });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
     }
 
     [Fact]
@@ -46,7 +49,7 @@ public class ModelBindingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreRoute");
 
         // assert that the SitecoreRouteProperty attribute binding worked
@@ -68,7 +71,7 @@ public class ModelBindingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreContext");
 
         // assert that the SitecoreContextProperty attribute binding worked
@@ -88,7 +91,7 @@ public class ModelBindingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithBoundSitecoreResponse");
 
         // assert that the SitecoreLayoutResponse attribute binding worked
@@ -97,8 +100,8 @@ public class ModelBindingFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
+        _factory?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

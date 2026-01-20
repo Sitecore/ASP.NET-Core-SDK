@@ -1,55 +1,34 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.ExperienceEditor.Extensions;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Request;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Response;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Serialization;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
 using Sitecore.AspNetCore.SDK.TestData;
 using Xunit;
+using Route = Sitecore.AspNetCore.SDK.LayoutService.Client.Response.Model.Route;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.ExperienceEditor;
 
 public class ExperienceEditorCustomRoutingFixture : IDisposable
 {
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     public ExperienceEditorCustomRoutingFixture()
     {
-        TestServerBuilder testHostBuilder = new();
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder.AddSingleton(Substitute.For<ISitecoreLayoutClient>());
-                builder.AddSitecoreRenderingEngine(options =>
-                {
-                    options.AddDefaultComponentRenderer();
-                }).WithExperienceEditor(options =>
-                {
-                    options.Endpoint = TestConstants.EEMiddlewarePostEndpoint;
-                    options.JssEditingSecret = TestConstants.JssEditingSecret;
-
-                    options.MapToRequest((sitecoreResponse, scPath, httpRequest) =>
-                        httpRequest.Path = scPath + "/" + sitecoreResponse.Sitecore?.Route?.DatabaseName);
-                });
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreExperienceEditor();
-                app.UseRouting();
-                app.UseSitecoreRenderingEngine();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapFallbackToController("Default", "Home");
-                });
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildExperienceEditorCustomRoutingWebApplicationFactory();
     }
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -57,7 +36,7 @@ public class ExperienceEditorCustomRoutingFixture : IDisposable
     public async Task EECustomRoute_MapsToCorrectRoute_WhenCustomRouteSetInOptions()
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         StringContent content = new(TestConstants.EESampleRequest);
 
         // Act
@@ -75,5 +54,44 @@ public class ExperienceEditorCustomRoutingFixture : IDisposable
         responseString.Should().Contain("{\"html\":\"");
         responseString.Should().EndWith("}");
         responseString.Should().Contain("master");
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildExperienceEditorCustomRoutingWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton(Substitute.For<ISitecoreLayoutClient>());
+                services.AddRouting();
+                services.AddSitecoreLayoutService();
+                services.AddControllersWithViews();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options.AddDefaultComponentRenderer();
+                }).WithExperienceEditor(options =>
+                {
+                    options.Endpoint = TestConstants.EEMiddlewarePostEndpoint;
+                    options.JssEditingSecret = TestConstants.JssEditingSecret;
+
+                    options.MapToRequest((sitecoreResponse, scPath, httpRequest) =>
+                        httpRequest.Path = scPath + "/" + sitecoreResponse.Sitecore?.Route?.DatabaseName);
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseSitecoreExperienceEditor();
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapFallbackToController("Default", "Home");
+                });
+            });
+        });
     }
 }

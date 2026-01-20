@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Mocks;
@@ -8,45 +9,47 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.SearchOptimization;
 
-public class SitemapProxyFixture : IDisposable
+public class SitemapProxyFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
     private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _cdInstanceUri = new("http://cd");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    public SitemapProxyFixture()
+    public SitemapProxyFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        _mockClientHandler.Responses.Push(new HttpResponseMessage
+        _factory = factory.WithWebHostBuilder(builder =>
         {
-            StatusCode = HttpStatusCode.OK
-        });
-
-        TestServerBuilder testHostBuilder = new();
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
+            _mockClientHandler.Responses.Push(new HttpResponseMessage
             {
-                builder.AddSingleton<IHttpClientFactory>(_ =>
+                StatusCode = HttpStatusCode.OK
+            });
+
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IHttpClientFactory>(_ =>
                 {
                     return new CustomHttpClientFactory(
-                        () =>
-                            new HttpClient(_mockClientHandler));
+                        () => new HttpClient(_mockClientHandler));
                 });
 
-                builder.AddSitemap(c => c.Url = _cdInstanceUri);
-            })
-            .Configure(app =>
+                services.AddSitemap(c => c.Url = _cdInstanceUri);
+            });
+
+            builder.Configure(app =>
             {
                 app.UseSitemap();
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
+        _ = _factory.Server;
     }
 
     [Fact]
     public async Task SitemapRequest_MustBeProxied()
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/sitemap.xml", UriKind.Relative));
 
         // Act
@@ -61,8 +64,8 @@ public class SitemapProxyFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

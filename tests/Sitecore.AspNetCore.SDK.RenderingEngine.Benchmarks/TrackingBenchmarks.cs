@@ -2,13 +2,14 @@
 using System.Net;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
+using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
-using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
 using Sitecore.AspNetCore.SDK.TestData;
 using Sitecore.AspNetCore.SDK.Tracking;
 using Sitecore.AspNetCore.SDK.Tracking.VisitorIdentification;
@@ -21,7 +22,7 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 [ExcludeFromCodeCoverage]
 public class TrackingBenchmarks : IDisposable
 {
-    private TestServer? _server;
+    private WebApplicationFactory<TestWebApplicationProgram>? _factory;
     private HttpClient? _client;
     private MockHttpMessageHandler? _mockClientHandler;
     private RenderingEngineBenchmarks? _baseLineTestInstance;
@@ -29,23 +30,25 @@ public class TrackingBenchmarks : IDisposable
     [GlobalSetup(Target = nameof(RegularHomePageRequestWithTracking))]
     public void TrackingBenchmarksSetup()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+
+        _factory = new WebApplicationFactory<TestWebApplicationProgram>()
+            .WithWebHostBuilder(builder =>
             {
-                builder.Configure<ForwardedHeadersOptions>(options =>
+                builder.ConfigureServices(services =>
                 {
-                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                                               ForwardedHeaders.XForwardedProto;
-                });
+                    services.Configure<ForwardedHeadersOptions>(options =>
+                    {
+                        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                                                   ForwardedHeaders.XForwardedProto;
+                    });
 
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = new Uri("http://layout.service") })
-                    .AsDefaultHandler();
+                    ISitecoreLayoutClientBuilder layoutBuilder = services.AddSitecoreLayoutService();
+                    layoutBuilder
+                        .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler!) { BaseAddress = new Uri("http://layout.service") })
+                        .AsDefaultHandler();
 
-                builder.AddSitecoreRenderingEngine(options =>
+                    services.AddSitecoreRenderingEngine(options =>
                     {
                         options.AddDefaultComponentRenderer();
                     }).ForwardHeaders(options =>
@@ -66,22 +69,15 @@ public class TrackingBenchmarks : IDisposable
                     })
                     .WithTracking();
 
-                builder.AddSitecoreVisitorIdentification(options =>
-                {
-                    options.SitecoreInstanceUri = new Uri("http://layout.service");
+                    services.AddSitecoreVisitorIdentification(options =>
+                    {
+                        options.SitecoreInstanceUri = new Uri("http://layout.service");
+                    });
+                    services.AddSingleton<IStartupFilter, PipelineStartupFilter>();
                 });
-            })
-            .Configure(app =>
-            {
-                app.UseForwardedHeaders();
-                app.UseRouting();
-                app.UseSitecoreVisitorIdentification();
-                app.UseSitecoreRenderingEngine();
             });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
-
-        _client = _server.CreateClient();
+        _client = _factory.CreateClient();
     }
 
     [GlobalSetup(Target = nameof(RegularHomePageRequest))]
@@ -119,10 +115,25 @@ public class TrackingBenchmarks : IDisposable
 
     public void Dispose()
     {
-        _server?.Dispose();
         _client?.Dispose();
+        _factory?.Dispose();
         _mockClientHandler?.Dispose();
         _baseLineTestInstance?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private class PipelineStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+        {
+            return app =>
+            {
+                app.UseForwardedHeaders();
+                app.UseRouting();
+                app.UseSitecoreVisitorIdentification();
+                app.UseSitecoreRenderingEngine();
+                next(app);
+            };
+        }
     }
 }
