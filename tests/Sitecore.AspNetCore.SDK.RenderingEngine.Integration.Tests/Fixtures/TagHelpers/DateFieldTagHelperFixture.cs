@@ -93,8 +93,8 @@ public class DateFieldTagHelperFixture : IDisposable
         HtmlNode? sectionNode = doc.DocumentNode.ChildNodes.First(n => n.HasClass("component-with-dates"));
 
         // Assert
-        sectionNode.ChildNodes[1].InnerHtml.Should().Be("05/04/2012");
-        sectionNode.ChildNodes[3].InnerHtml.Should().Be("05/04/2012 00:00:00");
+        sectionNode.ChildNodes[1].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString("MM/dd/yyyy", CultureInfo.CurrentCulture));
+        sectionNode.ChildNodes[3].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString("MM/dd/yyyy HH:mm:ss", CultureInfo.CurrentCulture));
         sectionNode.ChildNodes[5].InnerHtml.Should().Be(TestConstants.DateTimeValue.ToString(CultureInfo.CurrentCulture));
         sectionNode.ChildNodes[9].InnerHtml.Should().Contain("04.05.2012");
     }
