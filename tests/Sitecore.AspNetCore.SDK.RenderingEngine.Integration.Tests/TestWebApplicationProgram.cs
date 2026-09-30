@@ -1,22 +1,26 @@
 ﻿using Sitecore.AspNetCore.SDK.GraphQL.Extensions;
 using Sitecore.AspNetCore.SDK.TestData;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRouting()
-                .AddMvc();
-
-builder.Services.AddGraphQLClient(configuration =>
-{
-    configuration.ContextId = TestConstants.ContextId;
-});
-
-WebApplication app = builder.Build();
-app.Start();
+namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
 
 /// <summary>
-/// Partial class allowing this TestProgram to be created by a WebApplicationFactory for integration testing.
+/// Entry point created by <see cref="Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory{TEntryPoint}" /> for integration testing.
 /// </summary>
 public partial class TestWebApplicationProgram
 {
+    public static void Main(string[] args)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddRouting()
+                        .AddMvc();
+
+        builder.Services.AddGraphQLClient(configuration =>
+        {
+            configuration.ContextId = TestConstants.ContextId;
+        });
+
+        WebApplication app = builder.Build();
+        app.Start();
+    }
 }
