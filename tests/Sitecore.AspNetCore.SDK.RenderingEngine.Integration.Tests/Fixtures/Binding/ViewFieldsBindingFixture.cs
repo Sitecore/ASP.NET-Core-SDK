@@ -1,4 +1,5 @@
-﻿using System.Net;
+using System.Globalization;
+using System.Net;
 using AwesomeAssertions;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -79,7 +80,8 @@ public class ViewFieldsBindingFixture : IClassFixture<TestWebApplicationFactory<
         sectionNode.ChildNodes.First(n => n.Name.Equals("p", StringComparison.OrdinalIgnoreCase)).InnerText
             .Should().BeEmpty();
 
-        sectionNode.ChildNodes.First(n => n.Name.Equals("textarea", StringComparison.OrdinalIgnoreCase)).InnerText.Should().Contain("12/12/2019");
+        DateTime expectedDate = DateTime.Parse("12.12.19", CultureInfo.InvariantCulture);
+        sectionNode.ChildNodes.First(n => n.Name.Equals("textarea", StringComparison.OrdinalIgnoreCase)).InnerText.Should().Contain(expectedDate.ToString("MM/dd/yyyy", CultureInfo.CurrentCulture));
 
         sectionNode.ChildNodes.First(n => n.Name.Equals("span", StringComparison.OrdinalIgnoreCase)).InnerHtml
             .Should().Be(TestConstants.TestMultilineFieldValue.Replace(Environment.NewLine, "<br>", StringComparison.OrdinalIgnoreCase));

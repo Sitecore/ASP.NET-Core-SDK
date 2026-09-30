@@ -25,13 +25,12 @@ namespace Sitecore.AspNetCore.SDK.Pages.TagHelpers
         /// <inheritdoc />
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
-            ISitecoreRenderingContext renderingContext = ViewContext?.HttpContext.GetSitecoreRenderingContext() ??
-                                             throw new NullReferenceException(Resources.Exception_EditingScriptsTagHelperSitecoreRenderingContextNull);
+            ISitecoreRenderingContext? renderingContext = ViewContext?.HttpContext.GetSitecoreRenderingContext();
 
             output.TagName = string.Empty;
             string html = string.Empty;
 
-            if (renderingContext.Response?.Content?.Sitecore?.Context?.IsEditing ?? false)
+            if (renderingContext?.Response?.Content?.Sitecore?.Context?.IsEditing ?? false)
             {
                 EditingContext? editingContext = JsonSerializer.Deserialize<EditingContext>(renderingContext.Response?.Content.ContextRawData ?? string.Empty);
                 if (editingContext == null)

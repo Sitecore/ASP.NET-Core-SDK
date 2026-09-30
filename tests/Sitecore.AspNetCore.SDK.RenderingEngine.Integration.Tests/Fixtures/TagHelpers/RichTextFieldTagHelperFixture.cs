@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Globalization;
+using System.Net;
 using System.Text.Encodings.Web;
 using AwesomeAssertions;
 using HtmlAgilityPack;
@@ -74,7 +75,8 @@ public class RichTextFieldTagHelperFixture : IClassFixture<TestWebApplicationFac
 
         // Assert
         // check scenario that RichTextTagHelper does not reset values of another helpers.
-        sectionNode.ChildNodes.First(n => n.Name.Equals("textarea", StringComparison.OrdinalIgnoreCase)).InnerText.Should().Contain("12/12/2019");
+        DateTime expectedDate = DateTime.Parse("12.12.19", CultureInfo.InvariantCulture);
+        sectionNode.ChildNodes.First(n => n.Name.Equals("textarea", StringComparison.OrdinalIgnoreCase)).InnerText.Should().Contain(expectedDate.ToString("MM/dd/yyyy", CultureInfo.CurrentCulture));
     }
 
     [Fact]

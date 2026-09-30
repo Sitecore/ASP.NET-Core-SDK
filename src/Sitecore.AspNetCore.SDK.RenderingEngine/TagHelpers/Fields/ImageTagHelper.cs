@@ -29,6 +29,8 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     private const string VSpaceAttribute = "vspace";
     private const string TitleAttribute = "title";
     private const string BorderAttribute = "border";
+    private const string SrcSetAttribute = "srcset";
+    private const string SizesAttribute = "sizes";
     private readonly IEditableChromeRenderer _chromeRenderer = chromeRenderer ?? throw new ArgumentNullException(nameof(chromeRenderer));
 
     /// <summary>
@@ -52,6 +54,19 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
     /// Gets or sets parameters that are passed to Sitecore to perform server-side resizing of the image.
     /// </summary>
     public object? ImageParams { get; set; }
+
+    /// <summary>
+    /// Gets or sets the srcset configurations for responsive images.
+    /// Supports: object[] (anonymous objects) or Dictionary arrays.
+    /// Each item should contain width parameters like { mw = 300 }, { w = 100 }.
+    /// </summary>
+    public object? SrcSet { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sizes attribute for responsive images.
+    /// Example: "(min-width: 960px) 300px, 100px".
+    /// </summary>
+    public string? Sizes { get; set; }
 
     /// <inheritdoc/>
     public override void Process(TagHelperContext context, TagHelperOutput output)
@@ -98,6 +113,20 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             {
                 output.Attributes.Add(ScrAttribute, field.GetMediaLink(ImageParams));
 
+                if (SrcSet != null)
+                {
+                    string srcSetValue = GenerateSrcSetAttribute(field);
+                    if (!string.IsNullOrEmpty(srcSetValue))
+                    {
+                        output.Attributes.Add(SrcSetAttribute, srcSetValue);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Sizes))
+                {
+                    output.Attributes.Add(SizesAttribute, Sizes);
+                }
+
                 if (!string.IsNullOrWhiteSpace(field.Value.Alt))
                 {
                     output.Attributes.Add(AltAttribute, field.Value.Alt);
@@ -141,6 +170,42 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         }
     }
 
+    private static string? GetWidthDescriptor(object? parameters)
+    {
+        if (parameters == null)
+        {
+            return null;
+        }
+
+        IDictionary<string, object> dictionary = HtmlHelper.AnonymousObjectToHtmlAttributes(parameters);
+
+        // Priority: w > mw > width > maxWidth (matching Content SDK behavior + legacy support)
+        string? width = null;
+        if (dictionary.TryGetValue("w", out object? wValue))
+        {
+            width = wValue.ToString();
+        }
+        else if (dictionary.TryGetValue("mw", out object? mwValue))
+        {
+            width = mwValue.ToString();
+        }
+        else if (dictionary.TryGetValue("width", out object? widthValue))
+        {
+            width = widthValue.ToString();
+        }
+        else if (dictionary.TryGetValue("maxWidth", out object? maxWidthValue))
+        {
+            width = maxWidthValue.ToString();
+        }
+
+        if (width != null && int.TryParse(width, out int widthValueInt) && widthValueInt <= 0)
+        {
+            return null;
+        }
+
+        return width != null ? $"{width}w" : null;
+    }
+
     private TagBuilder GenerateImage(ImageField imageField, TagHelperOutput output)
     {
         Image image = imageField.Value;
@@ -152,6 +217,20 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
         if (!string.IsNullOrWhiteSpace(image.Src))
         {
             tagBuilder.Attributes.Add(ScrAttribute, imageField.GetMediaLink(ImageParams));
+
+            if (SrcSet != null)
+            {
+                string srcSetValue = GenerateSrcSetAttribute(imageField);
+                if (!string.IsNullOrEmpty(srcSetValue))
+                {
+                    tagBuilder.Attributes.Add(SrcSetAttribute, srcSetValue);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Sizes))
+            {
+                tagBuilder.Attributes.Add(SizesAttribute, Sizes);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(image.Alt))
@@ -230,8 +309,52 @@ public class ImageTagHelper(IEditableChromeRenderer chromeRenderer) : TagHelper
             }
 
             imageNode.SetAttributeValue(ScrAttribute, imageField.GetMediaLink(ImageParams));
+
+            if (SrcSet != null)
+            {
+                string srcSetValue = GenerateSrcSetAttribute(imageField);
+                if (!string.IsNullOrEmpty(srcSetValue))
+                {
+                    imageNode.SetAttributeValue(SrcSetAttribute, srcSetValue);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Sizes))
+            {
+                imageNode.SetAttributeValue(SizesAttribute, Sizes);
+            }
         }
 
         return new HtmlString(doc.DocumentNode.OuterHtml);
+    }
+
+    private string GenerateSrcSetAttribute(ImageField imageField)
+    {
+        if (SrcSet is not object[] parsedSrcSet || parsedSrcSet.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        List<string> srcSetEntries = [];
+
+        foreach (object srcSetItem in parsedSrcSet)
+        {
+            // Get width descriptor first to check if this entry should be included
+            string? descriptor = GetWidthDescriptor(srcSetItem);
+            if (descriptor == null)
+            {
+                // Skip entries without valid width parameters (matching Content SDK behavior)
+                continue;
+            }
+
+            // Use GetMediaLinkForSrcSet to preserve existing URL parameters (like ttc, tt, hash, quality, format) because in preview context id the images doesn't get loaded with src-set implementation
+            string? mediaUrl = imageField.GetMediaLinkForSrcSet(ImageParams, srcSetItem);
+            if (!string.IsNullOrEmpty(mediaUrl))
+            {
+                srcSetEntries.Add($"{mediaUrl} {descriptor}");
+            }
+        }
+
+        return string.Join(", ", srcSetEntries);
     }
 }

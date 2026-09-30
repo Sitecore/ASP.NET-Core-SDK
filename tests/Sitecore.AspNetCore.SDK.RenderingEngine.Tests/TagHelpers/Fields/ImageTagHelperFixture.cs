@@ -739,6 +739,420 @@ public class ImageTagHelperFixture
         chromeRenderer.Received().Render(closingChrome);
     }
 
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_ScImgTagWithSrcSet_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { w = 400 }, new { w = 200 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue("srcset attribute should be present in the HTML");
+
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        // Verify each entry precisely with preserved query parameters and new width parameters
+        srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=400 400w");
+        srcsetValue.Should().Contain("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=200 200w");
+
+        string[] entries = srcsetValue.Split(", ");
+        entries.Should().HaveCount(2);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithContentSDKBehavior_MatchesExpectedOutput(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.ImageParams = new { h = 1000 }; // Base parameters
+        sut.SrcSet = new object[] { new { h = 1000, w = 1000 }, new { mh = 250, mw = 250 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify exact srcset format
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(2);
+        entries[0].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&h=1000&w=1000 1000w");
+        entries[1].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&h=1000&mh=250&mw=250 250w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithoutValidWidth_FiltersEntries(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { h = 1000 }, new { mw = 250 }, new { quality = 80 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify exact entry
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=250 250w");
+
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(1);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_EditableImageWithSrcSet_MergesSrcSetIntoEditableMarkup(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        ImageField imageField = new(_image)
+        {
+            EditableMarkup = "<img src=\"/sitecore/shell/-/jssmedia/styleguide/data/media/img/sc_logo.png\" alt=\"Sitecore Logo\" />"
+        };
+
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(imageField);
+        sut.SrcSet = new object[] { new { mw = 600 }, new { mw = 300 } };
+        sut.Sizes = "(min-width: 768px) 600px, 300px";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+
+        // Extract srcset and sizes using regex for full string comparison
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue();
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        System.Text.RegularExpressions.Match sizesMatch = System.Text.RegularExpressions.Regex.Match(content, "sizes=\"([^\"]*)\"");
+        sizesMatch.Success.Should().BeTrue();
+        string sizesValue = sizesMatch.Groups[1].Value;
+
+        // Full string comparison
+        srcsetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=600 600w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=300 300w");
+        sizesValue.Should().Be("(min-width: 768px) 600px, 300px");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithMixedParameterTypes_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = RenderingEngineConstants.SitecoreTagHelpers.ImageHtmlTag;
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 800 },  // Anonymous object with 'w'
+            new { mw = 400 }, // Anonymous object with 'mw'
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        string content = tagHelperOutput.Content.GetContent();
+
+        // Extract srcset using regex for full string comparison
+        System.Text.RegularExpressions.Match srcsetMatch = System.Text.RegularExpressions.Regex.Match(content, "srcset=\"([^\"]*)\"");
+        srcsetMatch.Success.Should().BeTrue();
+        string srcsetValue = srcsetMatch.Groups[1].Value;
+
+        // Full string comparison
+        srcsetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;w=800 800w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&amp;hash=F313AD90AE547CAB09277E42509E289B&amp;mw=400 400w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithImageParamsConflict_SrcSetParametersArePreferred(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.ImageParams = new { w = 1000, quality = 50, format = "jpg" };
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify SrcSet parameters are preferred over ImageParams
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75&format=jpg 320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithWidthParameterPriority_UsesCorrectPrecedence(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange - Test priority: w > mw > width > maxWidth
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 100, mw = 200, width = 300, maxWidth = 400 }, // Should use w=100
+            new { mw = 200, width = 300, maxWidth = 400 }, // Should use mw=200
+            new { width = 300, maxWidth = 400 }, // Should use width=300
+            new { maxWidth = 400 } // Should use maxWidth=400
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify parameter priority
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(4);
+        entries[0].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=100&mw=200&width=300&maxWidth=400 100w");
+        entries[1].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=200&width=300&maxWidth=400 200w");
+        entries[2].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&width=300&maxWidth=400 300w");
+        entries[3].Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&maxWidth=400 400w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithZeroOrNegativeWidths_SkipsInvalidEntries(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 0, quality = 75 },    // Should skip
+            new { w = -100, quality = 80 }, // Should skip
+            new { w = 320, quality = 75 },  // Should include
+            new { quality = 90 } // Should skip - no width
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify only valid entry remains
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w");
+
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(1);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithExistingUrlParameters_PreservesAndMergesParameters(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        Image imageWithParams = new Image
+        {
+            Src = "https://edge.sitecorecloud.io/media/image.jpg?h=2001&iar=0&hash=abc123&w=3000",
+            Alt = "Test Image"
+        };
+
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(imageWithParams));
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify parameters are preserved and merged
+        srcSetValue.Should().Be("https://edge.sitecorecloud.io/media/image.jpg?h=2001&iar=0&hash=abc123&w=320&quality=75 320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithMediaUrlTransformation_TransformsCorrectly(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        Image imageWithMediaUrl = new Image
+        {
+            Src = "/~/media/images/test.jpg",
+            Alt = "Test Image"
+        };
+
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(imageWithMediaUrl));
+        sut.SrcSet = new object[] { new { w = 320, quality = 75 } };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify URL transformation
+        srcSetValue.Should().Be("/~/jssmedia/images/test.jpg?w=320&quality=75 320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithNullAndEmptyEntries_HandlesGracefully(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object?[]
+        {
+            new { w = 320, quality = 75 },
+            null, // Should skip
+            new { w = 480, quality = 80 },
+            new { } // Should skip - no width parameter
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify only valid entries remain
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=480&quality=80 480w");
+
+        string[] entries = srcSetValue.Split(", ");
+        entries.Should().HaveCount(2);
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithComplexParameters_HandlesAllParameters(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new { w = 320, quality = 75, format = "webp", dpr = 2, fit = "crop" }
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify all parameters are included
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75&format=webp&dpr=2&fit=crop 320w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithDictionaryParameters_GeneratesSrcSetAttribute(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[]
+        {
+            new Dictionary<string, object> { { "w", 320 }, { "quality", 75 } },
+            new Dictionary<string, object> { { "mw", 480 }, { "quality", 80 } }
+        };
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+
+        // Full string comparison - verify dictionary parameters
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320&quality=75 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&mw=480&quality=80 480w");
+    }
+
+    [Theory]
+    [AutoNSubstituteData]
+    public void Process_SrcSetWithSizesAttribute_AddsBothAttributes(
+        ImageTagHelper sut,
+        TagHelperContext tagHelperContext,
+        TagHelperOutput tagHelperOutput)
+    {
+        // Arrange
+        tagHelperOutput.TagName = "img";
+        sut.For = GetModelExpression(new ImageField(_image));
+        sut.SrcSet = new object[] { new { w = 320 }, new { w = 480 } };
+        sut.Sizes = "(min-width: 768px) 480px, 320px";
+
+        // Act
+        sut.Process(tagHelperContext, tagHelperOutput);
+
+        // Assert
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "srcset");
+        tagHelperOutput.Attributes.Should().ContainSingle(a => a.Name == "sizes");
+
+        string srcSetValue = tagHelperOutput.Attributes["srcset"].Value.ToString()!;
+        string sizesValue = tagHelperOutput.Attributes["sizes"].Value.ToString()!;
+
+        // Full string comparison
+        srcSetValue.Should().Be("http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=320 320w, http://styleguide/-/jssmedia/styleguide/data/media/img/sc_logo.png?iar=0&hash=F313AD90AE547CAB09277E42509E289B&w=480 480w");
+        sizesValue.Should().Be("(min-width: 768px) 480px, 320px");
+    }
+
     private static ModelExpression GetModelExpression(Field model)
     {
         DefaultModelMetadata? modelMetadata = Substitute.For<DefaultModelMetadata>(
