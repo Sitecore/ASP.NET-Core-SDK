@@ -194,7 +194,7 @@ public class ImageFieldTagHelperFixture : IClassFixture<TestWebApplicationFactor
             Content = new StringContent(Serializer.Serialize(CannedResponses.PageWithPreview))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
