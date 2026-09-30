@@ -1,4 +1,5 @@
 ﻿using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -14,50 +15,19 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 public class RequestDefaultsConfigurationFixture : IDisposable
 {
     private readonly MockHttpMessageHandler _clientHandler;
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     public RequestDefaultsConfigurationFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _clientHandler = new MockHttpMessageHandler();
-
-        testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                ISitecoreLayoutClientBuilder lsc = builder
-                    .AddSitecoreLayoutService()
-                    .WithDefaultRequestOptions(request =>
-                    {
-                        request["key1"] = "value1";
-                        request["key2"] = "value2";
-                    });
-
-                lsc.AddHttpHandler("mock", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") })
-                    .WithRequestOptions(request =>
-                    {
-                        request["key1"] = "value3";
-                        request["key3"] = "value4";
-                    })
-                    .AsDefaultHandler();
-
-                lsc.AddHttpHandler("mockwithoutoptions", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") });
-
-                builder
-                    .AddSitecoreRenderingEngine(options => options.MapToRequest((http, sc) => { sc.Path(http.Path); }));
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildRequestDefaultsConfigurationWebApplicationFactory();
     }
 
     [Fact]
     public async Task Request_OnlyGlobalOptionsProvided_FinalRequestUsesGlobalOptions()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("test");
@@ -74,7 +44,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_OnlyHandlerOptionsProvided_FinalRequestUsesHandlerOptions()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = [];
 
@@ -90,7 +60,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_OnlyRequestParameterProvided_FinalRequestUsesRequestParameter()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new()
         {
@@ -109,7 +79,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_GlobalAndHandlerOptionsProvided_FinalRequestUsesHandlerOptions()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = [];
 
@@ -125,7 +95,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_GlobalOptionsAndRequestParametersProvided_FinalRequestUsesRequestParameters()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new() { { "key2", "requestvalue" } };
 
@@ -141,7 +111,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_GlobalAndHandlerOptionsAndRequestParametersProvided_FinalRequestUsesRequestParameters()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new() { { "key1", "requestvalue" } };
 
@@ -157,7 +127,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_GlobalAndHandlerAndRequestSetDifferentParameters_FinalRequestUsesAllParameters()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new() { { "requestKey", "requestValue" } };
 
@@ -175,7 +145,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_GlobalOptionsProvidedRequestSetsParameterToNull_FinalRequestExcludesParameter()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new()
         {
@@ -194,7 +164,7 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public async Task Request_HandlerOptionsProvidedRequestSetsParameterToNull_FinalRequestExcludesParameter()
     {
         // Arrange
-        ISitecoreLayoutClient layoutClient = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutClient = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new()
         {
@@ -212,7 +182,45 @@ public class RequestDefaultsConfigurationFixture : IDisposable
     public void Dispose()
     {
         _clientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildRequestDefaultsConfigurationWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                ISitecoreLayoutClientBuilder lsc = services
+                    .AddSitecoreLayoutService()
+                    .WithDefaultRequestOptions(request =>
+                    {
+                        request["key1"] = "value1";
+                        request["key2"] = "value2";
+                    });
+
+                lsc.AddHttpHandler("mock", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                    .WithRequestOptions(request =>
+                    {
+                        request["key1"] = "value3";
+                        request["key3"] = "value4";
+                    })
+                    .AsDefaultHandler();
+
+                lsc.AddHttpHandler("mockwithoutoptions", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") });
+
+                services.AddSitecoreRenderingEngine(options => options.MapToRequest((http, sc) => { sc.Path(http.Path); }));
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
     }
 }

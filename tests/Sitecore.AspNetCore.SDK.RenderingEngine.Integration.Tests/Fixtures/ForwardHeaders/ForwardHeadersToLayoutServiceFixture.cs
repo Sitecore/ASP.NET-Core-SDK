@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -11,28 +11,27 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.ForwardHeaders;
 
-public class ForwardHeadersToLayoutServiceFixture : IDisposable
+public class ForwardHeadersToLayoutServiceFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private const string TestHeaderRhResponse = "testHeaderResponseFromRenderingHost";
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
-    public ForwardHeadersToLayoutServiceFixture()
-    {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
+    public ForwardHeadersToLayoutServiceFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder.Configure<ForwardedHeadersOptions>(options =>
+                services.Configure<ForwardedHeadersOptions>(options =>
                 {
                     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
                                                ForwardedHeaders.XForwardedProto;
                 });
 
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler)
                     {
@@ -40,10 +39,9 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
                     })
                     .AsDefaultHandler();
 
-                builder.AddSitecoreRenderingEngine(options =>
+                services.AddSitecoreRenderingEngine(options =>
                 {
-                    options
-                        .AddDefaultComponentRenderer();
+                    options.AddDefaultComponentRenderer();
                 }).ForwardHeaders(options =>
                 {
                     options.HeadersWhitelist.Add("HEADERTOCOPY");
@@ -62,14 +60,14 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
                             result.AppendValue(TestHeaderRhResponse, "testHeaderResponseValueFromRenderingHost");
                         });
                 });
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseForwardedHeaders();
                 app.UseSitecoreRenderingEngine();
             });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        });
     }
 
     [Fact]
@@ -82,7 +80,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder)),
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("connection", string.Empty);
         request.Headers.Add("keep-alive", "sometestvalueshere");
@@ -118,7 +116,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         request.Headers.Add("COOKIE", "testValue");
 
@@ -140,7 +138,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         request.Headers.Add("testNonWhitelistedHeader", "testNonWhitelistedHeaderValue");
 
@@ -161,7 +159,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("connection", string.Empty);
 
@@ -187,7 +185,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
         _mockClientHandler.Responses.Push(responseMsg);
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("headerToModify", "oldHeaderValue");
         request.Headers.Add("HEADERTOCOPY", "sometestvalueshere");
@@ -215,7 +213,7 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
         _mockClientHandler.Responses.Push(responseMsg);
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = BrowserWhitelistedHeaders();
         request.Headers.Add("Cookie", ["ASP.NET_SessionId=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax", "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"]);
 
@@ -231,8 +229,8 @@ public class ForwardHeadersToLayoutServiceFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
+        _factory?.Dispose();
         GC.SuppressFinalize(this);
     }
 

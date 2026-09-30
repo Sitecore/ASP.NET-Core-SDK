@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using AwesomeAssertions;
 using HtmlAgilityPack;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -10,31 +11,32 @@ using Xunit;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Binding;
 
-public class ComplexModelBindingFixture : IDisposable
+public class ComplexModelBindingFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
-    public ComplexModelBindingFixture()
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public ComplexModelBindingFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
             {
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine(options =>
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options
                         .AddModelBoundView<ComponentModels.ComplexComponent>(name => name.Equals("Complex-Component", StringComparison.OrdinalIgnoreCase), "ComplexComponent")
                         .AddDefaultComponentRenderer();
                 });
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseSitecoreRenderingEngine();
@@ -43,8 +45,10 @@ public class ComplexModelBindingFixture : IDisposable
                     endpoints.MapDefaultControllerRoute();
                 });
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
+        _ = _factory.Server;
     }
 
     [Fact]
@@ -57,7 +61,7 @@ public class ComplexModelBindingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -103,8 +107,8 @@ public class ComplexModelBindingFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

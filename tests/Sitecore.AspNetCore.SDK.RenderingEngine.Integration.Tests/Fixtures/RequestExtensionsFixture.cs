@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
@@ -14,26 +16,12 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures;
 public class RequestExtensionsFixture : IDisposable
 {
     private readonly MockHttpMessageHandler _clientHandler;
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     public RequestExtensionsFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _clientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") })
-                    .AsDefaultHandler();
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildRequestExtensionsWebApplicationFactory();
     }
 
     [Fact]
@@ -44,7 +32,7 @@ public class RequestExtensionsFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        ISitecoreLayoutClient layoutService = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutService = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("UsingGlobalMiddleware");
@@ -63,7 +51,7 @@ public class RequestExtensionsFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        ISitecoreLayoutClient layoutService = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutService = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("UsingGlobalMiddleware")
@@ -83,7 +71,7 @@ public class RequestExtensionsFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        ISitecoreLayoutClient layoutService = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutService = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("UsingGlobalMiddleware")
@@ -103,7 +91,7 @@ public class RequestExtensionsFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        ISitecoreLayoutClient layoutService = _server.Services.GetRequiredService<ISitecoreLayoutClient>();
+        ISitecoreLayoutClient layoutService = _factory.Services.GetRequiredService<ISitecoreLayoutClient>();
 
         SitecoreLayoutRequest request = new SitecoreLayoutRequest()
             .Path("UsingGlobalMiddleware")
@@ -118,7 +106,32 @@ public class RequestExtensionsFixture : IDisposable
     public void Dispose()
     {
         _clientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildRequestExtensionsWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_clientHandler) { BaseAddress = new Uri("http://layout.service") })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options => options.MapToRequest((http, sc) => { sc.Path(http.Path); }));
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
     }
 }

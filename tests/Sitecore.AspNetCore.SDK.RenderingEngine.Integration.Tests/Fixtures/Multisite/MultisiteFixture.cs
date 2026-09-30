@@ -3,7 +3,7 @@ using AutoFixture.Xunit2;
 using AwesomeAssertions;
 using GraphQL;
 using GraphQL.Client.Abstractions;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using NSubstitute;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -15,21 +15,43 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.Multisite;
 
-public class MultisiteFixture : IDisposable
+public class MultisiteFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
     private const string DefaultSiteName = "defaultSiteName";
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
 
-    public MultisiteFixture()
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
+
+    public MultisiteFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
+                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
+                mockedGraphQLClient
+                    .SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>())
+                    .Returns(new GraphQLResponse<SiteInfoCollectionResult>
+                    {
+                        Data = new SiteInfoCollectionResult
+                        {
+                            Site = new Site
+                            {
+                                SiteInfoCollection = new[]
+                                {
+                                    new SiteInfo { HostName = "host1", Name = "siteForHost1" },
+                                    new SiteInfo { HostName = "host2", Name = "siteForHost2" },
+                                    new SiteInfo { HostName = "foo.bar", Name = "fooSite" },
+                                    new SiteInfo { HostName = "*.test.com", Name = "wildcardSite" },
+                                    new SiteInfo { HostName = "concrete.test.com", Name = "concrete" },
+                                    new SiteInfo { HostName = "multiHostname1.test.com | multiHostname2.test.com ", Name = "multiHostNameTestSite" }
+                                }
+                            }
+                        }
+                    });
+
+                services
                     .AddSitecoreLayoutService().WithDefaultRequestOptions(request =>
                     {
                         request
@@ -42,35 +64,16 @@ public class MultisiteFixture : IDisposable
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
 
-                IGraphQLClient? mockedGraphQLClient = Substitute.For<IGraphQLClient>();
-                mockedGraphQLClient.SendQueryAsync<SiteInfoCollectionResult>(Arg.Any<GraphQLRequest>()).Returns(new GraphQLResponse<SiteInfoCollectionResult>
-                {
-                    Data = new SiteInfoCollectionResult
-                    {
-                        Site = new Site
-                        {
-                            SiteInfoCollection =
-                            [
-                                new SiteInfo { HostName = "host1", Name = "siteForHost1" },
-                                new SiteInfo { HostName = "host2", Name = "siteForHost2" },
-                                new SiteInfo { HostName = "foo.bar", Name = "fooSite" },
-                                new SiteInfo { HostName = "*.test.com", Name = "wildcardSite" },
-                                new SiteInfo { HostName = "concrete.test.com", Name = "concrete" },
-                                new SiteInfo { HostName = "multiHostname1.test.com | multiHostname2.test.com ", Name = "multiHostNameTestSite" }
-                            ]
-                        }
-                    }
-                });
-
-                builder.AddSitecoreRenderingEngine(options =>
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options.AddDefaultPartialView("_ComponentNotFound");
                 });
 
-                builder.AddSingleton(mockedGraphQLClient);
-                builder.AddMultisite();
-            })
-            .Configure(app =>
+                services.AddSingleton(mockedGraphQLClient);
+                services.AddMultisite();
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseMultisite();
@@ -80,12 +83,15 @@ public class MultisiteFixture : IDisposable
                     endpoints.MapFallbackToController("Index", "Multisite");
                 });
             });
+        });
 
+        // provide a default per-fixture response so startup/concurrent requests don't consume per-test responses
         _mockClientHandler.Responses.Push(new HttpResponseMessage
         {
             StatusCode = HttpStatusCode.OK
         });
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+
+        _ = _factory.Server;
     }
 
     [Theory]
@@ -100,7 +106,7 @@ public class MultisiteFixture : IDisposable
     public async Task Multisite_Should_Resolve_SiteName_ByHostName(string hostname, string expectedSiteName)
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         client.BaseAddress = new Uri($"http://{hostname}");
 
         // Act
@@ -116,7 +122,7 @@ public class MultisiteFixture : IDisposable
     public async Task Multisite_Should_Resolve_SiteName_ByQueryParam()
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         const string expectedSiteName = "siteNameFromQueryString";
 
         // Act
@@ -133,7 +139,7 @@ public class MultisiteFixture : IDisposable
     public async Task Multisite_Should_FallBacks_To_DefaultSite_If_Site_Is_NotResolved(string hostname)
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         client.BaseAddress = new Uri($"http://{hostname}");
 
         // Act
@@ -150,7 +156,7 @@ public class MultisiteFixture : IDisposable
     public async Task Multisite_Should_FallBacks_To_DefaultSite_If_Site_Is_NotResolved_OnSecondRequest(string hostnameFirstRequest, string hostnameSecondRequest, string resolvedFirsSite)
     {
         // Arrange
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         HttpRequestMessage msg = new()
         {
@@ -175,8 +181,8 @@ public class MultisiteFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
         _mockClientHandler.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

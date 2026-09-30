@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -17,19 +19,24 @@ namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
 [ExcludeFromCodeCoverage]
 public class ExperienceEditorMiddlewareBenchmarks : IDisposable
 {
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
     private readonly HttpClient _client;
     private readonly StringContent _content;
     private RenderingEngineBenchmarks? _baseLineTestInstance;
 
     public ExperienceEditorMiddlewareBenchmarks()
     {
-        TestServerBuilder testHostBuilder = new();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
             {
-                builder.AddSingleton(Substitute.For<ISitecoreLayoutClient>());
-                builder.AddSitecoreRenderingEngine(options =>
+                services.AddRouting();
+
+                services.AddSingleton(Substitute.For<ISitecoreLayoutClient>());
+
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options.AddDefaultComponentRenderer();
                 }).WithExperienceEditor(options =>
@@ -37,17 +44,17 @@ public class ExperienceEditorMiddlewareBenchmarks : IDisposable
                     options.Endpoint = TestConstants.EEMiddlewarePostEndpoint;
                     options.JssEditingSecret = TestConstants.JssEditingSecret;
                 });
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseSitecoreExperienceEditor();
                 app.UseRouting();
                 app.UseSitecoreRenderingEngine();
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
-
-        _client = _server.CreateClient();
+        _client = _factory.CreateClient();
         _content = new StringContent(TestConstants.EESampleRequest);
     }
 
@@ -76,7 +83,7 @@ public class ExperienceEditorMiddlewareBenchmarks : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         _client.Dispose();
         _content.Dispose();
         _baseLineTestInstance?.Dispose();

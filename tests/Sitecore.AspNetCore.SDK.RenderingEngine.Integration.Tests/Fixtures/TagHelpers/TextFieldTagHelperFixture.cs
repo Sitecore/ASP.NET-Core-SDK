@@ -2,7 +2,7 @@
 using System.Text.Encodings.Web;
 using AwesomeAssertions;
 using HtmlAgilityPack;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
@@ -12,31 +12,32 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class TextFieldTagHelperFixture : IDisposable
+public class TextFieldTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    public TextFieldTagHelperFixture()
+    public TextFieldTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine(options =>
+
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options
                         .AddModelBoundView<ComponentModels.Component3>("Component-3", "Component3")
                         .AddDefaultComponentRenderer();
                 });
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseSitecoreRenderingEngine();
@@ -45,8 +46,9 @@ public class TextFieldTagHelperFixture : IDisposable
                     endpoints.MapDefaultControllerRoute();
                 });
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _ = _factory.Server;
     }
 
     [Fact]
@@ -59,7 +61,7 @@ public class TextFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -94,7 +96,7 @@ public class TextFieldTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.HorizonEditablePage))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -123,7 +125,7 @@ public class TextFieldTagHelperFixture : IDisposable
     public void Dispose()
     {
         _mockClientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

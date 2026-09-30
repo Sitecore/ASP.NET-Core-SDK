@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -10,32 +11,33 @@ using Xunit;
 // ReSharper disable StringLiteralTypo
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests.Fixtures.TagHelpers;
 
-public class PlaceholderTagHelperFixture : IDisposable
+public class PlaceholderTagHelperFixture : IClassFixture<TestWebApplicationFactory<TestWebApplicationProgram>>, IDisposable
 {
-    private readonly TestServer _server;
-    private readonly MockHttpMessageHandler _mockClientHandler;
+    private readonly MockHttpMessageHandler _mockClientHandler = new();
     private readonly Uri _layoutServiceUri = new("http://layout.service");
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
-    public PlaceholderTagHelperFixture()
+    public PlaceholderTagHelperFixture(TestWebApplicationFactory<TestWebApplicationProgram> factory)
     {
-        TestServerBuilder testHostBuilder = new();
-        _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
             {
-                builder
+                services
                     .AddSitecoreLayoutService()
                     .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
                     .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine(options =>
+
+                services.AddSitecoreRenderingEngine(options =>
                 {
                     options
                         .AddViewComponent("Component-1", "Component1")
                         .AddModelBoundView<ComponentModels.Component2>("Component-2", "Component2")
                         .AddDefaultComponentRenderer();
                 });
-            })
-            .Configure(app =>
+            });
+
+            builder.Configure(app =>
             {
                 app.UseRouting();
                 app.UseSitecoreRenderingEngine();
@@ -44,8 +46,10 @@ public class PlaceholderTagHelperFixture : IDisposable
                     endpoints.MapDefaultControllerRoute();
                 });
             });
+        });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        // Accessing _factory.Server forces the TestServer to start. The variable is unused; this is intentional.
+        _ = _factory.Server;
     }
 
     [Fact]
@@ -58,7 +62,7 @@ public class PlaceholderTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -77,7 +81,7 @@ public class PlaceholderTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.EditablePage))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -104,7 +108,7 @@ public class PlaceholderTagHelperFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.HorizonEditablePage))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         string response = await client.GetStringAsync(new Uri("/", UriKind.Relative));
@@ -124,7 +128,7 @@ public class PlaceholderTagHelperFixture : IDisposable
     public void Dispose()
     {
         _mockClientHandler.Dispose();
-        _server.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
     }
 }

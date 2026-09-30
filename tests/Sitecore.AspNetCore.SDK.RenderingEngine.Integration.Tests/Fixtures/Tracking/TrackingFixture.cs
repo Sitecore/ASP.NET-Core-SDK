@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -25,7 +26,7 @@ public class TrackingFixture : IDisposable
         "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"
     ];
 
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     private readonly MockHttpMessageHandler _mockClientHandler;
 
@@ -35,39 +36,8 @@ public class TrackingFixture : IDisposable
 
     public TrackingFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-
-        _ = testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder.Configure<ForwardedHeadersOptions>(options =>
-                {
-                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor;
-                });
-
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-
-                builder.AddSitecoreRenderingEngine(options =>
-                    {
-                        options
-                            .AddDefaultComponentRenderer();
-                    })
-                    .WithTracking();
-
-                builder.AddSitecoreVisitorIdentification(o => o.SitecoreInstanceUri = _cmInstanceUri);
-            })
-            .Configure(app =>
-            {
-                app.UseForwardedHeaders();
-                app.UseSitecoreVisitorIdentification();
-                app.UseSitecoreRenderingEngine();
-            });
-
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildTrackingWebApplicationFactory();
     }
 
     [Fact]
@@ -80,7 +50,7 @@ public class TrackingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithVisitorIdentificationLayoutPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
 
         // Act
@@ -108,7 +78,7 @@ public class TrackingFixture : IDisposable
             }
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         HttpRequestMessage browserRequest = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
@@ -134,7 +104,7 @@ public class TrackingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage browserRequest = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         browserRequest.Headers.Add("Cookie", ["ASP.NET_SessionId=rku2oxmotbrkwkfxe0cpfrvn; path=/; HttpOnly; SameSite=Lax", "SC_ANALYTICS_GLOBAL_COOKIE=0f82f53555ce4304a1ee8ae99ab9f9a8|False; expires = Fri, 15 - Mar - 2030 13:15:08 GMT; path =/; HttpOnly"]);
 
@@ -159,7 +129,7 @@ public class TrackingFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithNestedPlaceholder))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpRequestMessage request = new(HttpMethod.Get, new Uri("/", UriKind.Relative));
         request.Headers.Add("X-Forwarded-For", "192.168.1.0, 172.217.16.14");
 
@@ -187,7 +157,7 @@ public class TrackingFixture : IDisposable
             }
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
 
         // Act
         HttpResponseMessage response = await client.GetAsync(new Uri("/", UriKind.Relative));
@@ -200,8 +170,54 @@ public class TrackingFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildTrackingWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor;
+                });
+
+                services.AddRouting();
+                services.AddControllersWithViews();
+
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                    {
+                        options
+                            .AddDefaultComponentRenderer();
+                    })
+                    .WithTracking();
+
+                services.AddSitecoreVisitorIdentification(o => o.SitecoreInstanceUri = _cmInstanceUri);
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseForwardedHeaders();
+                app.UseRouting();
+                app.UseSitecoreVisitorIdentification();
+                app.UseSitecoreRenderingEngine();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapDefaultControllerRoute();
+                });
+            });
+        });
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
@@ -15,7 +17,7 @@ public class GlobalMiddlewareFixture : IDisposable
 
     private const string GlobalMiddlewareController = "UsingGlobalMiddleware";
 
-    private readonly TestServer _server;
+    private readonly WebApplicationFactory<TestWebApplicationProgram> _factory;
 
     private readonly MockHttpMessageHandler _mockClientHandler;
 
@@ -23,27 +25,9 @@ public class GlobalMiddlewareFixture : IDisposable
 
     public GlobalMiddlewareFixture()
     {
-        TestServerBuilder testHostBuilder = new();
         _mockClientHandler = new MockHttpMessageHandler();
-        testHostBuilder
-            .ConfigureServices(builder =>
-            {
-                builder
-                    .AddSitecoreLayoutService()
-                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
-                    .AsDefaultHandler();
-                builder.AddSitecoreRenderingEngine(options =>
-                {
-                    options.AddDefaultPartialView("_ComponentNotFound");
-                    options.AddPostRenderingAction(httpContext => httpContext.Response.Headers.Append(CustomHeaderName, "value"));
-                });
-            })
-            .Configure(app =>
-            {
-                app.UseSitecoreRenderingEngine();
-            });
 
-        _server = testHostBuilder.BuildServer(new Uri("http://localhost"));
+        _factory = BuildGlobalMiddlewareWebApplicationFactory();
     }
 
     [Fact]
@@ -54,7 +38,7 @@ public class GlobalMiddlewareFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         await client.GetAsync(GlobalMiddlewareController);
 
         _mockClientHandler.WasInvoked.Should().BeTrue();
@@ -65,7 +49,7 @@ public class GlobalMiddlewareFixture : IDisposable
     {
         _mockClientHandler.Responses.Push(new HttpResponseMessage { StatusCode = HttpStatusCode.OK });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync(GlobalMiddlewareController);
 
         response.Should().Be("\"success\"");
@@ -76,7 +60,7 @@ public class GlobalMiddlewareFixture : IDisposable
     {
         _mockClientHandler.Responses.Push(new HttpResponseMessage { StatusCode = HttpStatusCode.OK });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         await client.GetAsync(GlobalMiddlewareController);
 
         _mockClientHandler.Requests.Single().RequestUri!.AbsoluteUri.Should()
@@ -92,7 +76,7 @@ public class GlobalMiddlewareFixture : IDisposable
             Content = new StringContent(Serializer.Serialize(CannedResponses.WithMissingComponent))
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         string response = await client.GetStringAsync("WithRoute");
 
         response.Should().Contain("ComponentIsMissing");
@@ -106,7 +90,7 @@ public class GlobalMiddlewareFixture : IDisposable
             StatusCode = HttpStatusCode.OK
         });
 
-        HttpClient client = _server.CreateClient();
+        HttpClient client = _factory.CreateClient();
         HttpResponseMessage response = await client.GetAsync(GlobalMiddlewareController);
 
         response.Headers.Contains(CustomHeaderName).Should().BeTrue();
@@ -114,8 +98,40 @@ public class GlobalMiddlewareFixture : IDisposable
 
     public void Dispose()
     {
-        _server.Dispose();
+        _factory.Dispose();
         _mockClientHandler.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private WebApplicationFactory<TestWebApplicationProgram> BuildGlobalMiddlewareWebApplicationFactory()
+    {
+        WebApplicationFactory<TestWebApplicationProgram> factory = new TestWebApplicationFactory<TestWebApplicationProgram>();
+
+        return factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddRouting();
+                services.AddControllersWithViews();
+
+                services
+                    .AddSitecoreLayoutService()
+                    .AddHttpHandler("mock", _ => new HttpClient(_mockClientHandler) { BaseAddress = _layoutServiceUri })
+                    .AsDefaultHandler();
+
+                services.AddSitecoreRenderingEngine(options =>
+                {
+                    options.AddDefaultPartialView("_ComponentNotFound");
+                    options.AddPostRenderingAction(httpContext => httpContext.Response.Headers.Append(CustomHeaderName, "value"));
+                });
+            });
+
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseSitecoreRenderingEngine();
+                app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
+            });
+        });
     }
 }
