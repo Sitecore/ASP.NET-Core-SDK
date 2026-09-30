@@ -9,6 +9,7 @@ using Sitecore.AspNetCore.SDK.AutoFixture.Mocks;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Extensions;
 using Sitecore.AspNetCore.SDK.LayoutService.Client.Interfaces;
 using Sitecore.AspNetCore.SDK.RenderingEngine.Extensions;
+using Sitecore.AspNetCore.SDK.RenderingEngine.Integration.Tests;
 using Sitecore.AspNetCore.SDK.TestData;
 
 namespace Sitecore.AspNetCore.SDK.RenderingEngine.Benchmarks;
